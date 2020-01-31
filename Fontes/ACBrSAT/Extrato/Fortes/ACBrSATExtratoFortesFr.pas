@@ -52,7 +52,7 @@ uses Classes, SysUtils,
        LResources,
      {$ENDIF}
      Forms, Graphics,
-     ACBrSATExtratoClass, ACBrSATExtratoReportClass,
+     ACBrBase, ACBrSATExtratoClass, ACBrSATExtratoReportClass,
      pcnCFe, pcnCFeCanc, pcnConversao,
      RLConsts, RLReport, RLBarcode, RLPDFFilter, RLHTMLFilter, RLPrintDialog,
      RLFilters, RLPrinters, Controls, StrUtils;
@@ -61,7 +61,7 @@ type
 
   { TACBrSATExtratoFortes }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrSATExtratoFortes = class( TACBrSATExtratoReportClass )
   private
@@ -359,7 +359,6 @@ type
     function CompoemCliche: String;
 
     function CalcularCaractesWidth( Canvas : TCanvas; WidthTotal : Integer ): Integer;
-    procedure DiminuirFonteSeNecessario( ARLMemo: TRLMemo; TamanhoMinimo: Integer = 1);
   public
     { Public declarations }
     property ACBrSATExtrato : TACBrSATExtratoFortes read fACBrSATExtrato ;
@@ -372,7 +371,7 @@ implementation
 
 uses  math, RLTypes,
      ACBrDelphiZXingQRCode, ACBrValidador, ACBrDFeUtil, ACBrUtil,
-     ACBrDFeReport;
+     ACBrDFeReport, ACBrDFeReportFortes;
 
 {$ifdef FPC}
   {$R *.lfm}
@@ -642,29 +641,6 @@ begin
   Result := Length(LinhaExemplo)-2
 end;
 
-procedure TACBrSATExtratoFortesFr.DiminuirFonteSeNecessario(ARLMemo: TRLMemo;
-  TamanhoMinimo: Integer);
-var
-  ABmp: TBitmap;
-begin
-  ABmp := TBitmap.Create;
-  try
-    ABmp.Canvas.Font.Assign(ARLMemo.Font);
-    TamanhoMinimo := max(1, TamanhoMinimo);
-
-    while ABmp.Canvas.Font.Size > TamanhoMinimo do
-    begin
-      if ABmp.Canvas.TextWidth( ARLMemo.Lines.Text ) <= ARLMemo.ClientWidth then
-        Break;
-
-      ABmp.Canvas.Font.Size := ABmp.Canvas.Font.Size - 1;
-    end;
-  finally
-    ARLMemo.Font.Size := ABmp.Canvas.Font.Size;
-    ABmp.Free;
-  end;
-end;
-
 procedure TACBrSATExtratoFortesFr.rlVendaBeforePrint(Sender: TObject;
   var PrintIt: boolean);
 var
@@ -691,7 +667,7 @@ begin
     lRazaoSocial.Lines.Text := Emit.xNome ;
     lEndereco.Lines.Text    := CompoemEnderecoCFe;
     lEmitCNPJ_IE_IM.Lines.Text := CompoemCliche;
-    DiminuirFonteSeNecessario(lEmitCNPJ_IE_IM, 6);
+    TDFeReportFortes.DiminuirFonteSeNecessario(lEmitCNPJ_IE_IM, 6);
 
     // Numero do Extrato ou Homologação //
     if (ide.tpAmb = taHomologacao) then
@@ -700,7 +676,7 @@ begin
       NumExtrato := IntToStrZero(ide.nCFe, 6);
 
     lNumeroExtrato.Lines.Text := StringReplace(lNumeroExtrato.Lines.Text,'<NUMERO>',NumExtrato,[]);
-    DiminuirFonteSeNecessario(lNumeroExtrato, 6);
+    TDFeReportFortes.DiminuirFonteSeNecessario(lNumeroExtrato, 6);
 
     pSATSerieHora.Visible := not ACBrSATExtrato.ImprimeQRCodeLateral;
     lTitLei12743.Visible := not ACBrSATExtrato.ImprimeQRCodeLateral;
@@ -721,7 +697,7 @@ begin
                                                        Total.vCFe,
                                                        Trim(Dest.CNPJCPF),
                                                        ide.assinaturaQRCODE );
-      PintarQRCode(qrcode, imgQRCode.Picture, qrUTF8BOM);
+      PintarQRCode(qrcode, imgQRCode.Picture.Bitmap, qrUTF8BOM);
     end;
 
     mSwHouseSite.Lines.Clear;
@@ -1250,7 +1226,7 @@ begin
     lRazaoSocialCanc.Lines.Text := Emit.xNome ;
     lEnderecoCanc.Lines.Text    := CompoemEnderecoCFe;
     lEmitCNPJ_IE_IMCanc.Lines.Text := CompoemCliche;
-    DiminuirFonteSeNecessario(lEmitCNPJ_IE_IMCanc, 6);
+    TDFeReportFortes.DiminuirFonteSeNecessario(lEmitCNPJ_IE_IMCanc, 6);
 
     // Numero do Extrato ou Homologação //
     if (ide.tpAmb = taHomologacao) then
@@ -1292,14 +1268,14 @@ begin
                                                        Total.vCFe,
                                                        Trim(Dest.CNPJCPF),
                                                        ide.assinaturaQRCODE );
-      PintarQRCode(qrcode, imgQRCodeCan.Picture, qrUTF8BOM);
+      PintarQRCode(qrcode, imgQRCodeCan.Picture.Bitmap, qrUTF8BOM);
     end;
   end;
 
   with ACBrSATExtrato.CFeCanc do
   begin
     lNumeroExtratoCanc.Lines.Text := StringReplace(lNumeroExtratoCanc.Lines.Text,'<NUMERO>',NumExtrato,[]);
-    DiminuirFonteSeNecessario(lNumeroExtratoCanc, 6);
+    TDFeReportFortes.DiminuirFonteSeNecessario(lNumeroExtratoCanc, 6);
 
     // Informações do Rodapé do Extrato //
     lChaveAcessoCanc2.Lines.Text := FormatarChaveAcesso(infCFe.ID);
@@ -1315,7 +1291,7 @@ begin
                                                        Total.vCFe,
                                                        Trim(Dest.CNPJCPF),
                                                        ide.assinaturaQRCODE );
-      PintarQRCode(qrcode, imgQRCodeCanc2.Picture, qrUTF8BOM);
+      PintarQRCode(qrcode, imgQRCodeCanc2.Picture.Bitmap, qrUTF8BOM);
     end;
   end;
 
@@ -1340,6 +1316,13 @@ var
   frACBrSATExtratoFortesFr: TACBrSATExtratoFortesFr;
   RLLayout: TRLReport;
   RLFiltro: TRLCustomSaveFilter;
+  FileExt, DirPDF: String;
+
+  function FormatarTitulo(Atitulo, AChave: String): String;
+  begin
+    Result := Atitulo + '-' +StringReplace(FormatarChaveAcesso(AChave),' ', '_', [rfReplaceAll]);
+  end;
+
 begin
   frACBrSATExtratoFortesFr := TACBrSATExtratoFortesFr.Create(Self);
   try
@@ -1348,12 +1331,12 @@ begin
       if LayOut = lCancelamento then
       begin
          RLLayout := rlCancelamento;
-         RLLayout.Title := 'CFeCan: '+FormatarChaveAcesso(CFeCanc.infCFe.ID);
+         RLLayout.Title := FormatarTitulo('CFeCan', CFeCanc.infCFe.ID);
       end
       else
       begin
         RLLayout := rlVenda;
-        RLLayout.Title := 'CFe: '+FormatarChaveAcesso(CFe.infCFe.ID);
+        RLLayout.Title := FormatarTitulo('CFe', CFe.infCFe.ID);
         Resumido := (LayOut = lResumido);
       end;
 
@@ -1383,8 +1366,9 @@ begin
       RLLayout.PageBreaking := pbNone;
       RLLayout.PageSetup.PaperSize   := fpCustom ;
       RLLayout.PageSetup.PaperWidth  := Round(LarguraBobina/MMAsPixels) ;
+      //RLLayout.PageSetup.PaperHeight := 200;
 
-      RLLayout.UnlimitedHeight := True; // ****** ATENÇÃO ******
+      RLLayout.UnlimitedHeight := FormularioContinuo; // ****** ATENÇÃO ******
       // Se você recebeu um erro de compilação na linha ACIMA
       // Voce DEVE atualizar os fontes do seu Fortes Report CE
       // https://github.com/fortesinformatica/fortesreport-ce
@@ -1402,15 +1386,34 @@ begin
         begin
           case Filtro of
             fiPDF  :
-              RLFiltro := RLPDFFilter1;
+              begin
+                RLFiltro := RLPDFFilter1;
+                FileExt := '.pdf';
+              end;
             fiHTML :
-              RLFiltro := RLHTMLFilter1;
+              begin
+                RLFiltro := RLHTMLFilter1;
+                FileExt := '.html';
+              end
           else
             exit ;
           end ;
 
+          if (NomeDocumento = '') then
+            RLFiltro.FileName := RLLayout.Title
+          else
+            RLFiltro.FileName := NomeDocumento ;
+
+          DirPDF := ExtractFilePath(RLFiltro.FileName);
+          if (DirPDF = '') then
+            RLFiltro.FileName := PathPDF + RLFiltro.FileName;
+
+          DirPDF := ExtractFilePath(RLFiltro.FileName);
+          if not DirectoryExists(DirPDF) then
+            ForceDirectories(DirPDF);
+
+          RLFiltro.FileName := ChangeFileExt(RLFiltro.FileName, FileExt);
           RLFiltro.ShowProgress := RLLayout.ShowProgress;
-          RLFiltro.FileName := NomeDocumento ;
           RLFiltro.FilterPages( RLLayout.Pages );
         end;
       end;

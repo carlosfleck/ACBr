@@ -41,8 +41,8 @@ unit ACBrNFSeConfiguracoes;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, Contnrs,
-  ACBrDFeConfiguracoes, ACBrDFeSSL, pcnConversao, pnfsConversao;
+  Classes, SysUtils, IniFiles,
+  ACBrDFeConfiguracoes, pcnConversao, pnfsConversao;
 
 type
 
@@ -69,6 +69,7 @@ type
     EComercial: Boolean;
     Tabulacao: Boolean;
     TagQuebradeLinhaUnica: Boolean;
+    TagTransform:Boolean;
  end;
 
  TConfigNameSpace = record
@@ -396,10 +397,10 @@ type
     constructor Create(AOwner: TConfiguracoes); override;
     procedure Assign(DeArquivosConfNFSe: TArquivosConfNFSe); reintroduce;
 
-    function GetPathGer(Data: TDateTime = 0; const CNPJ: String = ''): String;
-    function GetPathRPS(Data: TDateTime = 0; const CNPJ: String = ''): String;
-    function GetPathNFSe(Data: TDateTime = 0; const CNPJ: String = ''): String;
-    function GetPathCan(Data: TDateTime = 0; const CNPJ: String = ''): String;
+    function GetPathGer(Data: TDateTime = 0; const CNPJ: String = ''; const IE: String = ''): String;
+    function GetPathRPS(Data: TDateTime = 0; const CNPJ: String = ''; const IE: String = ''): String;
+    function GetPathNFSe(Data: TDateTime = 0; const CNPJ: String = ''; const IE: String = ''): String;
+    function GetPathCan(Data: TDateTime = 0; const CNPJ: String = ''; const IE: String = ''): String;
   published
     property EmissaoPathNFSe: boolean read FEmissaoPathNFSe
       write FEmissaoPathNFSe default False;
@@ -437,7 +438,7 @@ type
 implementation
 
 uses
-  ACBrUtil, ACBrNFSe,
+  ACBrUtil,
   DateUtils;
 
 { TEmitenteConfNFSe }
@@ -646,6 +647,7 @@ begin
   FConfigRemover.EComercial            := FPIniParams.ReadBool('Remover', 'EComercial', False);
   FConfigRemover.Tabulacao             := FPIniParams.ReadBool('Remover', 'Tabulacao', False);
   FConfigRemover.TagQuebradeLinhaUnica := FPIniParams.ReadBool('Remover', 'TagQuebradeLinhaUnica', False);
+  FConfigRemover.TagTransform          := FPIniParams.ReadBool('Remover', 'TagTransfom', False);
 
   FConfigNameSpace.Producao    := StringReplace(FPIniParams.ReadString('NameSpace', 'Producao'   , ''), '%NomeURL_P%', FxNomeURL_P, [rfReplaceAll]);
   FConfigNameSpace.Homologacao := StringReplace(FPIniParams.ReadString('NameSpace', 'Homologacao', ''), '%NomeURL_H%', FxNomeURL_H, [rfReplaceAll]);
@@ -1155,22 +1157,22 @@ begin
   TabServicosExt := DeArquivosConfNFSe.TabServicosExt;
 end;
 
-function TArquivosConfNFSe.GetPathGer(Data: TDateTime;
-  const CNPJ: String): String;
+function TArquivosConfNFSe.GetPathGer(Data: TDateTime = 0;
+  const CNPJ: String = ''; const IE: String = ''): String;
 begin
-  Result := GetPath(FPathGer, 'NFSe', CNPJ, Data);
+  Result := GetPath(FPathGer, 'NFSe', CNPJ, IE, Data);
 end;
 
-function TArquivosConfNFSe.GetPathRPS(Data: TDateTime;
-  const CNPJ: String): String;
+function TArquivosConfNFSe.GetPathRPS(Data: TDateTime = 0;
+  const CNPJ: String = ''; const IE: String = ''): String;
 var
   Dir: String;
 begin
   if FPathRPS <> '' then
-    Result := GetPath(FPathRPS, 'Recibos', CNPJ, Data)
+    Result := GetPath(FPathRPS, 'Recibos', CNPJ, IE, Data)
   else
   begin
-    Dir := GetPath(FPathGer, 'NFSe', CNPJ, Data);
+    Dir := GetPath(FPathGer, 'NFSe', CNPJ, IE, Data);
 
     Dir := PathWithDelim(Dir) + 'Recibos';
 
@@ -1182,15 +1184,15 @@ begin
 end;
 
 function TArquivosConfNFSe.GetPathNFSe(Data: TDateTime = 0;
-  const CNPJ: String = ''): String;
+  const CNPJ: String = ''; const IE: String = ''): String;
 var
   Dir: String;
 begin
   if FPathNFSe <> '' then
-    Result := GetPath(FPathNFSe, 'Notas', CNPJ, Data)
+    Result := GetPath(FPathNFSe, 'Notas', CNPJ, IE, Data)
   else
   begin
-    Dir := GetPath(FPathGer, 'NFSe', CNPJ, Data);
+    Dir := GetPath(FPathGer, 'NFSe', CNPJ, IE, Data);
 
     Dir := PathWithDelim(Dir) + 'Notas';
 
@@ -1202,15 +1204,15 @@ begin
 end;
 
 function TArquivosConfNFSe.GetPathCan(Data: TDateTime = 0;
-  const CNPJ: String = ''): String;
+  const CNPJ: String = ''; const IE: String = ''): String;
 var
   Dir: String;
 begin
   if FPathCan <> '' then
-    Result := GetPath(FPathCan, 'Can', CNPJ, Data)
+    Result := GetPath(FPathCan, 'Can', CNPJ, IE, Data)
   else
   begin
-    Dir := GetPath(FPathGer, 'NFSe', CNPJ, Data);
+    Dir := GetPath(FPathGer, 'NFSe', CNPJ, IE, Data);
 
     Dir := PathWithDelim(Dir) + 'Can';
 

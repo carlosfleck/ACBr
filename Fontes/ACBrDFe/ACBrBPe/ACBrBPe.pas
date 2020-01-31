@@ -46,8 +46,8 @@ unit ACBrBPe;
 interface
 
 uses
-  Classes, SysUtils, ACBrBase,
-  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes,
+  Classes, SysUtils,
+  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes, ACBrBase, 
   ACBrBPeConfiguracoes, ACBrBPeWebServices, ACBrBPeBilhetes, ACBrBPeDABPEClass,
   pcnBPe, pcnConversao, pcnConversaoBPe, pcnEnvEventoBPe, 
   ACBrUtil;
@@ -61,8 +61,8 @@ type
   EACBrBPeException = class(EACBrDFeException);
 
   { TACBrBPe }
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrBPe = class(TACBrDFe)
   private
@@ -153,8 +153,8 @@ Const
 implementation
 
 uses
-  strutils, dateutils,
-  pcnAuxiliar, synacode, ACBrDFeSSL;
+  dateutils,
+  pcnAuxiliar, ACBrDFeSSL;
 
 {$IFDEF FPC}
  {$R ACBrBPeServicos.rc}

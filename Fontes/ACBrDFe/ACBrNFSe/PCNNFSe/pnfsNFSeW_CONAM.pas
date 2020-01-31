@@ -40,9 +40,8 @@ uses
 
 {$ENDIF}
   SysUtils, Classes, StrUtils,
-  synacode, ACBrConsts,
-  pnfsNFSeW,
-  pcnAuxiliar, pcnConversao, pcnGerador,
+  ACBrConsts,
+  pnfsNFSeW, pcnAuxiliar, pcnConversao, pcnGerador,
   pnfsNFSe, pnfsConversao, pnfsConsts;
 
 type
@@ -344,6 +343,8 @@ begin
   //Gerador.wGrupoNFSe('SDTRPS');
   //GerarIdentificacaoRPS;
   Gerador.Opcoes.DecimalChar := ',';
+  Gerador.Opcoes.QuebraLinha := FQuebradeLinha;
+
   GerarListaServicos;
   //GerarValoresServico;
   //Gerador.wGrupoNFSe('/SDTRPS');

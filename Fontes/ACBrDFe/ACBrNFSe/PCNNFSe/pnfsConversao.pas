@@ -92,7 +92,7 @@ type
   TnfseSituacaoLoteRPS = ( slrNaoRecibo, slrNaoProcessado, slrProcessadoErro, slrProcessadoSucesso );
 
   TnfseDeducaoPor = ( dpNenhum, dpPercentual, dpValor );
-  TnfseTipoDeducao = ( tdNenhum, tdMateriais, tdSubEmpreitada );
+  TnfseTipoDeducao = ( tdNenhum, tdMateriais, tdSubEmpreitada, tdValor );
 
   TnfseProvedor = ( proNenhum, proTiplan, proISSNET, proWebISS, proWebISSv2, proGINFES, proIssDSF,
                     proProdemge, proAbaco, proBetha, proEquiplano, proISSIntel, proProdam,
@@ -114,8 +114,9 @@ type
                     proTiplanv2, proGiss, proDeISS, proTcheInfov2, proDataSmart,
                     proMetropolisWeb, proDesenvolve, proCenti, proRLZ, proSigCorp, 
                     proGiap, proAssessorPublico, proSigIss, proElotech,
-                    proSilTecnologia, proiiBrasilv2, proWEBFISCO, proDSFSJC,
-                    proSimplISSv2 );
+                    proSilTecnologia, proiiBrasilv2, proWebFisco, proDSFSJC,
+                    proSimplISSv2, proLencois, progeNFe, proMegaSoft,
+                    proModernizacaoPublica);
 
   TnfseAcao = (acRecepcionar, acConsSit, acConsLote, acConsNFSeRps, acConsNFSe,
                acCancelar, acGerar, acRecSincrono, acConsSecRps, acSubstituir);
@@ -131,7 +132,8 @@ type
 
   TLayOutXML = (loNone, loABRASFv1, loABRASFv2, loEGoverneISS, loEL, loEquiplano,
                 loInfisc, loISSDSF, loGoverna, loSP, loCONAM, loAgili, loSMARAPD, 
-                loIPM, loGiap, loAssessorPublico, loSigIss, loElotech, loWEBFISCO);
+                loIPM, loGiap, loAssessorPublico, loSigIss, loElotech, loWebFisco,
+                loLencois);
 
   TnfseFrete = ( tfPrestador, tfTomador );
 
@@ -283,7 +285,7 @@ function RemoverIdentacao(const AXML: String): String;
 implementation
 
 uses
-  pcnConversao;
+  pcnConversao, StrUtilsEx;
 
 // Status RPS ******************************************************************
 
@@ -526,7 +528,7 @@ begin
          'Tiplanv2', 'Giss', 'DeISS', 'TcheInfov2', 'DataSmart', 'MetropolisWeb',
          'Desenvolve', 'Centi', 'RLZ', 'SigCorp', 'Giap', 'AssessorPublico', 
          'SigIss', 'Elotech', 'SilTecnologia', 'iiBrasilv2', 'WEBFISCO', 'DSFSJC',
-         'SimplISSv2'],
+         'SimplISSv2', 'Lencois', 'geNFe', 'MegaSoft', 'ModernizacaoPublica'],
         [proNenhum, proTiplan, proISSNET, proWebISS, proWebISSv2, proGINFES, proIssDSF,
          proProdemge, proAbaco, proBetha, proEquiplano, proISSIntel, proProdam,
          proGovBR, proRecife, proSimplISS, proThema, proRJ, proPublica,
@@ -545,7 +547,8 @@ begin
          proAsten, proELv2, proTiplanv2, proGiss, proDeISS, proTcheInfov2,
          proDataSmart, proMetropolisWeb, proDesenvolve, proCenti, proRLZ, proSigCorp, 
          proGiap, proAssessorPublico, proSigIss, proElotech, proSilTecnologia,
-         proiiBrasilv2, proWEBFISCO, proDSFSJC, proSimplISSv2]);
+         proiiBrasilv2, proWebFisco, proDSFSJC, proSimplISSv2, proLencois, progeNFe,
+         proMegaSoft, proModernizacaoPublica]);
 end;
 
 function StrToProvedor(out ok: boolean; const s: String): TnfseProvedor;
@@ -568,7 +571,7 @@ begin
          'Tiplanv2', 'Giss', 'DeISS', 'TcheInfov2', 'DataSmart', 'MetropolisWeb',
          'Desenvolve', 'Centi', 'RLZ', 'SigCorp', 'Giap', 'AssessorPublico', 
          'SigIss', 'Elotech', 'SilTecnologia', 'iiBrasilv2', 'WEBFISCO', 'DSFSJC',
-         'SimplISSv2'],
+         'SimplISSv2', 'Lencois', 'geNFe', 'MegaSoft', 'ModernizacaoPublica'],
         [proNenhum, proTiplan, proISSNET, proWebISS, proWebISSv2, proGINFES, proIssDSF,
          proProdemge, proAbaco, proBetha, proEquiplano, proISSIntel, proProdam,
          proGovBR, proRecife, proSimplISS, proThema, proRJ, proPublica,
@@ -587,7 +590,8 @@ begin
          proAsten, proELv2, proTiplanv2, proGiss, proDeISS, proTcheInfov2,
          proDataSmart, proMetropolisWeb, proDesenvolve, proCenti, proRLZ, proSigCorp, 
          proGiap, proAssessorPublico, proSigIss, proElotech, proSilTecnologia,
-         proiiBrasilv2, proWEBFISCO, proDSFSJC, proSimplISSv2]);
+         proiiBrasilv2, proWebFisco, proDSFSJC, proSimplISSv2, proLencois, progeNFe,
+         proMegaSoft, proModernizacaoPublica]);
 end;
 
 // Condição de pagamento ******************************************************
@@ -882,6 +886,7 @@ var
         25300: Cidade := 'Goiânia/GO';
         33800: Cidade := 'Aparecida de Goiânia/GO';
        530020: Cidade := 'Brazlandia/DF';
+        28800: Cidade := 'Trindade/GO';
    end;
  end;
 
@@ -6658,6 +6663,7 @@ var
         25300: CodSiafi := ''; // Goiânia/GO
         33800: CodSiafi := ''; // Aparecida de Goiânia/GO
        530020: CodSiafi := ''; // Brazlandia/DF
+        28800: CodSiafi := ''; // Trindade/GO
    end;
  end;
 
@@ -18135,6 +18141,7 @@ begin
   XML := StrReplace( XML, 'nfse:' );
   XML := StrReplace( XML, 'soap:' );
   XML := StrReplace( XML, 'soap12:' );
+  XML := StrReplace( XML, 'soapenv:' );
   XML := StrReplace( XML, 'SOAP-ENV:' );
   XML := StrReplace( XML, 'tin:' );
   XML := StrReplace( XML, 'a:' );
@@ -18142,8 +18149,7 @@ begin
   XML := StrReplace( XML, 's:' );
   XML := StrReplace( XML, 'tipos:' );
 
-  // Provedor NFSeBrasil
-  if AProvedor in [proNFSeBrasil, proSigCorp] then
+  if AProvedor in [proNFSeBrasil, proSigCorp, proMegasoft] then
   begin
     XML := StringReplace( XML, '<![CDATA[', '', [rfReplaceAll] );
     XML := StringReplace( XML, ']]>', '', [rfReplaceAll] );
@@ -18451,8 +18457,8 @@ begin
     proGINFES, proGovBR, proISSCuritiba, proISSIntel, proISSNet, proLexsom,
     proNatal, proProdemge, proPronim, proPublica, proRecife, proRJ, proSalvador,
     proSimplISS, proSJP, proSpeedGov, proThema, proTinus, proTiplan, proWebISS,
-    proCIGA, proNFSeBrasil, proMetropolisWeb, proSilTecnologia, 
-	  proDSFSJC: Result := loABRASFv1;
+    proCIGA, proNFSeBrasil, proMetropolisWeb, proSilTecnologia, proDSFSJC,
+    progeNFe: Result := loABRASFv1;
 
     proABRASFv2, pro4R, proABase, proActconv2, proBethav2, proCoplan, proDigifred,
     proEReceita, proFIntelISS, proFiorilli, proFriburgo, proGoiania, proGovDigital,
@@ -18463,7 +18469,7 @@ begin
     proSH3, proSIAPNet, proBelford, proISSJoinville, proSmarAPDABRASF,
     proAsten, proELv2, proTiplanv2, proGiss, proDeISS, proTcheInfov2,
     proDataSmart, proDesenvolve, proCenti, proRLZ, proSigCorp, proiiBrasilv2,
-    proSimplISSv2: Result := loABRASFv2;
+    proSimplISSv2, proMegasoft, proModernizacaoPublica: Result := loABRASFv2;
 
     proAgili,
     proAgiliv2:     Result := loAgili;
@@ -18484,8 +18490,9 @@ begin
     proAssessorPublico: Result := loAssessorPublico;
     proSigIss:      Result := loSigIss;
     proElotech:     Result := loElotech;
-    proWEBFISCO:    Result := loWEBFISCO;
-else
+    proWebFisco:    Result := loWebFisco;
+    proLencois:     Result := loLencois;
+  else
     Result := loNone;
   end;
 (*
@@ -18503,11 +18510,11 @@ begin
     proSisPMJP, proSystemPro, proTecnos, proVirtual, proVitoria, proNFSEBrasil,
     proVersaTecnologia, proActconv201, proSafeWeb, proActconv202, proWebISSv2,
     proSH3, proSIAPNet, proBelford, proISSJoinville, proSmarAPDABRASF,
-    proAsten, proELv2, proTiplanv2, proGiss, proDeISS, proTcheInfov2,
-    proDataSmart, proDesenvolve, proCenti, proRLZ, proSigCorp, 
-	proGiap: Result := ve200;
+    proAsten, proELv2, proTiplanv2, proGiss, proDeISS, proTcheInfov2, proSigep,
+    proDataSmart, proDesenvolve, proCenti, proRLZ, proSigCorp, proGiap,
+    proSimplISSv2, proMegasoft, proModernizacaoPublica: Result := ve200;
 
-    proInfiscv11: Result := ve110;
+    proInfiscv11, proLencois: Result := ve110;
   else
     Result := ve100;
   end;
@@ -18683,10 +18690,10 @@ begin
     if XMLs <> '' then
       XMLe := XMLs;
 
-    XMLs := StringReplace(XMLe, ' <', '<', [rfReplaceAll]);
-    XMLs := StringReplace(XMLs, #13 + '<', '<', [rfReplaceAll]);
-    XMLs := StringReplace(XMLs, '> ', '>', [rfReplaceAll]);
-    XMLs := StringReplace(XMLs, '>' + #13, '>', [rfReplaceAll]);
+    XMLs := FastStringReplace(XMLe, ' <', '<', [rfReplaceAll]);
+    XMLs := FastStringReplace(XMLs, #13 + '<', '<', [rfReplaceAll]);
+    XMLs := FastStringReplace(XMLs, '> ', '>', [rfReplaceAll]);
+    XMLs := FastStringReplace(XMLs, '>' + #13, '>', [rfReplaceAll]);
   end;
 
   Result := XMLs;

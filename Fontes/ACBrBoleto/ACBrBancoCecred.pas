@@ -505,7 +505,7 @@ begin
              StringOfChar(' ', 8);                                                      // 233 a 240 - Uso exclusivo FEBRABAN/CNAB
 
     //SEGMENTO R
-    if (CodigoMoraJuros <> cjIsento) then
+    if (PercentualMulta > 0) then
     begin
       Inc(fCountRegR);
       Result:= Result + #13#10 +
@@ -1056,7 +1056,7 @@ begin
 
    rCedente := trim(copy(ARetorno[0], 73, 30));
    rCNPJCPF := OnlyNumber( copy(ARetorno[0], 19, 14) );
-   rConta := OnlyNumber( copy(ARetorno[0], 67, 4) );
+   rConta := OnlyNumber( copy(ARetorno[0], 60, 11) ); //OnlyNumber( copy(ARetorno[0], 67, 4) );
 
    ValidarDadosRetorno('', '', rCNPJCPF);
    with ACBrBanco.ACBrBoleto do

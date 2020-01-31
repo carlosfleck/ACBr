@@ -64,8 +64,8 @@ type
   /// ACBrSpedFiscal - Sitema Publico de Escrituração Digital Fiscal
 
   { TACBrSPEDFiscal }
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrSPEDFiscal = class(TACBrComponent)
   private
@@ -803,6 +803,18 @@ begin
          REG_BLC := '0001';
          QTD_REG_BLC := 1;
       end;
+   end;
+   if (DT_INI >= EncodeDate(2020,01,01)) and 
+      (Bloco_0.Registro0000.IND_ATIV = atIndustrial) then
+   begin 
+     with Bloco_9.Registro9900 do
+     begin
+       with New do
+       begin
+         REG_BLC := '0002';
+         QTD_REG_BLC := 1;
+       end;
+     end;
    end;
    if Bloco_0.Registro0001.IND_MOV = imComDados then
    begin
@@ -1694,6 +1706,22 @@ begin
            QTD_REG_BLC := Bloco_C.RegistroC590Count;
          end;
        end;
+       if Bloco_C.RegistroC591Count > 0 then
+       begin
+         with New do
+         begin
+           REG_BLC := 'C591';
+           QTD_REG_BLC := Bloco_C.RegistroC591Count;
+         end;
+       end;
+       if Bloco_C.RegistroC595Count > 0 then
+       begin
+         with New do
+         begin
+           REG_BLC := 'C595';
+           QTD_REG_BLC := Bloco_C.RegistroC595Count;
+         end;
+       end;
        if Bloco_C.RegistroC600Count > 0 then
        begin
          with New do
@@ -1759,6 +1787,21 @@ begin
            QTD_REG_BLC := Bloco_C.RegistroC800Count;
          end;
        end;
+
+       if Bloco_C.RegistroC810Count > 0 then
+       begin
+         with New do
+         begin
+           REG_BLC := 'C810';
+           QTD_REG_BLC := Bloco_C.RegistroC810Count;
+         end;
+         with New do
+         begin
+           REG_BLC := 'C815';
+           QTD_REG_BLC := Bloco_C.RegistroC810Count;
+         end;
+       end;
+
        if Bloco_C.RegistroC850Count > 0 then
        begin
          with New do
@@ -1776,6 +1819,21 @@ begin
            QTD_REG_BLC := Bloco_C.RegistroC860Count;
          end;
        end;
+
+       if Bloco_C.RegistroC870Count > 0 then
+       begin
+         with New do
+         begin
+           REG_BLC := 'C870';
+           QTD_REG_BLC := Bloco_C.RegistroC870Count;
+         end;
+         with New do
+         begin
+           REG_BLC := 'C880';
+           QTD_REG_BLC := Bloco_C.RegistroC870Count;
+         end;
+       end;
+
        if Bloco_C.RegistroC890Count > 0 then
        begin
          with New do

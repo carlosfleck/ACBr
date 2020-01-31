@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ACBrLib.Core
 {
@@ -147,6 +150,7 @@ namespace ACBrLib.Core
         protected readonly Dictionary<Type, string> methodList;
         protected readonly Dictionary<string, Delegate> methodCache;
         protected readonly string className;
+        protected const int BUFFER_LEN = 256;
 
         #endregion Fields
 
@@ -157,18 +161,29 @@ namespace ACBrLib.Core
             MinusOne = new IntPtr(-1);
         }
 
-        /// <inheritdoc />
-        protected ACBrLibHandle(string dllPath)
+        protected ACBrLibHandle(string dllName64, string dllName32) :
+            this(Environment.Is64BitProcess ? dllName64 : dllName32)
+        {
+        }
+
+        protected ACBrLibHandle(string dllName)
             : base(IntPtr.Zero, true)
         {
+            var uri = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+            var path = Path.GetDirectoryName(!uri.IsFile ? uri.ToString() : uri.LocalPath + Uri.UnescapeDataString(uri.Fragment));
+            path += Environment.Is64BitProcess ? "\\ACBrLib\\x64\\" : "\\ACBrLib\\x86\\";
+            Environment.SetEnvironmentVariable("PATH", path);
+
             methodCache = new Dictionary<string, Delegate>();
             methodList = new Dictionary<Type, string>();
             className = GetType().Name;
 
-            var pNewSession = LibLoader.LoadLibrary(dllPath);
+            var pNewSession = LibLoader.LoadLibrary(dllName);
             if (pNewSession == IntPtr.Zero || pNewSession == MinusOne)
-                throw new ApplicationException("Não foi possivel carregar a biblioteca.");
+                throw CreateException("Não foi possivel carregar a biblioteca.");
+
             SetHandle(pNewSession);
+            InitializeMethods();
         }
 
         #endregion Constructors
@@ -216,7 +231,46 @@ namespace ACBrLib.Core
             return ret;
         }
 
+        protected abstract void InitializeMethods();
+
+        protected abstract string GetUltimoRetorno(int iniBufferLen = 0);
+
         protected abstract void FinalizeLib();
+
+        protected virtual T ConvertValue<T>(string value)
+        {
+            if (typeof(T).IsEnum) return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value));
+            if (typeof(T) == typeof(bool)) return (T)(object)Convert.ToBoolean(Convert.ToInt32(value));
+            if (typeof(T) == typeof(byte[])) return (T)(object)Convert.FromBase64String(value);
+            if (typeof(T) == typeof(Stream))
+            {
+                var dados = Convert.FromBase64String(value);
+                var ms = new MemoryStream();
+                ms.Write(dados, 0, dados.Length);
+                return (T)(object)ms;
+            }
+
+            return (T)Convert.ChangeType(value, typeof(T));
+        }
+
+        protected virtual string ConvertValue(object value)
+        {
+            var type = value.GetType();
+            var propValue = value.ToString();
+            if (type.IsEnum) propValue = ((int)value).ToString();
+            if (type == typeof(bool)) propValue = Convert.ToInt32(value).ToString();
+            if (type == typeof(byte[])) propValue = Convert.ToBase64String((byte[])value);
+            if (type == typeof(Stream))
+            {
+                using (var ms = new MemoryStream())
+                {
+                    ((Stream)value).CopyTo(ms);
+                    propValue = Convert.ToBase64String(ms.ToArray());
+                }
+            }
+
+            return propValue;
+        }
 
         /// <summary>
         ///     Adiciona um delegate a lista para a função informada.
@@ -287,11 +341,11 @@ namespace ACBrLib.Core
         }
 
         /// <summary>
-        ///     Cria e dispara uma <see cref="ACBrException" /> com a mensagem informada.
+        ///     Cria e dispara uma <see cref="ApplicationException" /> com a mensagem informada.
         /// </summary>
         /// <param name="errorMessage">Mensagem de erro.</param>
         /// <returns>
-        ///     <see cref="ACBrException" />
+        ///     <see cref="ApplicationException" />
         /// </returns>
         protected virtual ApplicationException CreateException(string errorMessage)
         {
@@ -299,15 +353,52 @@ namespace ACBrLib.Core
         }
 
         /// <summary>
-        ///     Tatar uma <see cref="Exception" /> e dispara uma <see cref="ACBrException" /> com a mensagem da mesma.
+        ///     Tatar uma <see cref="Exception" /> e dispara uma <see cref="ApplicationException" /> com a mensagem da mesma.
         /// </summary>
         /// <param name="exception">Exception</param>
         /// <returns>
-        ///     <see cref="ACBrException" />
+        ///     <see cref="ApplicationException" />
         /// </returns>
         protected virtual ApplicationException ProcessException(Exception exception)
         {
             return new ApplicationException(exception.Message, exception);
+        }
+
+        protected static string ToUTF8(string value)
+        {
+            return string.IsNullOrEmpty(value) ? value : Encoding.Default.GetString(Encoding.UTF8.GetBytes(value));
+        }
+
+        protected static string FromUTF8(StringBuilder value)
+        {
+            if (value == null) return null;
+            return value.Length == 0
+                ? string.Empty
+                : Encoding.UTF8.GetString(Encoding.Default.GetBytes(value.ToString()));
+        }
+
+        protected string ProcessResult(StringBuilder buffer, int bufferLen)
+        {
+            return bufferLen > BUFFER_LEN ? GetUltimoRetorno(bufferLen) : FromUTF8(buffer);
+        }
+
+        protected void CheckResult(int ret)
+        {
+            if (ret >= 0) return;
+
+            var message = GetUltimoRetorno();
+
+            switch (ret)
+            {
+                case -6:
+                    throw new DirectoryNotFoundException(message);
+
+                case -5:
+                    throw new FileNotFoundException(message);
+
+                default:
+                    throw new ApplicationException(message);
+            }
         }
 
         #endregion Methods

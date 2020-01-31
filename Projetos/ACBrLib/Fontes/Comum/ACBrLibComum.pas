@@ -1,35 +1,35 @@
-{******************************************************************************}
-{ Projeto: Componentes ACBr                                                    }
-{  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
-{ mentos de Automação Comercial utilizados no Brasil                           }
-
-{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida               }
-
-{ Colaboradores nesse arquivo: Rafael Teno Dias                                }
-
-{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
-{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
-{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
-{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
-{ qualquer versão posterior.                                                   }
-
-{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM   }
-{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU      }
-{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor}
-{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)              }
-
-{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto}
-{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
-{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
-{ Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{        Rua Cel.Aureliano de Camargo, 973 - Tatuí - SP - 18270-170            }
-
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: Componentes ACBr                                                     }
+{  Biblioteca multiplataforma de componentes Delphi para interação com equipa-  }
+{ mentos de Automação Comercial utilizados no Brasil                            }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo: Rafael Teno Dias                                 }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 
 {$I ACBr.inc}
 
@@ -38,7 +38,7 @@ unit ACBrLibComum;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, fileinfo,
   ACBrLibConfig;
 
 type
@@ -67,11 +67,17 @@ type
   private
     FLogNome: String;
     FLogData: TDate;
+    FNome: String;
+    FDescricao: String;
+    FVersao: String;
+
+    function GetNome: String;
+    function GetDescricao: String;
+    function GetVersao: String;
 
   protected
-    fpNome: String;
-    fpVersao: String;
     fpConfig: TLibConfig;
+    fpFileVerInfo: TFileVersionInfo;  // Informações da Aplicação e Versão, definida em Opções do Projeto
 
     procedure Inicializar; virtual;
     procedure CriarConfiguracao(ArqConfig: String = ''; ChaveCrypt: AnsiString = ''); virtual;
@@ -87,8 +93,9 @@ type
 
     property Config: TLibConfig read fpConfig;
 
-    property Nome: String read fpNome;
-    property Versao: String read fpVersao;
+    property Nome: String read GetNome;
+    property Versao: String read GetVersao;
+    property Descricao: String read GetDescricao;
   end;
 
   TACBrLibClass = class of TACBrLib;
@@ -108,6 +115,7 @@ function LIB_UltimoRetorno(const sMensagem: PChar; var esTamanho: longint): long
 {%endregion}
 
 {%region Ler/Gravar Config }
+function LIB_ImportarConfig(const eArqConfig: PChar): longint;
 function LIB_ConfigLer(const eArqConfig: PChar): longint;
 function LIB_ConfigGravar(const eArqConfig: PChar): longint;
 function LIB_ConfigLerValor(const eSessao, eChave: PChar; sValor: PChar; var esTamanho: longint): longint;
@@ -166,17 +174,48 @@ begin
 
   FLogData := -1;
   FLogNome := '';
+  FNome := '';
+  FVersao := '';
+  FDescricao := '';
 
-  fpNome := CLibNome;
-  fpVersao := CLibVersao;
+  fpFileVerInfo := TFileVersionInfo.Create(Nil);
+  fpFileVerInfo.ReadFileInfo;
 
   CriarConfiguracao(ArqConfig, ChaveCrypt);
 end;
 
 destructor TACBrLib.Destroy;
 begin
+  fpFileVerInfo.Free;
   Finalizar;
   inherited Destroy;
+end;
+
+function TACBrLib.GetVersao: String;
+begin
+  if (FVersao = '') then
+    if Assigned(fpFileVerInfo) then
+      FVersao := fpFileVerInfo.VersionStrings.Values['FileVersion'];
+
+  Result := FVersao;
+end;
+
+function TACBrLib.GetNome: String;
+begin
+  if (FNome = '') then
+    if Assigned(fpFileVerInfo) then
+      FNome := fpFileVerInfo.VersionStrings.Values['InternalName'];
+
+  Result := FNome;
+end;
+
+function TACBrLib.GetDescricao: String;
+begin
+  if (FDescricao = '') then
+    if Assigned(fpFileVerInfo) then
+      FDescricao := fpFileVerInfo.VersionStrings.Values['FileDescription'];
+
+  Result := FDescricao;
 end;
 
 procedure TACBrLib.Inicializar;
@@ -225,7 +264,7 @@ begin
     else
       APath := ApplicationPath;
 
-    FLogNome := APath + fpNome + '-' + DtoS(FLogData) + '.log';
+    FLogNome := APath + Self.Nome + '-' + DtoS(FLogData) + '.log';
   end;
 
   Result := FLogNome;
@@ -235,7 +274,7 @@ procedure TACBrLib.GravarLog(AMsg: String; NivelLog: TNivelLog; Traduzir: Boolea
 var
   NomeArq: String;
 begin
-  if (FLogData < 0) or (fpNome = '') or
+  if (FLogData < 0) or (Self.Nome = '') or
     (not Assigned(fpConfig)) or (NivelLog > fpConfig.Log.Nivel) then
     Exit;
 
@@ -312,7 +351,7 @@ begin
     MoverStringParaPChar(pLib.Nome, sNome, esTamanho);
     if pLib.Config.Log.Nivel >= logCompleto then
       pLib.GravarLog('   Nome:' + strpas(sNome) + ', len:' + IntToStr(esTamanho), logCompleto, True);
-    Result := SetRetorno(ErrOK, strpas(sNome));
+    Result := SetRetorno(ErrOK, pLib.Nome);
   except
     on E: EACBrLibException do
       Result := SetRetorno(E.Erro, E.Message);
@@ -330,7 +369,7 @@ begin
     MoverStringParaPChar(pLib.Versao, sVersao, esTamanho);
     if pLib.Config.Log.Nivel >= logCompleto then
       pLib.GravarLog('   Versao:' + strpas(sVersao) + ', len:' + IntToStr(esTamanho), logCompleto, True);
-    Result := SetRetorno(ErrOK, strpas(sVersao));
+    Result := SetRetorno(ErrOK, pLib.Versao);
   except
     on E: EACBrLibException do
       Result := SetRetorno(E.Erro, E.Message);
@@ -360,6 +399,29 @@ end;
 {%endregion}
 
 {%region Ler/Gravar Config }
+
+function LIB_ImportarConfig(const eArqConfig: PChar): longint;
+var
+  ArqConfig: String;
+begin
+  try
+    VerificarLibInicializada;
+    ArqConfig := strpas(eArqConfig);
+    pLib.GravarLog('LIB_ImportarConfig(' + ArqConfig + ')', logNormal);
+
+    if NaoEstaVazio(ArqConfig) then
+      pLib.Config.Importar(ArqConfig);
+
+    pLib.Config.Gravar;
+    Result := SetRetorno(ErrOK);
+  except
+    on E: EACBrLibException do
+      Result := SetRetorno(E.Erro, E.Message);
+
+    on E: Exception do
+      Result := SetRetorno(ErrConfigLer, E.Message);
+  end;
+end;
 
 function LIB_ConfigLer(const eArqConfig: PChar): longint;
 var
@@ -410,26 +472,24 @@ end;
 function LIB_ConfigLerValor(const eSessao, eChave: PChar; sValor: PChar;
   var esTamanho: longint): longint;
 var
-  Sessao, Chave, Valor: String;
-  Criptografar: Boolean;
+  Sessao, Chave, Valor: Ansistring;
 begin
   try
     VerificarLibInicializada;
-    Sessao := strpas(eSessao);
-    Chave := strpas(eChave);
+    Sessao := Ansistring(eSessao);
+    Chave := Ansistring(eChave);
     pLib.GravarLog('LIB_ConfigLerValor(' + Sessao + ', ' + Chave + ')', logNormal);
-    Criptografar := pLib.Config.PrecisaCriptografar(Sessao, Chave);
 
     Valor := pLib.Config.LerValor(Sessao, Chave);
-    if Criptografar then
-      Valor := B64CryptToString(Valor, pLib.Config.ChaveCrypt);
 
     MoverStringParaPChar(Valor, sValor, esTamanho);
-    if (pLib.Config.Log.Nivel >= logCompleto) then
-      pLib.GravarLog('   Valor:' + IfThen(Criptografar, StringOfChar('*', esTamanho), strpas(sValor)) +
-                     ', len:' + IntToStr(esTamanho), logCompleto, True);
 
-    Result := SetRetorno(ErrOK, strpas(sValor));
+    if (pLib.Config.Log.Nivel >= logCompleto) then
+      pLib.GravarLog('   Valor:' + IfThen(pLib.Config.PrecisaCriptografar(Sessao, Chave),
+                                          StringOfChar('*', esTamanho), sValor) +
+                                          ', len:' + IntToStr(esTamanho), logCompleto, True);
+
+    Result := SetRetorno(ErrOK, Valor);
   except
     on E: EACBrLibException do
       Result := SetRetorno(E.Erro, E.Message);
@@ -441,18 +501,17 @@ end;
 
 function LIB_ConfigGravarValor(const eSessao, eChave, eValor: PChar): longint;
 var
-  Sessao, Chave, Valor: String;
+  Sessao, Chave, Valor: Ansistring;
 begin
   try
     VerificarLibInicializada;
-    Sessao := strpas(eSessao);
-    Chave := strpas(eChave);
-    if pLib.Config.PrecisaCriptografar(Sessao, Chave) then
-      Valor := StringToB64Crypt(strpas(eValor), pLib.Config.ChaveCrypt)
-    else
-      Valor := strpas(eValor);
+    Sessao := Ansistring(eSessao);
+    Chave := Ansistring(eChave);
+    Valor := Ansistring(eValor);
 
-    pLib.GravarLog('LIB_ConfigGravarValor(' + Sessao + ', ' + Chave + ', ' + Valor + ')', logNormal);
+    pLib.GravarLog('LIB_ConfigGravarValor(' + Sessao + ', ' + Chave + ', ' +
+                                          IfThen(pLib.Config.PrecisaCriptografar(Sessao, Chave),
+                                          StringOfChar('*', Length(Valor)), Valor) + ')', logNormal);
 
     pLib.Config.GravarValor(Sessao, Chave, Valor);
     Result := SetRetorno(ErrOK);

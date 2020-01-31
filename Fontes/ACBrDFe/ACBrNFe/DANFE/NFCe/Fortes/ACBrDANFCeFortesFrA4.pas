@@ -46,19 +46,20 @@ unit ACBrDANFCeFortesFrA4;
 interface
 
 uses
-	Classes, SysUtils,
-     {$IFDEF FPC}
-       LResources,
-     {$ENDIF}
-  Messages, Variants, Graphics,
-  Controls, Forms, Dialogs, ACBrNFeDANFEClass, RLReport, pcnNFe, ACBrNFe,
-  RLHTMLFilter, RLFilters, RLPDFFilter, ACBrUtil, pcnConversao, ACBrDFeUtil, ACBrValidador;
+  Classes, SysUtils,
+  {$IFDEF FPC}
+   LResources,
+  {$ENDIF}
+  Variants, Graphics, Controls, Forms, Dialogs,
+  ACBrBase, ACBrNFeDANFEClass, pcnNFe, ACBrNFe,
+  RLReport, RLHTMLFilter, RLFilters, RLPDFFilter,
+  ACBrUtil, pcnConversao, ACBrDFeUtil, ACBrValidador;
 
 type
   TACBrNFeDANFCeFortesA4Filtro = (fiNenhum, fiPDF, fiHTML ) ;
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$ENDIF RTL230_UP}	
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
+  {$ENDIF RTL230_UP}
   TACBrNFeDANFCeFortesA4 = class(TACBrNFeDANFCEClass)
   private
     FpNFe: TNFe;
@@ -165,6 +166,10 @@ type
     RlPelosProdutos: TRLLabel;
     RLLabel51: TRLLabel;
     lCancelada: TRLLabel;
+    rllFisco: TRLLabel;
+    RLBand17: TRLBand;
+    RLLabel43: TRLLabel;
+    RLLabel52: TRLLabel;
     procedure lNomeFantasiaBeforePrint(Sender: TObject; var Text: string;
       var PrintIt: Boolean);
     procedure RLBand9BeforePrint(Sender: TObject; var PrintIt: Boolean);
@@ -256,6 +261,9 @@ type
     procedure RLLabel51BeforePrint(Sender: TObject; var Text: string;
       var PrintIt: Boolean);
     procedure RLBand11BeforePrint(Sender: TObject; var PrintIt: Boolean);
+    procedure RLLabel52BeforePrint(Sender: TObject; var AText: string;
+      var PrintIt: Boolean);
+    procedure RLBand17BeforePrint(Sender: TObject; var PrintIt: Boolean);
   private
     FNumItem: Integer;
     FNumPag: Integer;
@@ -396,6 +404,8 @@ procedure TfrmACBrDANFCeFortesFrA4.RLBand11BeforePrint(Sender: TObject;
 begin
   if self.FACBrNFeDANFCeFortesA4.Cancelada then
     lCancelada.Caption    := ACBrStr('NF-e CANCELADA');
+
+  rllFisco.Caption := ACBrStr(self.FACBrNFeDANFCeFortesA4.FpNFe.procNFe.xMsg);
 end;
 
 procedure TfrmACBrDANFCeFortesFrA4.RLBand12BeforePrint(Sender: TObject;
@@ -415,6 +425,12 @@ procedure TfrmACBrDANFCeFortesFrA4.RLBand15BeforePrint(Sender: TObject;
 begin
   with self.FACBrNFeDANFCeFortesA4 do
     PrintIt := (ImprimeTributos = trbSeparadamente);
+end;
+
+procedure TfrmACBrDANFCeFortesFrA4.RLBand17BeforePrint(Sender: TObject;
+  var PrintIt: Boolean);
+begin
+  PrintIt := self.FACBrNFeDANFCeFortesA4.FpNFe.Total.ICMSTot.vFrete > 0;
 end;
 
 procedure TfrmACBrDANFCeFortesFrA4.RLBand8BeforePrint(Sender: TObject;
@@ -475,7 +491,7 @@ begin
                                      Total.ICMSTot.vNF, Total.ICMSTot.vICMS,
                                      signature.DigestValue,
                                      infNFe.Versao);
-    PintarQRCode(qrcode, imgQRCode.Picture, qrUTF8NoBOM);
+    PintarQRCode(qrcode, imgQRCode.Picture.Bitmap, qrUTF8NoBOM);
 
     lProtocolo.Caption := ACBrStr('Protocolo de Autorização: '+procNFe.nProt+
                            ' '+ifthen(procNFe.dhRecbto<>0,DateTimeToStr(procNFe.dhRecbto),''));
@@ -689,7 +705,7 @@ begin
   if self.FACBrNFeDANFCeFortesA4.FpNFe.Det[self.FNumItem].infAdProd = '' then
     Text := self.FACBrNFeDANFCeFortesA4.FpNFe.Det[self.FNumItem].Prod.xProd
   else
-    Text := self.FACBrNFeDANFCeFortesA4.FpNFe.Det[self.FNumItem].Prod.xProd + ' - ' 
+    Text := self.FACBrNFeDANFCeFortesA4.FpNFe.Det[self.FNumItem].Prod.xProd + ' - '
 			+ StringReplace( self.FACBrNFeDANFCeFortesA4.FpNFe.Det[self.FNumItem].infAdProd, ';',#13,[rfReplaceAll]);
 end;
 
@@ -698,14 +714,23 @@ procedure TfrmACBrDANFCeFortesFrA4.RLMemo2BeforePrint(Sender: TObject;
 var
   I:integer;
 begin
-  if self.FACBrNFeDANFCeFortesA4.FpNFe.InfAdic.obsCont.Count > 0 then
+  with self.FACBrNFeDANFCeFortesA4.FpNFe do
+  begin
+    if InfAdic.obsCont.Count > 0 then
     begin
-      for I := 0 to self.FACBrNFeDANFCeFortesA4.FpNFe.InfAdic.obsCont.Count - 1 do
-        Text := Text + StringReplace( self.FACBrNFeDANFCeFortesA4.FpNFe.InfAdic.obsCont[i].xCampo + ': ' +
-                                      self.FACBrNFeDANFCeFortesA4.FpNFe.InfAdic.obsCont[i].xTexto, ';', #13, [rfReplaceAll] ) + #13;
+      for I := 0 to InfAdic.obsCont.Count - 1 do
+        Text := Text + StringReplace(InfAdic.obsCont[i].xCampo + ': ' +
+                                     InfAdic.obsCont[i].xTexto, ';', #13, [rfReplaceAll] ) + #13;
     end;
 
-  Text := Text + StringReplace(self.FACBrNFeDANFCeFortesA4.FpNFe.InfAdic.infCpl, ';', #13, [rfReplaceAll] ) ;
+    Text := Text + StringReplace(InfAdic.infCpl, ';', #13, [rfReplaceAll] ) + #13;
+
+    if procNFe.xMsg <> '' then
+    begin
+      Text := Text + 'Nota MS Premiada' + #13 + 'www.notamspremiada.ms.gov.br';
+      Text := Text + #13 + ACBrStr(procNFe.xMsg);
+    end;
+  end;
 end;
 
 procedure TfrmACBrDANFCeFortesFrA4.RLMemo3BeforePrint(Sender: TObject;
@@ -771,6 +796,12 @@ begin
   try
     with frACBrNFeDANFCeFortesFr do
     begin
+	  if AlterarEscalaPadrao then
+      begin
+        frACBrNFeDANFCeFortesFr.Scaled := False;
+        frACBrNFeDANFCeFortesFr.ScaleBy(NovaEscala , Screen.PixelsPerInch);
+      end;
+	
       Filtro := AFiltro;
       RLLayout := rlReportA4;
       Resumido := DanfeResumido;
@@ -946,6 +977,12 @@ begin
 end;
 
 
+procedure TfrmACBrDANFCeFortesFrA4.RLLabel52BeforePrint(Sender: TObject;
+  var AText: string; var PrintIt: Boolean);
+begin
+  Text := FormatFloat('R$ ,0.00;R$ -,0.00', self.FACBrNFeDANFCeFortesA4.FpNFe.Total.ICMSTot.vFrete);
+end;
+
 procedure TfrmACBrDANFCeFortesFrA4.RlPelosProdutosBeforePrint(Sender: TObject;
   var Text: string; var PrintIt: Boolean);
 Var
@@ -954,13 +991,11 @@ begin
   With self.FACBrNFeDANFCeFortesA4 do
   begin
     With FpNFe.Total.ICMSTot do
-      dPelosProdutos := ( VProd - VDesc + VOutro); // Valor Total
+      dPelosProdutos := (vProd - vDesc + vOutro + vFrete); // Valor Total
 
     dPelosProdutos := dPelosProdutos - ( vTribFed + vTribEst + vTribMun) ;
   end;
   Text  := FormatFloat('R$ ,0.00', dPelosProdutos );
-
-
 end;
 
 

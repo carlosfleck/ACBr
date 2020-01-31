@@ -46,19 +46,19 @@ type
   {TACBrLibBoleto}
 
   TACBrLibBoleto = class(TACBrLib)
-    private
-      FBoletoDM: TLibBoletoDM;
+  private
+    FBoletoDM: TLibBoletoDM;
 
-    protected
-      procedure Inicializar; override;
-      procedure CriarConfiguracao(ArqConfig: string = ''; ChaveCrypt: ansistring = ''); override;
-      procedure Executar; override;
+  protected
+    procedure Inicializar; override;
+    procedure CriarConfiguracao(ArqConfig: string = ''; ChaveCrypt: ansistring = ''); override;
+    procedure Executar; override;
 
-    public
-      constructor Create(ArqConfig: string = ''; ChaveCrypt: ansistring = ''); override;
-      destructor Destroy; override;
+  public
+    constructor Create(ArqConfig: string = ''; ChaveCrypt: ansistring = ''); override;
+    destructor Destroy; override;
 
-      property BoletoDM: TLibBoletoDM read FBoletoDM;
+    property BoletoDM: TLibBoletoDM read FBoletoDM;
 
   end;
 
@@ -76,6 +76,9 @@ type
     {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 
   function Boleto_UltimoRetorno(const sMensagem: PChar; var esTamanho: longint): longint;
+    {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
+
+  function Boleto_ImportarConfig(const eArqConfig: PChar): longint;
     {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 
   function Boleto_ConfigLer(const eArqConfig: PChar): longint;
@@ -208,6 +211,12 @@ function Boleto_UltimoRetorno(const sMensagem: PChar; var esTamanho: longint): l
   {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 begin
   Result := LIB_UltimoRetorno(sMensagem, esTamanho);
+end;
+
+function Boleto_ImportarConfig(const eArqConfig: PChar): longint;
+    {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
+begin
+  Result := LIB_ImportarConfig(eArqConfig);
 end;
 
 function Boleto_ConfigLer(const eArqConfig: PChar): longint;
@@ -1129,9 +1138,6 @@ constructor TACBrLibBoleto.Create(ArqConfig: string; ChaveCrypt: ansistring);
 begin
   inherited
   Create(ArqConfig, ChaveCrypt);
-  fpNome := CLibBoletoNome;
-  fpVersao := CLibBoletoVersao;
-
   FBoletoDM := TLibBoletoDM.Create(nil);
 end;
 

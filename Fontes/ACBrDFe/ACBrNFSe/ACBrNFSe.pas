@@ -42,7 +42,7 @@ interface
 
 uses
   Classes, SysUtils,
-  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes,
+  ACBrBase, ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes,
   ACBrNFSeDANFSEClass,
   ACBrNFSeConfiguracoes,
   ACBrNFSeNotasFiscais,
@@ -57,8 +57,8 @@ type
   EACBrNFSeException = class(EACBrDFeException);
 
   { TACBrNFSe }
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrNFSe = class(TACBrDFe)
   private
@@ -527,8 +527,9 @@ begin
   XML := '';
   for i := 1 to J do
   begin
-    if (AXML[i] in ['!'..'~'])  then
-      XML := XML + AXML[i];
+//  if (AXML[i] in ['!'..'~'])  then
+    if {$IFNDEF HAS_CHARINSET}ACBrUtil.{$ENDIF}CharInSet(AXML[i], ['!'..'~']) then
+       XML := XML + AXML[i];
   end;
 
 //  SSL.CarregarCertificadoSeNecessario;

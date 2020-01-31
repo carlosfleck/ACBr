@@ -74,6 +74,8 @@ function ETQ_Versao(const sVersao: PChar; var esTamanho: longint): longint;
   {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 function ETQ_UltimoRetorno(const sMensagem: PChar; var esTamanho: longint): longint;
   {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
+function ETQ_ImportarConfig(const eArqConfig: PChar): longint;
+  {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 function ETQ_ConfigLer(const eArqConfig: PChar): longint;
   {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 function ETQ_ConfigGravar(const eArqConfig: PChar): longint;
@@ -129,16 +131,13 @@ function ETQ_ImprimirImagem(const MultiplicadorImagem, Vertical, Horizontal: Int
 implementation
 
 uses
-  ACBrLibConsts, ACBrLibETQConsts, ACBrLibConfig, ACBrLibETQConfig;
+  ACBrLibConsts, ACBrLibConfig, ACBrLibETQConfig;
 
 { TACBrLibETQ }
 
 constructor TACBrLibETQ.Create(ArqConfig: string; ChaveCrypt: ansistring);
 begin
   inherited Create(ArqConfig, ChaveCrypt);
-  fpNome := CLibETQNome;
-  fpVersao := CLibETQVersao;
-
   FETQDM := TLibETQDM.Create(nil);
 end;
 
@@ -197,6 +196,12 @@ function ETQ_UltimoRetorno(const sMensagem: PChar; var esTamanho: longint): long
   {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
 begin
   Result := LIB_UltimoRetorno(sMensagem, esTamanho);
+end;
+
+function ETQ_ImportarConfig(const eArqConfig: PChar): longint;
+  {$IfDef STDCALL} stdcall{$Else} cdecl{$EndIf};
+begin
+  Result := LIB_ImportarConfig(eArqConfig);
 end;
 
 function ETQ_ConfigLer(const eArqConfig: PChar): longint;

@@ -61,8 +61,8 @@ uses
 
 type
   TACBrSEF2Arquivo = (aSEF, aEDOC);
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrSEF2 = class(TACBrComponent)
   private
@@ -1197,9 +1197,11 @@ begin
   Bloco_H.WriteRegistroH990;
 end;
 
-{$IFDEF FPC}
+{$IFNDEF NOGUI}
+ {$IFDEF FPC}
 initialization
 	{$i ACBrSEF2.lrs}
+ {$ENDIF}
 {$ENDIF}
 
 end.

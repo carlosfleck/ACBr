@@ -43,12 +43,13 @@ unit ACBrSATExtratoESCPOS;
 
 interface
 
-uses Classes, SysUtils,
-     {$IFDEF FPC}
-       LResources,
-     {$ENDIF} 
-     ACBrSATExtratoClass, ACBrPosPrinter,
-     pcnCFe, pcnCFeCanc, pcnConversao;
+uses
+  Classes, SysUtils,
+  {$IFDEF FPC}
+    LResources,
+  {$ENDIF}
+  ACBrBase, ACBrSATExtratoClass, ACBrPosPrinter,
+  pcnCFe, pcnCFeCanc, pcnConversao;
 
 const
   CLarguraRegiaoEsquerda = 290;
@@ -57,9 +58,9 @@ type
   TAutoSimNao = (rAuto, rSim, rNao);
 
   { TACBrSATExtratoESCPOS }
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$ENDIF RTL230_UP}	
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
+  {$ENDIF RTL230_UP}
   TACBrSATExtratoESCPOS = class( TACBrSATExtratoClass )
   private
     FImprimeChaveEmUmaLinha: TAutoSimNao;
@@ -153,7 +154,7 @@ var
 begin
   if SuportaLogoLateral then
   begin
-    MetadeColunas := Trunc(FPosPrinter.ColunasFonteCondensada/2);
+    MetadeColunas := Trunc(FPosPrinter.ColunasFonteCondensada/2)-2;
     TextoLateral := '';
     if (Trim(CFe.Emit.xFant) <> '') then
       TextoLateral := TextoLateral + CFe.Emit.xFant + sLineBreak;
@@ -180,7 +181,7 @@ begin
 
     FPosPrinter.Buffer.Add('</zera><mp>' +
                            FPosPrinter.ConfigurarRegiaoModoPagina(0,0,Altura,CLarguraRegiaoEsquerda)+
-                           StringOfChar(LF, LinhasTextoLateral)+ '</logo>');
+                           StringOfChar(LF, max(LinhasTextoLateral-1,0))+ '</logo>');
     FPosPrinter.Buffer.Add(FPosPrinter.ConfigurarRegiaoModoPagina(CLarguraRegiaoEsquerda,0,Altura,325) +
                            '</ae><c>'+TextoLateral +
                            '</mp>');
@@ -580,16 +581,17 @@ begin
 
       if (Trim(CFe.Dest.xNome) <> '') then
         NomeConsumidor := Trim(CFe.Dest.xNome)
-      else if ImprimeCPFNaoInformado then
-        NomeConsumidor := ACBrStr('CONSUMIDOR NÃO IDENTIFICADO')
+      else if (ImprimeCPFNaoInformado and (CFe.Dest.CNPJCPF = '')) then
+        NomeConsumidor := ACBrStr('NÃO IDENTIFICADO')
       else
         NomeConsumidor := '';
 
       if (Trim(Cfe.Dest.CNPJCPF) <> '') or (NomeConsumidor <> '') then
       begin
         ATexto := TituloConsumidor + ' '+
-                        FormatarCNPJouCPF(CFe.Dest.CNPJCPF) +
-                        IfThen(NomeConsumidor<>'', ' - '+ NomeConsumidor, '') + sLineBreak;
+                  FormatarCNPJouCPF(CFe.Dest.CNPJCPF) +
+                  IfThen((CFe.Dest.CNPJCPF <> '') and (NomeConsumidor <> ''), ' - ','') +
+                  NomeConsumidor + sLineBreak;
       end;
 
       ATexto := ATexto + TituloSAT +

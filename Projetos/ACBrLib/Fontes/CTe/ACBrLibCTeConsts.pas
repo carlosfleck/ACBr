@@ -41,9 +41,6 @@ uses
   Classes, SysUtils;
 
 const
-  CLibCTeNome = 'ACBrLibCTe';
-  CLibCTeVersao = '0.0.1';
-
   CSessaoDACTe = 'DACTe';
 
   CChaveTipoRelatorioEvento = 'TipoRelatorioEvento';
@@ -54,7 +51,6 @@ const
   CChaveCTeCancelada = 'CTeCancelada';
   CChaveEPECEnviado = 'EPECEnviado';
   CChaveImprimirHoraSaida = 'ImprimirHoraSaida';
-  CChavePrintDialog = 'PrintDialog';
   CChaveUsarSeparadorPathPDF = 'UsarSeparadorPathPDF';
   CChaveFax = 'Fax';
   CChaveImprimirHoraSaida_Hora = 'ImprimirHoraSaida_Hora';
@@ -62,6 +58,7 @@ const
   CChaveSistema = 'Sistema';
   CChaveSite = 'Site';
   CChaveTamanhoPapel = 'TamanhoPapel';
+  CChaveImprimirDescPorc = 'ImprimirDescPorc';
 
   CSessaoRespStatus = 'Status';
   CSessaoRespInutilizacao = 'Inutilizacao';
@@ -88,6 +85,7 @@ Resourcestring
   SErrCNPJCPFInvalido = 'CNPJ/CPF % inválido.';
 
 function SetRetornoCTesCarregados(const NumCTe: Integer): Integer;
+function SetRetornoEventoCarregados(const NumEventos: Integer): Integer;
 
 implementation
 uses
@@ -96,6 +94,11 @@ uses
 function SetRetornoCTesCarregados(const NumCTe: Integer): Integer;
 begin
   Result := SetRetorno( 0, {NumCTe,} Format(SInfCTeCarregados, [NumCTe]));
+end;
+
+function SetRetornoEventoCarregados(const NumEventos: Integer): Integer;
+begin
+  Result := SetRetorno( 0, {NumNFe,} Format(SInfEventosCarregados, [NumEventos]));
 end;
 
 end.

@@ -39,21 +39,22 @@ unit ACBrNFSeDANFSeFR;
 interface
 
 uses
-  SysUtils, Classes, Graphics, ACBrNFSeDANFSeClass, pnfsNFSe, pnfsConversao, pcnauxiliar, frxClass,  
+  SysUtils, Classes,
+  ACBrBase, ACBrNFSeDANFSeClass, pnfsNFSe, pnfsConversao, pcnauxiliar, frxClass,
   DB, DBClient, frxDBSet, frxExportPDF, frxBarcode, ACBrValidador;
 
 type
   EACBrNFSeDANFSeFR = class(Exception);
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$ENDIF RTL230_UP}	
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
+  {$ENDIF RTL230_UP}
   TACBrNFSeDANFSeFR = class(TACBrNFSeDANFSeClass)
   private
     FFastFile        : String;
     FEspessuraBorda  : Integer;
     FDANFSeClassOwner: TACBrNFSeDANFSeClass;
     function GetPreparedReport: TfrxReport;
-    function PrepareReport(NFSe: TNFSe = nil): Boolean;
+    function PrepareReport(ANFSe: TNFSe = nil): Boolean;
     procedure CriarDataSetsFrx;
     procedure CarregaDados(ANFSe: TNFSe);
     procedure CarregaIdentificacao(ANFSe: TNFSe);
@@ -66,9 +67,10 @@ type
     procedure CarregaLogoPrefeitura;
     procedure CarregaImagemPrestadora;
 
-    function ManterDocumento(sCpfCnpj: String): string;
+    function ManterDocumento(const sCpfCnpj: String): string;
     procedure frxReportBeforePrint(Sender: TfrxReportComponent);
 		procedure SetDataSetsToFrxReport;
+    procedure AjustaMargensReports;
   public
     frxReport   : TfrxReport; // Está como public, pois quando declarado em datamodule, tem acesso externo, e pode ser que alguem esteja usando.
     frxPDFExport: TfrxPDFExport;
@@ -105,7 +107,7 @@ type
 implementation
 
 uses
-  ACBrNFSe, ACBrUtil, StrUtils, Dialogs, ACBrDFeUtil, Math;
+  ACBrNFSe, ACBrUtil, StrUtils, ACBrDFeUtil, Math;
 
 constructor TACBrNFSeDANFSeFR.Create(AOwner: TComponent);
 begin
@@ -208,6 +210,26 @@ begin
   end;
 end;
 
+procedure TACBrNFSeDANFSeFR.AjustaMargensReports;
+var
+  Page: TfrxReportPage;
+  I: Integer;
+begin
+  for I := 0 to (frxReport.PreviewPages.Count - 1) do
+  begin
+    Page := frxReport.PreviewPages.Page[I];
+    if (MargemSuperior > 0) then
+      Page.TopMargin := MargemSuperior;
+    if (MargemInferior > 0) then
+      Page.BottomMargin := MargemInferior;
+    if (MargemEsquerda > 0) then
+      Page.LeftMargin := MargemEsquerda;
+    if (MargemDireita > 0) then
+      Page.RightMargin := MargemDireita;
+    frxReport.PreviewPages.ModifyPage(I, Page);
+  end;
+end;
+
 procedure TACBrNFSeDANFSeFR.SetDataSetsToFrxReport;
 begin
   frxReport.EnabledDataSets.Clear;
@@ -220,7 +242,7 @@ begin
   frxReport.EnabledDataSets.Add(frxItensServico);
 end;
 
-function TACBrNFSeDANFSeFR.PrepareReport(NFSe: TNFSe): Boolean;
+function TACBrNFSeDANFSeFR.PrepareReport(ANFSe: TNFSe): Boolean;
 var
   I: Integer;
 	wProjectStream: TStringStream;
@@ -258,9 +280,9 @@ begin
   if NaoEstaVazio(frxReport.PrintOptions.Printer) then
     frxReport.PrintOptions.Printer := Impressora;
 
-  if Assigned(NFSe) then
+  if Assigned(ANFSe) then
   begin
-    CarregaDados(NFSe);
+    CarregaDados(ANFSe);
     Result := frxReport.PrepareReport;
   end
   else
@@ -269,7 +291,7 @@ begin
     begin
       for I := 0 to TACBrNFSe(ACBrNFSe).NotasFiscais.Count - 1 do
       begin
-        
+
         CarregaDados(TACBrNFSe(ACBrNFSe).NotasFiscais.Items[I].NFSe);
 
         if (I > 0) then
@@ -281,6 +303,9 @@ begin
     else
       raise EACBrNFSeDANFSeFR.Create('Propriedade ACBrNFSe não assinalada.');
   end;
+
+  AjustaMargensReports;
+
 end;
 
 procedure TACBrNFSeDANFSeFR.CriarDataSetsFrx;
@@ -411,6 +436,10 @@ begin
       Add('TotalNota', ftCurrency); // Nao usado - mantido por compatibilidade era calcfield
       Add('Tributacao', ftString, 1);
       Add('OutrosDescontos', ftCurrency);
+      // Provedor SP
+      Add('ValorCargaTributaria', ftCurrency);
+      Add('PercentualCargaTributaria', ftCurrency);
+      Add('FonteCargaTributaria', ftString, 10);
     end;
     CreateDataSet;
     LogChanges := False;
@@ -445,6 +474,8 @@ begin
       Add('OptanteSimplesNacional', ftString, 10);
       Add('IncentivadorCultural', ftString, 10);
       Add('TipoRecolhimento', ftString, 10);
+      //
+      Add('ValorCredito', ftCurrency);
     end;
     CreateDataSet;
     LogChanges := False;
@@ -672,8 +703,12 @@ begin
         Add('DescontoCondicionado=DescontoCondicionado');
         Add('DescontoIncondicionado=DescontoIncondicionado');
         Add('TotalNota=TotalNota');
-        Add('Tributacao=Tributacao'); 
+        Add('Tributacao=Tributacao');
         Add('OutrosDescontos=OutrosDescontos');
+        // Provedor SP
+        Add('ValorCargaTributaria=ValorCargaTributaria');
+        Add('PercentualCargaTributaria=PercentualCargaTributaria');
+        Add('FonteCargaTributaria=FonteCargaTributaria');
       end;
       DataSet       := cdsServicos;
       BCDToCurrency := False;
@@ -711,7 +746,8 @@ begin
         Add('OptanteSimplesNacional=OptanteSimplesNacional');
         Add('RegimeEspecialTributacao=RegimeEspecialTributacao');
         Add('NaturezaOperacao=NaturezaOperacao');
-        Add('TipoRecolhimento=TipoRecolhimento'); 
+        Add('TipoRecolhimento=TipoRecolhimento');
+        Add('ValorCredito=ValorCredito');
       end;
       DataSet       := cdsParametros;
       BCDToCurrency := False;
@@ -814,9 +850,10 @@ begin
         cdsItensServico.FieldByName('ValorTotal').AsString           := FormatFloatBr( ValorTotal, '###,###,##0.00');
         cdsItensServico.FieldByName('Tributavel').AsString           := SimNaoToStr(Tributavel);
 
-        if Provedor = proEL then
-          cdsItensServico.FieldByName('Aliquota').AsString := FormatFloatBr( Aliquota * 100, '0.00')
-        else
+//        if Provedor = proEL then
+//          cdsItensServico.FieldByName('Aliquota').AsString := FormatFloatBr( Aliquota * 100, '0.00')
+//        else
+        // A multiplicação por 100 agora é feita pela rotina que lê o XML
           cdsItensServico.FieldByName('Aliquota').AsString := FormatFloatBr( Aliquota, '0.00');
 
         cdsItensServico.FieldByName('Unidade').AsString              := Unidade;
@@ -879,10 +916,11 @@ begin
           FieldByName('CodigoMunicipio').AsString  := CodCidadeToCidade(StrToIntDef(IfThen(CodigoMunicipio <> '', CodigoMunicipio, ''),0));
           FieldByName('ExigibilidadeISS').AsString := ExigibilidadeISSDescricao(ExigibilidadeISS);
 
-          if proEL = proEL then
-            FieldByName('MunicipioIncidencia').AsString := 'No Município'
-          else
-            FieldByName('MunicipioIncidencia').AsString := CodCidadeToCidade(StrToIntDef(CodigoMunicipio, 0));
+//          if proEL = proEL then
+//            FieldByName('MunicipioIncidencia').AsString := 'No Município'
+//          else
+//            FieldByName('MunicipioIncidencia').AsString := CodCidadeToCidade(StrToIntDef(CodigoMunicipio, 0));
+          FieldByName('MunicipioIncidencia').AsString := 'No Município';
 
           if Valores.IssRetido = stRetencao then
             FieldByName('TipoRecolhimento').AsString := 'Retido'
@@ -911,6 +949,7 @@ begin
       end;
 
       FieldByName('InformacoesComplementares').AsString := InformacoesComplementares;
+      FieldByName('ValorCredito').AsCurrency := ValorCredito;
     end;
 
     CarregaLogoPrefeitura;
@@ -1012,9 +1051,10 @@ begin
         FieldByName('ValorIss').AsFloat               := ValorIss;
         FieldByName('OutrasRetencoes').AsFloat        := OutrasRetencoes;
         FieldByName('BaseCalculo').AsFloat            := BaseCalculo;
-        if Provedor = proWebISS then
-          FieldByName('Aliquota').AsFloat := Aliquota * 100
-        else
+//        if Provedor = proWebISS then
+//          FieldByName('Aliquota').AsFloat := Aliquota * 100
+//        else
+        // Agora a multiplicação por 100 é feita pela rotina que lê o XML
           FieldByName('Aliquota').AsFloat := Aliquota;
 
         FieldByName('ValorLiquidoNfse').AsFloat       := ValorLiquidoNfse;
@@ -1022,6 +1062,10 @@ begin
         FieldByName('DescontoCondicionado').AsFloat   := DescontoCondicionado;
         FieldByName('DescontoIncondicionado').AsFloat := DescontoIncondicionado;
         FieldByName('OutrosDescontos').AsCurrency := OutrosDescontos;
+        // Provedor SP
+        FieldByName('ValorCargaTributaria').AsCurrency := ValorCargaTributaria;
+        FieldByName('PercentualCargaTributaria').AsCurrency := PercentualCargaTributaria;
+        FieldByName('FonteCargaTributaria').AsString := FonteCargaTributaria;
       end;
     end;
     Post;
@@ -1162,7 +1206,7 @@ begin
   end;
 end;
 
-function TACBrNFSeDANFSeFR.ManterDocumento(sCpfCnpj: String): string;
+function TACBrNFSeDANFSeFR.ManterDocumento(const sCpfCnpj: String): string;
 begin
   Result := sCpfCnpj;
   if NaoEstaVazio(Result) then

@@ -40,9 +40,8 @@ uses
 
 {$ENDIF}
   SysUtils, Classes, StrUtils,
-  synacode, ACBrConsts,
-  pnfsNFSeW,
-  pcnAuxiliar, pcnConversao, pcnGerador,
+  ACBrConsts,
+  pnfsNFSeW, pcnAuxiliar, pcnConversao, pcnGerador,
   pnfsNFSe, pnfsConversao, pnfsConsts;
 
 type
@@ -193,9 +192,12 @@ end;
 function TNFSeW_Governa.GerarXml: Boolean;
 begin
   Gerador.ListaDeAlertas.Clear;
+
   Gerador.Opcoes.DecimalChar := ',';
+  Gerador.Opcoes.QuebraLinha := FQuebradeLinha;
 
   Gerador.Prefixo := Prefixo4;
+
   Gerador.wGrupoNFSe('LoteRps');
 
   Gerador.wCampoNFSe(tcStr, '', 'CodCadBic', 01, 15, 1, NFSe.Prestador.InscricaoMunicipal, '');

@@ -39,14 +39,13 @@ interface
 
 uses
   Classes, SysUtils, IniFiles, SynaChar,
-  ACBrLibConfig, ACBrCHQ;
+  ACBrLibConfig, ACBrDeviceConfig, ACBrCHQ;
 
 type
 
   { TCHQConfig }
   TCHQConfig = class
   private
-    FArqLog: String;
     FModelo: TACBrCHQModelo;
     FPaginaDeCodigo: Word;
     FPorta: String;
@@ -57,7 +56,6 @@ type
     procedure LerIni(const AIni: TCustomIniFile);
     procedure GravarIni(const AIni: TCustomIniFile);
 
-    property ArqLog: String         read FArqLog         write FArqLog;
     property Modelo: TACBrCHQModelo read FModelo         write FModelo;
     property Porta: String          read FPorta          write FPorta;
     property PaginaDeCodigo: Word   read FPaginaDeCodigo write FPaginaDeCodigo;
@@ -67,13 +65,13 @@ type
   TLibCHQConfig = class(TLibConfig)
   private
     FCHQConfig: TCHQConfig;
+    FDeviceConfig: TDeviceConfig;
 
   protected
-    function AtualizarArquivoConfiguracao: Boolean; override;
-
     procedure INIParaClasse; override;
     procedure ClasseParaINI; override;
     procedure ClasseParaComponentes; override;
+    procedure ImportarIni(FIni: TCustomIniFile); override;
 
     procedure Travar; override;
     procedure Destravar; override;
@@ -83,15 +81,16 @@ type
     destructor Destroy; override;
 
     property CHQConfig: TCHQConfig read FCHQConfig;
+    property DeviceConfig: TDeviceConfig read FDeviceConfig;
   end;
 
 implementation
 
 uses
-  ACBrLibCHQClass, ACBrLibCHQConsts, ACBrLibConsts, ACBrLibComum, ACBrUtil;
+  ACBrMonitorConsts, ACBrLibCHQClass, ACBrLibCHQConsts,
+  ACBrLibConsts, ACBrLibComum, ACBrUtil;
 
 { TCHQConfig }
-
 constructor TCHQConfig.Create;
 begin
   FPorta            := '';
@@ -106,7 +105,6 @@ end;
 
 procedure TCHQConfig.LerIni(const AIni: TCustomIniFile);
 begin
-  FArqLog         := AIni.ReadString(CSessaoCHQ, CChaveLog, FArqLog);
   FPorta          := AIni.ReadString(CSessaoCHQ, CChavePorta, FPorta);
   FModelo         := TACBrCHQModelo(AIni.ReadInteger(CSessaoCHQ, CChaveModelo, Integer(FModelo)));
   FPaginaDeCodigo := AIni.ReadInteger(CSessaoCHQ, CChavePaginaDeCodigo, FPaginaDeCodigo);
@@ -114,35 +112,26 @@ end;
 
 procedure TCHQConfig.GravarIni(const AIni: TCustomIniFile);
 begin
-  AIni.WriteString(CSessaoCHQ, CChaveLog, FArqLog);
   AIni.WriteString(CSessaoCHQ, CChavePorta, FPorta);
   AIni.WriteInteger(CSessaoCHQ, CChaveModelo, Integer(FModelo));
   AIni.WriteInteger(CSessaoCHQ, CChavePaginaDeCodigo, FPaginaDeCodigo);
 end;
 
 { TLibCHQConfig }
-
 constructor TLibCHQConfig.Create(AOwner: TObject; ANomeArquivo: String; AChaveCrypt: AnsiString);
 begin
   inherited Create(AOwner, ANomeArquivo, AChaveCrypt);
 
   FCHQConfig := TCHQConfig.Create;
+  FDeviceConfig := TDeviceConfig.Create('CHQ_Device');
 end;
 
 destructor TLibCHQConfig.Destroy;
 begin
   FCHQConfig.Free;
+  FDeviceConfig.Free;
 
   inherited Destroy;
-end;
-
-function TLibCHQConfig.AtualizarArquivoConfiguracao: Boolean;
-var
-  Versao: String;
-begin
-  Versao := Ini.ReadString(CSessaoVersao, CLibCHQNome, '0');
-  Result := (CompareVersions(CLibCHQVersao, Versao) > 0) or
-            (inherited AtualizarArquivoConfiguracao);
 end;
 
 procedure TLibCHQConfig.INIParaClasse;
@@ -150,21 +139,29 @@ begin
   inherited INIParaClasse;
 
   FCHQConfig.LerIni(Ini);
+  FDeviceConfig.LerIni(Ini);
 end;
 
 procedure TLibCHQConfig.ClasseParaINI;
 begin
   inherited ClasseParaINI;
 
-  Ini.WriteString(CSessaoVersao, CLibCHQNome, CLibCHQVersao);
-
   FCHQConfig.GravarIni(Ini);
+  FDeviceConfig.GravarIni(Ini);
 end;
 
 procedure TLibCHQConfig.ClasseParaComponentes;
 begin
   if Assigned(Owner) then
     TACBrLibCHQ(Owner).CHQDM.AplicarConfiguracoes;
+end;
+
+procedure TLibCHQConfig.ImportarIni(FIni: TCustomIniFile);
+begin
+  FCHQConfig.Porta := FIni.ReadString(CSecCHQ, CKeyCHQPorta, FCHQConfig.Porta);
+  FCHQConfig.Modelo := TACBrCHQModelo(FIni.ReadInteger(CSecCHQ, CKeyCHQModelo, Integer(FCHQConfig.Modelo)));
+
+  FDeviceConfig.ImportarSerialParams(FIni.ReadString(CSecCHQ, CKeyCHQSerialParams, FCHQConfig.Porta));
 end;
 
 procedure TLibCHQConfig.Travar;

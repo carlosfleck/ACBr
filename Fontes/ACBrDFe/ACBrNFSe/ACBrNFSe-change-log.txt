@@ -47,6 +47,345 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+30/01/2020
+-- Diversos -- 
+[*] Ajustes para ser impresso a mensagem de Homologação no DANFSE.
+   Por: Italo Jurisato Junior
+
+27/01/2020
+-- pnfsNFSeR -- 
+[*] Alterado para que a multiplicação por 100 a aliquota passa a ser feita pela leitura do XML.
+   Por: Italo Jurisato Junior
+
+20/01/2020
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/55822-ajuste-na-al%C3%ADquota-para-o-provedor-thema/
+   Por: Leandro KSC
+
+16/01/2020
+-- Diversos --
+[*] Ajustes realizados para gerar corretamente o pedido de cancelamento para o
+    provedor Sigep.
+   Por: Italo Jurisato Junior
+
+14/01/2020
+-- pnfsNFSeW_ABRASFv2 --
+[*] Alteração no ID do provedor ModernizacaoPublica.
+   Por: Michel Ouriques
+-- pnfsNFSeW_ABRASFv1 --
+[*] https://www.projetoacbr.com.br/forum/topic/55744-quebra-de-linha/
+   Por: Leandro ksc
+-- Diversos --
+[*] Acrescentado a linha para levar em consideração o caracter de 
+    quebra de linha definido no arquivo INI do provedor ao gerar
+    o XML do RPS.
+   Por: Italo Jurisato Junior
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/55721-provedor-ipm-altera%C3%A7%C3%B5es/
+   Por: Lutzem Massao Aihara
+
+10/01/2020
+-- Diversos --
+[+] Implementação do provedor ModernizacaoPublica
+   Por: Michel Ouriques
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/55699-provedor-issjoinville-carregamento-atrav%C3%A9s-do-m%C3%A9todo-tnotasfiscaisloadfromstring/
+   Por: Henrique Sandri Zimermam
+-- Diversos --
+[*] Alterações visando gerar e enviar o RPS para o webservice do provedor
+    MegaSoft.
+   Por: Italo Jurisato Junior
+
+-- pnfsNFSeW_Agili --
+[*] Geração da tag "InscricaoEstadual" nos dados do tomador.
+    https://www.projetoacbr.com.br/forum/topic/55713-inscri%C3%A7%C3%A3o-estadual-tomador-nfse-provedor-agili/
+  Por: BigWings
+
+08/01/2020
+-- pnfsNFSeW_Infisc --
+[*] Alterações visando a validação do Lote de RPS antes do seu envio.
+   Por: Italo Jurisato Junior
+
+30/12/2019
+-- pnfsLerListaNFSe --
+[*] Incluido a condição para identificar o grupo <ConsultarNfseRpsRespostaV110>.
+   Por: Natan Andreolla
+
+30/12/2019
+-- pnfsNFSeW_ABRASFv2 --
+[*] Segundo o provedor Pronimv2 a tag Aliquota sempre deve ser gerada se o 
+    contribuinte for do Simples Nacional, alteração feita para atender essa
+    condição.
+   Por: Italo Jurisato Junior
+
+27/12/2019
+-- pnfsNFSeG --
+[*] Incluido o enumerador proBelford na lista de provedores que devem gerar
+    o ID do lote de forma alfanumerica
+-- pnfsNFSeW_ABRASFv2 --
+[*] Incluido o enumerador proISSJoinville na lista de provedor que devem gerar
+    o ItemListaServico sem o zero a esquerda.
+   Por: Italo Jurisato Junior
+
+23/12/2019
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/55426-nfs-e-joinville-atualiza%C3%A7%C3%A3o-arquivo-ini-e-leitura-do-xml-de-retorno-da-consulta/
+   Por: Filipe Natividade
+-- pnfsNFSeW_SP --
+[*] https://www.projetoacbr.com.br/forum/topic/55483-quebra-de-linha/
+   Por: Rogério
+
+18/12/2019
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/50851-atualiza%C3%A7%C3%A3o-para-importa%C3%A7%C3%A3o-xml-sigiss-e-elotech/?do=findComment&comment=363690
+   Por: Marcos
+
+13/12/2019
+-- ACBrNFSeNotasFiscais --
+[*] https://www.projetoacbr.com.br/forum/topic/55300-provedor-el-carregamento-atrav%C3%A9s-do-m%C3%A9todo-tnotasfiscaisloadfromstring/
+   Por: Italo Jurisato Junior
+
+11/12/2019
+-- pnfsNFSeR --
+[*] Possível correção para a impressão da descrição do código do serviço.
+   Por: Italo Jurisato Junior
+-- ACBrNFSeWebServices --
+[*] Possível correção para enviar em ambiente de homologação - provedor ISSDSF.
+   Por: Italo Jurisato Junior
+-- ACBrNFSe --
+[*] https://www.projetoacbr.com.br/forum/topic/55292-charinset/
+   Por: Antonio Gomes
+
+03/12/2019
+-- pnfsNFSeW_ABRASFv1 --
+[*] https://www.projetoacbr.com.br/forum/topic/55191-quebra-de-linha-na-impress%C3%A3o-via-site-prefeitura-rj/
+   Por: Felipe Augusto R.
+
+26/11/2019
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/55041-tipo-de-deducao-nao-encontrado-ou-invalido/
+   Por: Danilo MS
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/55055-cancelamento-provedor-ipm/
+   Por: Marcio st
+-- ACBrNFSeWebServices --
+[*] Possível ajuste para evitar a exibição de uma tela em branco após o envio
+    de RPS pelo método Gerar para o webservice do provedor SP.
+   Por: Italo Jurisato Junior
+-- pnfsNFSeW_SP --
+[*] https://www.projetoacbr.com.br/forum/topic/55000-municipioprestacao-do-servi%C3%A7o/
+   Por: Antonio Alexandre
+
+22/11/2019
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/54949-joinville-n%C3%A3o-emite-nota-para-estrangeiro/
+   Por: Augusto Fontana
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/54986-provedor-infisc-v11-melhorias-m%C3%A9todo-tacbrnfseconsultarnfse/
+   Por: Henrique Sandri Zimermam
+
+21/11/2019
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/54963-impress%C3%A3o-nfs-e-com-v%C3%A1rios-servi%C3%A7os/?do=findComment&comment=361102
+   Por: Rafael Sartori
+-- pnfsNFSeR --
+[+] Incluida as linhas para a leitura dos campos de itens de serviços, provedor SystemPro.
+   Por: Italo Jurisato Junior
+
+19/11/2019
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/54163-envio-de-nota-para-blumenau-usando-o-novo-webservice/?do=findComment&comment=360700
+   Por: Ernesto Ricardo
+
+18/11/2019
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/54874-loadfromfile-carrega-somente-1-servi%C3%A7o/?do=findComment&comment=360557
+   Por: Rafael Sartori
+
+14/11/2019
+-- pnfsNFSeR --
+[*] O grupo <Servico> do provedor SystemPro pode ter mais de uma ocorrência.
+    Alteração feita para ler todas as ocorrências desse grupo.
+   Por: Italo Jurisato Junior
+
+13/11/2019
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/54688-como-informar-o-codigo_item_lista_servico-na-nfs-e/?do=findComment&comment=360196
+   Por: Juliano do Amaral Chaves
+
+11/11/2019
+-- pnfsNFSeW_ABRASFv1 --
+[*] https://www.projetoacbr.com.br/forum/topic/54793-provedor-fisslex-inscri%C3%A7%C3%A3o-estadual/?do=findComment&comment=359896
+   Por: Rafael D' Lima
+
+06/11/2019
+-- ACBrNFSeDANFSeRLRetrato --
+[*] https://www.projetoacbr.com.br/forum/topic/54711-logos-no-danfse-est%C3%A3o-ficando-deformadas/
+   Por: Juliano do Amaral Chaves
+-- pnfsNFSeG --
+[*] Ajustes no Consultar NFS-e por Faixa
+   Por: Italo Jurisato Junior
+
+05/11/2019
+-- pnfsNFSeR/pnfsConversao --
+[*] https://www.projetoacbr.com.br/forum/topic/54717-provedor-megasoft/
+   Por: Leonardo Gregianin
+-- pnfsNFSeG --
+[-] https://www.projetoacbr.com.br/forum/topic/54660-cancelamento-issnet-novo-hamburgo/
+   Por: Marco Moreira
+-- ACBrNFSeDANFSeRLRetrato --
+[-] https://www.projetoacbr.com.br/forum/topic/54623-ajustes-danfe-fortes/
+   Por: Marcio Lopes
+
+31/10/2019
+-- pnfsConversao --
+[-] Estava faltando o enumerador do provedor SimplISSv2 na lista de provedores que
+    seguem a versão 2 do layout da ABRASF.
+   Por: Italo Jurisato Junior
+
+30/10/2019
+-- ACBrNFSeWebServices --
+[*] Alterado os namespace de todos os método - provedor SimplISSv2 - Blumenau/SC
+   Por: Italo Jurisato Junior
+[*] Alterado os namespace do método Cancelar - provedor SimplISSv2 - Blumenau/SC
+   Por: Italo Jurisato Junior
+[*] Remoção do "CDATA" no XML de retorno.
+   Por: Italo Jurisato Junior
+
+25/10/2019
+-- ACBrNFSeDANFSeRLRetrato --
+[*] https://www.projetoacbr.com.br/forum/topic/53848-nfse-goi%C3%A1sgoi%C3%A2niatrindade/
+   Por: Mozart
+
+24/10/2019
+-- ACBrNFSeWebServices --
+[*] Possível correção para o provedor SimplISSv2.
+   Por: Italo Jurisato Junior
+
+24/10/2019
+-- pnfsNFSe --
+[*] Alterado o tipo Currency para Double do campo Aliquota
+   Por: Italo Jurisato Junior
+
+21/10/2019
+-- pnfsNFSeW_SP --
+[*] https://www.projetoacbr.com.br/forum/topic/54158-envio-de-nota-para-blumenau-usando-o-webservice-de-migra%C3%A7%C3%A3o/?do=findComment&comment=357512
+   Por: João Paulo Muller
+
+-- ACBrNFSeWebServices --
+[*] Possível correção para o provedor Pronim.
+   Por: Italo Jurisato Junior
+
+-- pnfsNFSeW_IPM --
+[*] https://www.projetoacbr.com.br/forum/topic/54381-ipm-tributa_municipio_prestador-bug/
+   Por: Marcos
+
+16/10/2019
+-- ACBrNFSeWebServices --
+[*] Alterado o método TratarResposta do SubstituirNFSe.
+   Por: Italo Jurisato Junior
+
+15/10/2019
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/53949-nfse-de-santo-antonio-do-planalto-rs/
+   Por: Deunerf
+-- pnfsLerListaNFSe --
+[*] Possível correção para a leitura do retorno do método SubstituirNFSe.
+   Por: Italo Jurisato Junior
+
+14/10/2019
+-- pnfsCancNfseResposta --
+[*] https://www.projetoacbr.com.br/forum/topic/54253-tratamento-retorno-cancelamento-provedor-assessorpublico/
+   Por: Verissimo
+
+10/10/2019
+-- pnfsLerListaNFSe --
+[*] Acrescentado a leitura da tag <situacao_codigo_nfse> provedor IPM.
+-- pnfsNFSeW_Giap / pnfsNFSeW --
+[*] Estava faltando incluir o provedor Giap na unit para gerar o XML do RPS.
+   Por: Italo Jurisato Junior
+
+09/10/2019
+-- ACBrNFSeWebServices --
+[*] Alteração visando o provedor TcheInfov2, incluio o namespace na tag <Rps>
+   Por: Italo Jurisato Junior
+
+04/10/2019
+-- pnfsNFSeW_Agili --
+[*] Ajustes para o provedor Agili.
+   Por: Italo Jurisato Junior / Márcio Lopes
+
+03/10/2019
+-- Diversos --
+[*] Ajustes para o provedor Assessor Publico.
+   Por: Italo Jurisato Junior / José Jair de Oliveira
+
+02/10/2019
+-- ACBrNFSeDANFSeRLRetrato --
+[*] https://www.projetoacbr.com.br/forum/topic/53987-ajuste-campo-competencia-danfe-fortes/
+   Por: Marcio Lopes
+-- ACBrNFSeWebServices --
+[*] https://www.projetoacbr.com.br/forum/topic/52548-assinatura-inv%C3%A1lida-na-tag-infpedidocancelamento/?do=findComment&comment=354637
+   Por: Rafael Sartori
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/53667-erro-ao-enviar-lote-para-blumenausc/?do=findComment&comment=354382
+   Por: Ernesto Ricardo
+
+26/09/2019
+-- Diversos --
+[*] https://www.projetoacbr.com.br/forum/topic/53852-altera%C3%A7%C3%A3o-para-envio-e-retorno-provedor-pvh-e-iibrasil/
+   Por: André Guimarães
+-- Diversos --
+[*] Alterações visando o provedor SimplISSv2.
+   Por: Ernesto Ricardo / Moacir Ezequiel Lamego
+
+26/09/2019
+-- ACBrNFSeWebServices --
+[*] https://www.projetoacbr.com.br/forum/topic/53835-provedor-saatri-erro-durante-o-processo-de-validacao/
+   Por: Henrique Sandri Zimermam
+
+25/09/2019
+-- Diversos --
+[*] Alterações visando o provedor WebFisco.
+   Por: Italo Jurisato Junior
+
+24/09/2019
+-- pnfsLerListaNFSe --
+[*] Leitura do retorno ao executar o método Gerar - provedor NotaBlu.
+   Por: Italo Jurisato Junior
+-- pnfsConsSitLoteRpsResposta --
+[*] https://www.projetoacbr.com.br/forum/topic/53760-ajuste-no-processamento-de-retorno-de-lote-do-provedor-infisc/
+   Por: Marcio st
+-- Diversos --
+[+] Implementação do provedor geNFe.
+   Por: Italo Jurisato Junior
+
+20/09/2019
+-- Diversos --
+[*] Alterações visando o provedor WebFisco.
+   Por: Italo Jurisato Junior
+-- pnfsNFSeR --
+[*] https://www.projetoacbr.com.br/forum/topic/53711-nfse-goi%C3%A2nia-go-com-iss-retido/
+   Por: Igor Cibiac
+
+19/09/2019
+-- Diversos --
+[*] Mais alterações visando o provedor SimplISSv2.
+   Por: Italo Jurisato Junior
+
+18/09/2019
+-- Diversos --
+[*] Alterações visando o provedor SimplISSv2.
+   Por: Italo Jurisato Junior
+
+16/09/2019
+-- Diversos --
+[+] Inicio da implementação do provedor Lencois.
+   Por: Innovae Brasil Engenharia
+-- Diversos --
+[*] Alterações visando o provedor SimplISSv2.
+   Por: Italo Jurisato Junior
+
 12/09/2019
 -- Diversos --
 [*] Inicio da implementação do provedor SimplISSv2 a ser utilizado pela 

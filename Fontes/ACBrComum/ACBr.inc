@@ -63,10 +63,16 @@
 {.$DEFINE DFE_SEM_MSXML}
 // Descomente a linha abaixo, se você não deseja adicionar a Dependência da INDY nos seus Projetos
 {.$DEFINE DFE_SEM_INDY}
+// Descomente a linha abaixo, se você deseja utilizar a libxml2 para ler e gerar os arquivos xml
+{.$DEFINE DFE_ACBR_LIBXML2}
 
 {$IfDef DFE_SEM_OPENSSL}
   {$Define DFE_SEM_XMLSEC}
   {$Define DFE_SEM_LIBXML2}
+{$EndIf}
+
+{$IfDef DFE_SEM_LIBXML2}
+  {$UnDef DFE_ACBR_LIBXML2}
 {$EndIf}
 
 // Descomente essa linha, para usar a carga de DLL tardia, nas Units do OpenSSL  (Apenas Delphi)
@@ -118,6 +124,7 @@
    {$DEFINE SUPPORTS_DEPRECATED_DETAILS}
    {$UnDef FPC2}
   {$ENDIF}
+  {$UNDEF REMOVE_CAST_WARN} //Devido a problemas com a mensagem de erro "Message recordind not yet supported"
 {$ELSE}
   {$DEFINE BORLAND}
 {$ENDIF}
@@ -146,6 +153,9 @@
 //------------------------------------------------------------------------------
 {$I ACBr_jedi.inc}
 
+{$IFDEF POSIX}
+ {$UNDEF USE_DELAYED}
+{$ENDIF}
 {$IFNDEF SUPPORTS_DELAYED_LOADING}
  {$UNDEF USE_DELAYED}
 {$ENDIF}
@@ -164,21 +174,22 @@
   {$DEFINE HAS_REGEXPR}
 {$ENDIF}
 
-{$IFNDEF FPC}
- {$DEFINE USE_libeay32}
-{$ENDIF}
-
 // Definições multi-plataforma
 //------------------------------------------------------------------------------
 {$IFDEF WIN64}
   {$DEFINE MSWINDOWS}
+  {$DEFINE DFE_SEM_CAPICOM}  // apenas 32 bits
+  {$DEFINE DFE_SEM_MSXML}    // apenas 32 bits
 {$ENDIF}
 
 {$IFDEF DELPHILANGUAGE}
-  {$IFDEF LINUX}
-    {$IFNDEF FPC} // Suporte ao FreePascal 
-      {$DEFINE VisualCLX}
-    {$ENDIF}
+  {$IFDEF POSIX}
+    {$DEFINE FMX}
+    {$UNDEF CLX}
+    {$UNDEF VisualCLX}
+    {$UNDEF VCL}
+    {$DEFINE DFE_SEM_CAPICOM}
+    {$DEFINE DFE_SEM_MSXML}
   {$ENDIF}
 
   {$IFDEF CLX}
@@ -277,12 +288,4 @@
 {$Else}
  {$UnDef USE_ZLibExGZ} // ZLibExGZ não é compatível com FPC
 {$EndIf}
-
-// Compatibilização de Tipos inexistentes em Delphi Linux (POSIX)
-{$IFDEF POSIX}
-  AnsiString = UTF8String;
-  AnsiChar = UTF8Char;
-  PAnsiChar = PUTF8Char;
-  PPAnsiChar = ^PUTF8Char;
-{$ENDIF}
 

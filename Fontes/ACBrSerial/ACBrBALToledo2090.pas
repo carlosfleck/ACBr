@@ -26,9 +26,8 @@
 { Você também pode obter uma copia da licença em:                              }
 { http://www.opensource.org/licenses/lgpl-license.php                          }
 {                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
 
 {$I ACBr.inc}
@@ -38,7 +37,7 @@ unit ACBrBALToledo2090;
 interface
 
 uses
-  ACBrBALClass, Classes;
+  Classes, ACBrBALClass;
 
 type
 
@@ -56,15 +55,14 @@ type
 implementation
 
 uses
-  SysUtils, Math,
-  ACBrConsts, ACBrUtil,
+  SysUtils, Math, ACBrConsts,
   {$IFDEF COMPILER6_UP}
    DateUtils, StrUtils
   {$ELSE}
    ACBrD5, Windows
   {$ENDIF};
 
-{ TACBrBALToledo }
+{ TACBrBALToledo2090 }
 
 constructor TACBrBALToledo2090.Create(AOwner: TComponent);
 begin

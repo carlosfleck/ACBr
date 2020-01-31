@@ -71,7 +71,7 @@ type
 
   { TACBrNFe }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrNFe = class(TACBrDFe)
   private
@@ -296,7 +296,7 @@ end;
 function TACBrNFe.CstatCancelada(AValue: integer): Boolean;
 begin
   case AValue of
-    101, 151, 155: Result := True;
+    101, 135, 151, 155: Result := True;
     else
       Result := False;
   end;
@@ -570,13 +570,13 @@ begin
   // Passo 3 e 4
   cCSC := Configuracoes.Geral.CSC;
 
-  if EstaVazio(cCSC) then
-    cCSC := Copy(idNFe, 7, 8) + '20' + Copy(idNFe, 3, 2) + Copy(cIdCSC, 3, 4);
-
   if VersaoQrCode >= veqr200 then
     cIdCSC := IntToStr(StrToIntDef(Configuracoes.Geral.IdCSC,0))
   else
     cIdCSC := IntToStrZero(StrToIntDef(Configuracoes.Geral.IdCSC,0),6);
+
+  if EstaVazio(cCSC) then
+    cCSC := Copy(idNFe, 7, 8) + '20' + Copy(idNFe, 3, 2) + Copy(cIdCSC, 3, 4);
 
   sCSC := cIdCSC + cCSC;
   sNF := FloatToString( ValorTotalNF, '.', FloatMask(2, False));

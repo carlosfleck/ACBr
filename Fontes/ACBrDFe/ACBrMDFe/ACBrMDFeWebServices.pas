@@ -126,6 +126,7 @@ type
     FxMotivo: String;
     FdhRecbto: TDateTime;
     FTMed: Integer;
+    FProtocolo: string;
     FVersaoDF: TVersaoMDFe;
     FSincrono: Boolean;
     FMsgUnZip: String;
@@ -159,6 +160,8 @@ type
     property xMotivo: String read FxMotivo;
     property dhRecbto: TDateTime read FdhRecbto;
     property TMed: Integer read FTMed;
+    property Protocolo: string read FProtocolo;
+
     property Lote: String read GetLote write FLote;
     property Sincrono: Boolean read FSincrono write FSincrono;
     property MsgUnZip: String read FMsgUnZip write FMsgUnZip;
@@ -326,7 +329,7 @@ type
 
     FEventoRetorno: TRetEventoMDFe;
 
-    function GerarPathEvento(const ACNPJ: String = ''): String;
+    function GerarPathEvento(const ACNPJ: String = ''; const AIE: String = ''): String;
   protected
     procedure DefinirURL; override;
     procedure DefinirServicoEAction; override;
@@ -496,7 +499,7 @@ uses
   StrUtils, Math,
   ACBrUtil, ACBrCompress, ACBrMDFe,
   pcnGerador, pcnLeitor, pcnConsStatServ, pcnRetConsStatServ,
-  pmdfeConsSitMDFe, pcnConsReciDFe, pmdfeConsMDFeNaoEnc, pmdfeMDFeW;
+  pmdfeConsSitMDFe, pcnConsReciDFe, pmdfeConsMDFeNaoEnc;
 
 { TMDFeWebService }
 
@@ -699,13 +702,14 @@ begin
   FPArqEnv := 'env-lot';
   FPArqResp := 'rec';
 
-  Fversao := '';
-  FTMed := 0;
-  FverAplic := '';
-  FcStat    := 0;
-  FxMotivo  := '';
-  FRecibo   := '';
-  FdhRecbto := 0;
+  Fversao    := '';
+  FTMed      := 0;
+  FverAplic  := '';
+  FcStat     := 0;
+  FxMotivo   := '';
+  FRecibo    := '';
+  FdhRecbto  := 0;
+  FProtocolo := '';
 
   if Assigned(FPConfiguracoesMDFe) then
   begin
@@ -891,6 +895,9 @@ begin
 
     if Result then
     begin
+      // Pega o numero do protocolo
+      FProtocolo := FMDFeRetornoSincrono.protMDFe.nProt;
+
       for I := 0 to TACBrMDFe(FPDFeOwner).Manifestos.Count - 1 do
       begin
         with TACBrMDFe(FPDFeOwner).Manifestos.Items[I] do
@@ -1820,8 +1827,10 @@ begin
 
     with TACBrMDFe(FPDFeOwner) do
     begin
-      Result := cStatProcessado(MDFeRetorno.CStat) or
-                cStatCancelado(MDFeRetorno.CStat);
+      // cStat = 132 indica que o MDF-e foi encerrado
+      Result := cStatProcessado(MDFeRetorno.cStat) or
+                cStatCancelado(MDFeRetorno.cStat) or
+                (MDFeRetorno.cStat = 132);
     end;
 
     for i := 0 to TACBrMDFe(FPDFeOwner).Manifestos.Count - 1 do
@@ -1833,7 +1842,7 @@ begin
           Atualiza := (NaoEstaVazio(MDFeRetorno.XMLprotMDFe));
 
           if Atualiza and
-             TACBrMDFe(FPDFeOwner).cStatCancelado(MDFeRetorno.CStat) then
+             TACBrMDFe(FPDFeOwner).cStatCancelado(MDFeRetorno.cStat) then
             Atualiza := False;
 
           if (FPConfiguracoesMDFe.Geral.ValidarDigest) and
@@ -1902,22 +1911,22 @@ begin
               else
                 dhEmissao := Now;
 
-                sPathMDFe := PathWithDelim(FPConfiguracoesMDFe.Arquivos.GetPathMDFe(dhEmissao, MDFe.Emit.CNPJCPF));
+              sPathMDFe := PathWithDelim(FPConfiguracoesMDFe.Arquivos.GetPathMDFe(dhEmissao, MDFe.Emit.CNPJCPF, MDFe.emit.IE));
 
-                if (FRetMDFeDFe <> '') then
-                  FPDFeOwner.Gravar( FMDFeChave + '-MDFeDFe.xml', FRetMDFeDFe, sPathMDFe);
+              if (FRetMDFeDFe <> '') then
+                FPDFeOwner.Gravar( FMDFeChave + '-MDFeDFe.xml', FRetMDFeDFe, sPathMDFe);
 
-                // Salva o XML do MDF-e assinado e protocolado
-                NomeXMLSalvo := '';
-                if NaoEstaVazio(NomeArq) and FileExists(NomeArq) then
-                begin
-                  FPDFeOwner.Gravar( NomeArq, XMLOriginal );  // Atualiza o XML carregado
-                  NomeXMLSalvo := NomeArq;
-                end;
+              // Salva o XML do MDF-e assinado e protocolado
+              NomeXMLSalvo := '';
+              if NaoEstaVazio(NomeArq) and FileExists(NomeArq) then
+              begin
+                FPDFeOwner.Gravar( NomeArq, XMLOriginal );  // Atualiza o XML carregado
+                NomeXMLSalvo := NomeArq;
+              end;
 
-                // Salva na pasta baseado nas configurações do PathCTe
-                if (NomeXMLSalvo <> CalcularNomeArquivoCompleto()) then
-                  GravarXML;
+              // Salva na pasta baseado nas configurações do PathCTe
+              if (NomeXMLSalvo <> CalcularNomeArquivoCompleto()) then
+                GravarXML;
             end;
           end;
 
@@ -1992,11 +2001,11 @@ begin
   FEventoRetorno := TRetEventoMDFe.Create;
 end;
 
-function TMDFeEnvEvento.GerarPathEvento(const ACNPJ: String): String;
+function TMDFeEnvEvento.GerarPathEvento(const ACNPJ, AIE: String): String;
 begin
   with FEvento.Evento.Items[0].InfEvento do
   begin
-    Result := FPConfiguracoesMDFe.Arquivos.GetPathEvento(tpEvento, ACNPJ);
+    Result := FPConfiguracoesMDFe.Arquivos.GetPathEvento(tpEvento, ACNPJ, AIE);
   end;
 end;
 
@@ -2039,7 +2048,7 @@ end;
 procedure TMDFeEnvEvento.DefinirDadosMsg;
 var
   EventoMDFe: TEventoMDFe;
-  I, J, F: Integer;
+  I, J, k, F: Integer;
   Evento, Eventos, EventosAssinados, AXMLEvento: AnsiString;
   FErroValidacao: String;
   EventoEhValido: Boolean;
@@ -2103,6 +2112,53 @@ begin
               end;
             end;
           end;
+
+          tePagamentoOperacao:
+          begin
+            SchemaEventoMDFe := schevPagtoOperMDFe;
+            infEvento.detEvento.nProt := FEvento.Evento[i].InfEvento.detEvento.nProt;
+
+            infEvento.detEvento.infViagens.qtdViagens := FEvento.Evento[i].InfEvento.detEvento.infViagens.qtdViagens;
+            infEvento.detEvento.infViagens.nroViagem  := FEvento.Evento[i].InfEvento.detEvento.infViagens.nroViagem;
+
+            for j := 0 to FEvento.Evento[i].InfEvento.detEvento.infPag.Count - 1 do
+            begin
+              with EventoMDFe.Evento[i].InfEvento.detEvento.infPag.New do
+              begin
+                xNome         := FEvento.Evento[i].InfEvento.detEvento.infPag[j].xNome;
+                idEstrangeiro := FEvento.Evento[i].InfEvento.detEvento.infPag[j].idEstrangeiro;
+                CNPJCPF       := FEvento.Evento[i].InfEvento.detEvento.infPag[j].CNPJCPF;
+
+                for k := 0 to FEvento.Evento[i].InfEvento.detEvento.infPag[j].Comp.Count - 1 do
+                begin
+                  EventoMDFe.Evento[i].InfEvento.detEvento.infPag[j].Comp.New;
+
+                  Comp[k].tpComp := FEvento.Evento[i].InfEvento.detEvento.infPag[j].Comp[k].tpComp;
+                  Comp[k].vComp  := FEvento.Evento[i].InfEvento.detEvento.infPag[j].Comp[k].vComp;
+                  Comp[k].xComp  := FEvento.Evento[i].InfEvento.detEvento.infPag[j].Comp[k].xComp;
+                end;
+
+                vContrato := FEvento.Evento[i].InfEvento.detEvento.infPag[j].vContrato;
+                indPag    := FEvento.Evento[i].InfEvento.detEvento.infPag[j].indPag;
+
+                if indPag = ipPrazo then
+                begin
+                  for k := 0 to FEvento.Evento[i].InfEvento.detEvento.infPag[j].infPrazo.Count - 1 do
+                  begin
+                    EventoMDFe.Evento[i].InfEvento.detEvento.infPag[j].infPrazo.New;
+
+                    infPrazo[k].nParcela := FEvento.Evento[i].InfEvento.detEvento.infPag[j].infPrazo[k].nParcela;
+                    infPrazo[k].dVenc    := FEvento.Evento[i].InfEvento.detEvento.infPag[j].infPrazo[k].dVenc;
+                    infPrazo[k].vParcela := FEvento.Evento[i].InfEvento.detEvento.infPag[j].infPrazo[k].vParcela;
+                  end;
+                end;
+
+                infBanc.CNPJIPEF   := FEvento.Evento[i].InfEvento.detEvento.infPag[j].infBanc.CNPJIPEF;
+                infBanc.codBanco   := FEvento.Evento[i].InfEvento.detEvento.infPag[j].infBanc.codBanco;
+                infBanc.codAgencia := FEvento.Evento[i].InfEvento.detEvento.infPag[j].infBanc.codAgencia;
+              end;
+            end;
+          end;
         end;
       end;
     end;
@@ -2163,6 +2219,13 @@ begin
           AXMLEvento := '<evIncDFeMDFe xmlns="' + ACBRMDFE_NAMESPACE + '">' +
                           Trim(RetornarConteudoEntre(AXMLEvento, '<evIncDFeMDFe>', '</evIncDFeMDFe>')) +
                         '</evIncDFeMDFe>';
+        end;
+
+      schevPagtoOperMDFe:
+        begin
+          AXMLEvento := '<evPagtoOperMDFe xmlns="' + ACBRMDFE_NAMESPACE + '">' +
+                          Trim(RetornarConteudoEntre(AXMLEvento, '<evPagtoOperMDFe>', '</evPagtoOperMDFe>')) +
+                        '</evPagtoOperMDFe>';
         end;
     end;
 
@@ -2642,11 +2705,13 @@ begin
       Result := FPConfiguracoesMDFe.Arquivos.GetPathDownloadEvento(AItem.procEvento.tpEvento,
                                                            AItem.resDFe.xNome,
                                                            AItem.procEvento.CNPJ,
+                                                           AItem.resDFe.IE,
                                                            Data);
 
     schprocMDFe:
       Result := FPConfiguracoesMDFe.Arquivos.GetPathDownload(AItem.resDFe.xNome,
                                                              AItem.resDFe.CNPJCPF,
+                                                             AItem.resDFe.IE,
                                                              Data);
   end;
 end;

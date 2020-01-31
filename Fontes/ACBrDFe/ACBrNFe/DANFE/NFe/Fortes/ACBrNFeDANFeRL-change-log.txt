@@ -47,6 +47,39 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+17/01/2020
+-- ACBrNFeDANFeRLRetrato, ACBrNFeDANFeRLPaisagem --
+[+] Adicionado configuração para a propriedade "EspacoEntreProdutos" no DANFe
+  Por: José M S Junior
+
+20/01/2020
+-- pcnConversaoNFe, ACBrNFeDANFEClass, ACBrNFeDANFeRLPaisagem, ACBrNFeDANFeRLRetrato, ACBrNFeDANFEFRDM --
+[*] Criação de propriedade "ExibeCampoDePagamento" para controlar a impressão
+    dos pagamentos no DANFE.
+  Por: Henrique Leonardo (hleorj) / BigWings
+
+18/12/2019
+-- ACBrNFeDANFeRLRetrato --
+[-] Ajuste para impressão do canhoto apenas na primeira página.
+  Por: BigWings
+
+20/11/2019
+-- ACBrDANFCeFortesFr --
+[*] Ajuste para impressão de "procNFe.xMsg" nas informações do Fisco, com QRCode
+    Lateral
+    https://www.projetoacbr.com.br/forum/topic/54953-sefaz-ms-nota-ms-premiada-2/
+    (por: Compusofts)
+
+24/10/2019
+-- ACBrNFeDANFeRLRetrato
+[*] Ajuste na impressão do Canhoto apenas na primeira página
+    (por: José M S Junior )
+
+19/09/2019
+-- ACBrNFeDANFeRLRetrato
+[-] Corrigido erro de impressão quando tinha apenas 1 item na nfe e a continuação das observações imprimiam abaixo dos itens em vez de uma nova pagina.
+	(por: Rafael Dias )
+
 29/07/2019
 -- ACBrNFeDANFeRLRetrato
 [*] Compatibilização dos ajustes reff propriedade TPosReciboLayout para o .lfm no Lazarus

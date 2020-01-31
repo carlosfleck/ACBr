@@ -40,7 +40,7 @@ interface
 uses
   SysUtils, Classes, contnrs,
   pcteRetEnvEventoCTe, pcteEventoCTe,
-  ACBrCTe, ACBrLibResposta;
+  ACBrLibConsReciDFe, ACBrLibResposta, ACBrCTe;
 
 type
 
@@ -55,11 +55,6 @@ type
     FxMotivo: string;
     FcUF: integer;
     FdhRecbto: TDateTime;
-
-  public
-    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo);
-
-    procedure Processar(const ACBrCTe: TACBrCTe); reintroduce; virtual; abstract;
 
   published
     property Msg: string read FMsg write FMsg;
@@ -80,7 +75,7 @@ type
     FdhRetorno: TDateTime;
     FxObs: string;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrCTe: TACBrCTe); override;
 
@@ -96,7 +91,7 @@ type
     FNomeArquivo: String;
     FXml: String;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrCTe: TACBrCTe); override;
 
@@ -112,7 +107,7 @@ type
     FNProt: String;
     FDigVal: String;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrCTe: TACBrCTe); override;
 
@@ -127,14 +122,23 @@ type
   private
     FtMed: integer;
     FnRec: string;
+    FNProt: string;
+    FXml: string;
+    FItem: TRetornoItemResposta;
+
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
+    destructor Destroy; override;
 
     procedure Processar(const ACBrCTe: TACBrCTe); override;
 
   published
    property TMed: integer read FtMed write FtMed;
    property NRec: string read FnRec write FnRec;
+   property NProt: String read FNProt write FNProt;
+   property Xml: string read FXml write FXml;
+   property Retorno: TRetornoItemResposta read FItem;
+
   end;
 
   { TCancelamentoResposta }
@@ -149,7 +153,7 @@ type
     FemailDest: string;
     Fxml: string;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrCTe: TACBrCTe); override;
 
@@ -165,7 +169,7 @@ type
   end;
 
   { TEventoItemResposta }
-  TEventoItemResposta = class(TACBrLibResposta)
+  TEventoItemResposta = class(TACBrLibRespostaBase)
   private
     FtpAmb: string;
     FverAplic: string;
@@ -186,7 +190,8 @@ type
     FXML: string;
 
   public
-    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo);
+    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao);
 
     procedure Processar(const RetInfEvento: TRetInfEvento);
 
@@ -221,7 +226,7 @@ type
     function GetItem(Index: Integer): TEventoItemResposta;
 
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     destructor Destroy; override;
 
@@ -239,15 +244,15 @@ type
 implementation
 
 uses
-  pcnConversao,
+  pcnConversao, pcteConversaoCTe,
   ACBrUtil,
   ACBrLibCTeConsts;
 
 { TEventoItemResposta }
 constructor TEventoItemResposta.Create(const ASessao: String;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(ASessao, ATipo);
+  inherited Create(ASessao, ATipo, AFormato);
 end;
 
 procedure TEventoItemResposta.Processar(const RetInfEvento: TRetInfEvento);
@@ -271,9 +276,9 @@ begin
 end;
 
 { TEventoResposta }
-constructor TEventoResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TEventoResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespEvento, ATipo);
+  inherited Create(CSessaoRespEvento, ATipo, AFormato);
   FItens := TObjectList.Create(True);
 end;
 
@@ -320,7 +325,7 @@ begin
     begin
       for i := 0 to retEvento.Count - 1 do
       begin
-        Item := TEventoItemResposta.Create('EVENTO' + Trim(IntToStrZero(i +1, 3)), Tipo);
+        Item := TEventoItemResposta.Create('EVENTO' + Trim(IntToStrZero(i +1, 3)), Tipo, Formato);
         Item.Processar(retEvento.Items[i].RetInfevento);
         FItens.Add(Item);
       end;
@@ -329,9 +334,9 @@ begin
 end;
 
 { TCancelamentoResposta }
-constructor TCancelamentoResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TCancelamentoResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespCancelamento, ATipo);
+  inherited Create(CSessaoRespCancelamento, ATipo, AFormato);
 end;
 
 procedure TCancelamentoResposta.Processar(const ACBrCTe: TACBrCTe);
@@ -357,32 +362,75 @@ begin
 end;
 
 { TEnvioResposta }
-constructor TEnvioResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TEnvioResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespEnvio, ATipo);
+  inherited Create(CSessaoRespEnvio, ATipo, AFormato);
+  FItem := nil;
+end;
+
+destructor TEnvioResposta.Destroy;
+begin
+  if Assigned(FItem) then FreeAndNil(FItem);
 end;
 
 procedure TEnvioResposta.Processar(const ACBrCTe: TACBrCTe);
 begin
-  with ACBrCTe.WebServices do
+  if Assigned(FItem) then FreeAndNil(FItem);
+
+  with ACBrCTe.WebServices.Enviar do
   begin
-    Self.Versao := Enviar.verAplic;
-    Self.TpAmb := TpAmbToStr(Enviar.TpAmb);
-    Self.verAplic := Enviar.verAplic;
-    Self.CStat := Enviar.cStat;
-    Self.XMotivo := Enviar.xMotivo;
-    Self.CUF := Enviar.cUF;
-    Self.nRec := Enviar.Recibo;
-    Self.DhRecbto := Enviar.dhRecbto;
-    Self.Tmed := Enviar.TMed;
-    Self.Msg := Enviar.Msg;
+    Self.Versao := verAplic;
+    Self.TpAmb := TpAmbToStr(TpAmb);
+    Self.verAplic := verAplic;
+    Self.CStat := cStat;
+    Self.XMotivo := xMotivo;
+    Self.CUF := cUF;
+    Self.nRec := Recibo;
+    Self.DhRecbto := dhRecbto;
+    Self.Tmed := TMed;
+    Self.Msg := Msg;
+    Self.NProt := Protocolo;
+    Self.Xml := '';
+  end;
+
+  if (ACBrCTe.Configuracoes.Geral.ModeloDF = moCTe) and
+     (ACBrCTe.WebServices.Enviar.Sincrono) and
+     (ACBrCTe.Conhecimentos.Count > 0) then
+  begin
+    Self.Xml := ACBrCTe.Conhecimentos.Items[0].XMLOriginal;
+
+    FItem := TRetornoItemResposta.Create('CTe' + Trim(ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.chCTe), Tipo, Formato);
+    FItem.Id := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.Id;
+    FItem.tpAmb := TpAmbToStr(ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.tpAmb);
+    FItem.verAplic := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.verAplic;
+    FItem.chDFe := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.chCTe;
+    FItem.dhRecbto := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.dhRecbto;
+    FItem.nProt := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.nProt;
+    FItem.digVal := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.digVal;
+    FItem.cStat := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.cStat;
+    FItem.xMotivo := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.xMotivo;
+    FItem.XML := ACBrCTe.Conhecimentos.Items[0].CTe.procCTe.XML_prot;
+  end
+  else if (ACBrCTe.Configuracoes.Geral.ModeloDF = moCTeOS) and (ACBrCTe.Conhecimentos.Count > 0) then
+  begin
+    FItem := TRetornoItemResposta.Create('CTeOS' + Trim(ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.chCTe), Tipo, Formato);
+    FItem.Id := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.Id;
+    FItem.tpAmb := TpAmbToStr(ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.tpAmb);
+    FItem.verAplic := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.verAplic;
+    FItem.chDFe := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.chCTe;
+    FItem.dhRecbto := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.dhRecbto;
+    FItem.nProt := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.nProt;
+    FItem.digVal := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.digVal;
+    FItem.cStat := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.cStat;
+    FItem.xMotivo := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.xMotivo;
+    FItem.XML := ACBrCTe.WebServices.Enviar.CTeRetornoOS.protCTe.XML_prot;
   end;
 end;
 
 { TStatusServicoResposta }
-constructor TStatusServicoResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TStatusServicoResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespStatus, ATipo);
+  inherited Create(CSessaoRespStatus, ATipo, AFormato);
 end;
 
 procedure TStatusServicoResposta.Processar(const ACBrCTe: TACBrCTe);
@@ -404,9 +452,9 @@ begin
 end;
 
 { TInutilizarCTeResposta }
-constructor TInutilizarCTeResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TInutilizarCTeResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespInutilizacao, ATipo);
+  inherited Create(CSessaoRespInutilizacao, ATipo, AFormato);
 end;
 
 procedure TInutilizarCTeResposta.Processar(const ACBrCTe: TACBrCTe);
@@ -427,9 +475,9 @@ begin
 end;
 
 { TConsultaCTeResposta }
-constructor TConsultaCTeResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TConsultaCTeResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespConsulta, ATipo);
+  inherited Create(CSessaoRespConsulta, ATipo, AFormato);
 end;
 
 procedure TConsultaCTeResposta.Processar(const ACBrCTe: TACBrCTe);
@@ -448,13 +496,6 @@ begin
      Self.NProt := Consulta.Protocolo;
      Self.DigVal := Consulta.protCTe.digVal;
    end;
-end;
-
-{ TLibCTeResposta }
-constructor TLibCTeResposta.Create(const ASessao: String;
-  const ATipo: TACBrLibRespostaTipo);
-begin
-  inherited Create(ASessao, ATipo);
 end;
 
 end.

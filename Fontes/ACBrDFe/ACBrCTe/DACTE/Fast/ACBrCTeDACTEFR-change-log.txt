@@ -44,6 +44,19 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+11/12/2019
+-- ACBrCTeDACTEFR --
+[*] Correção na impressão do DACTE quando CTe de complemento ou anulação,
+    alinhamento de bandas e reativação do "double pass" para numeração correta
+    com múltiplos CTe carregados.
+  Por: BigWings
+  
+09/10/2019
+-- ACBrCTeDACTEFR --
+[*] Ajuste para impressão quando CTe não contiver documentos no grupo "infDoc".
+    https://www.projetoacbr.com.br/forum/topic/54123-observação-não-sai-no-dacte/
+  Por: BigWings
+
 02/09/2019
 -- ACBrCTeDACTEFR --
 [*] Ajustes para impressão de evento do comprovante de entrega e cancelamento

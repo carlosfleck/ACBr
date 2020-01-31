@@ -46,14 +46,14 @@ unit ACBrBPeDABPEClass;
 interface
 
 uses
-  SysUtils, Classes, ACBrBase,
-  pcnBPe, pcnConversao, ACBrDFeReport;
+  SysUtils, Classes,
+  ACBrBase, pcnBPe, pcnConversao, ACBrDFeReport;
 
 type
 
   { TACBrBPeDABPEClass }
-   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrBPeDABPEClass = class( TACBrDFeReport )
   private
@@ -70,6 +70,7 @@ type
     FCancelada: Boolean;
     FViaConsumidor: Boolean;
     FImprimeNomeFantasia: Boolean;
+    FImprimeLogoLateral: Boolean;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
@@ -91,6 +92,7 @@ type
     property Cancelada: Boolean                      read FCancelada                      write FCancelada;
     property ViaConsumidor: Boolean                  read FViaConsumidor                  write FViaConsumidor;
     property ImprimeNomeFantasia: Boolean            read FImprimeNomeFantasia            write FImprimeNomeFantasia;
+    property ImprimeLogoLateral: Boolean read FImprimeLogoLateral write FImprimeLogoLateral default False;
   end;
 
 implementation
@@ -109,6 +111,7 @@ begin
   FCancelada := False;
   FViaConsumidor := True;
   FImprimeNomeFantasia := False;
+  FImprimeLogoLateral  := False;
 end;
 
 destructor TACBrBPeDABPEClass.Destroy;
@@ -216,6 +219,7 @@ begin
                          Result,
                          DescricaoModelo,
                          ABPe.Emit.CNPJ,
+                         ABPe.Emit.IE,
                          dhEmissao,
                          DescricaoModelo);
     end;

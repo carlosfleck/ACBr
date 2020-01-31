@@ -47,6 +47,139 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+30/01/2020
+-- ACBrDANFCeFortesFrA4 --  
+[*] Incluído a impressão do valor total do frete.
+Por: Italo Jurisato Junior
+-- ACBrDANFCeFortesFrA4 --  
+[*] Incluído a impressão dos numeros dos bilhetes da Nota MS Premiada.
+Por: Italo Jurisato Junior
+
+23/01/2020
+-- pcnNFeRTXT --  
+[*] Atualizado leitura do grupo pagamento validando tag YA, disponivel na versão 3.10 da NFe
+Por: José M S Junior
+
+16/01/2020
+-- ACBrNFeDANFeESCPOS, ACBrDANFCeFortesFr --
+[+] Ajuste para que Frete no Item, seja impresso destacado de Acréscimos
+    https://www.projetoacbr.com.br/forum/topic/55780-valor-do-frete-no-item-da-nfc-e/
+    (por: DSA)
+
+15/01/2020
+-- ACBrDANFCeFortesFr --
+[+] Adicionada a propriedade FormularioContinuo: Boolean default False
+    Para permitir gerar relatórios com quebras de Páginas, a fim de permitir a
+    impressão correta de DANFCEs longos, algumas Impressoras
+    https://www.projetoacbr.com.br/forum/topic/55422-extrato-forte-itens/
+    (por: DSA)
+
+13/01/2020
+-- pcnNFeW -- 
+[*] Acrescentado a condição (OcorrenciasVICMSSubstituto > 0) para a geração das tags: 
+    vBCSTRET, pST, vICMSSubstituto e vICMSSTRET quando o CST for 60 e CSOSN for 500.
+   Por: Italo Jurisato Junior
+
+09/01/2020
+-- pcnNFeW -- 
+[*] Alterado as condições para a geração das tags: vBCSTRET, pST, 
+    vICMSSubstituto e vICMSSTRET quando o CST for 60 e CSOSN for 500.
+   Por: Italo Jurisato Junior
+
+-- pcnConversaoNFe, ACBrNFeDANFEClass, ACBrNFeDANFeRLPaisagem, ACBrNFeDANFeRLRetrato, ACBrNFeDANFEFRDM --
+[*] Criação de propriedade "ExibeCampoDePagamento" para controlar a impressão
+    dos pagamentos no DANFE.
+  Por: Henrique Leonardo (hleorj) / BigWings
+
+08/01/2020
+-- pcnLayoutTXT -- 
+[*] Atualização do Layout TXT compatibilizando com a versão 4.0 disponibilizada pelo SEBRAE
+-- pcnNFeRTXT -- 
+[*] Atualização na leitura do Layout TXT compatibilizando com a versão 4.0 disponibilizada pelo SEBRAE
+   Por: José M S Junior
+
+30/12/2019
+-- pcnNFeW -- 
+[*] https://www.projetoacbr.com.br/forum/topic/47753-notas-de-exporta%C3%A7%C3%A3o-ind-obrigando-campo-nre/?do=findComment&comment=363645
+   Por: Fernando Bolson
+
+19/12/2019
+-- ACBrNFeWebServices --
+[+] Incluido a propriedade Protocolo no retorno de envio do NF-e.
+   Por: Italo Jurisato Junior
+
+18/12/2019
+-- ACBrDANFCeFortesFr -- 
+[*] https://www.projetoacbr.com.br/forum/topic/54973-impressao-nfce-fortes-bobina/
+   Por: Volmir
+
+18/12/2019
+-- ACBrNFe -- 
+[*] Invertido as alinhas que atribuem valores para cCSC e cIdCSC, uma vez que cCSC
+    se utiliza do valor de cIdCSC caso cCSC for vazio.
+   Por: Italo Jurisato Junior
+
+21/11/2019
+-- ACBrNFeNotasFiscais 
+[-] Checagem de todos os campos que compõe o grupo <vol> para decidir se o mesmo será criado ou não.
+   Por: Italo Jurisato Junior
+
+20/11/2019
+[*] Ajustes nos arquivos .lfm ref. impressão do conteúdo da tag xMsg nos DANFE da NF-e e NFC-e
+    feitos em Fortes Report
+  Por: José M S Junior
+
+19/11/2019
+-- ACBrNFeWebServices 
+[*] https://www.projetoacbr.com.br/forum/topic/54881-sefaz-ms-nota-ms-premiada/?do=findComment&comment=360858
+   Por: Compusofts
+-- ACBrNFeWebServices --
+[*] Ajustes para a leitura dos campos cMsg, xMsg na consulta logo após o envio.
+  Por: Italo Jurisato Junior
+-- ACBrNFeWebServices --
+[+] Implementado a leitura dos campos cMsg, xMsg na consulta.
+  Por: André Moraes
+-- Diversos --
+[+] Implementado a impressão do conteúdo da tag xMsg nos DANFE da NF-e e NFC-e
+    feitos em Fortes Report e EscPos.
+  Por: Italo Jurisato Junior
+
+24/10/2019
+-- ACBrNFeServicos --
+[*] Correção da URL de consulta por QR-Code AC homologação.
+  Por: BigWings
+
+11/09/2019
+-- ACBrECFVirtualNFCe --
+[-] Acerto para considerar 0,01 de desconto no total.
+    Por: Regys Silveira
+
+04/10/2019
+-- ACBrNFeServicos --
+[*] Incluido a seção: SOAP_V4_BA no arquivo INI, pois a SEFAZ-BA esta usando 
+    namespace diferente do padrão para alguns serviços.
+   Por: Italo Jurisato Junior / Henrique Sandri Zimermam
+
+03/10/2019
+-- pcnConversaoNFe --
+[*] Incluido o tipo de evento: Averbação para Exportação.
+   Por: Italo Jurisato Junior
+
+01/10/2019
+-- ACBrNFeWebServices --
+[*] Incluido a chamada para remover os namespaces individos no método
+    Inutilização.
+   Por: Italo Jurisato Junior
+-- ACBrNFeWebServices --
+[*] Possível correção para o problema que esta ocorrendo na SEFAZ-MG,
+    estão incluido indevidamente o namespace em todas as tags de retorno.
+   Por: Italo Jurisato Junior
+
+27/09/2019
+-- pcnNFeW --
+[*] Alterado de opcional para obrigatório algumas tags do cst 51.
+  Por: Italo Jurisato Junior
+
 13/09/2019
 -- pcnEnvEventoNFe --
 [*] Correção para não tentar extrair CPF da chave de acesso no envio de evento

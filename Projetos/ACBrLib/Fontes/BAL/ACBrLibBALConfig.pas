@@ -76,11 +76,10 @@ type
     FDeviceConfig: TDeviceConfig;
 
   protected
-    function AtualizarArquivoConfiguracao: Boolean; override;
-
     procedure INIParaClasse; override;
     procedure ClasseParaINI; override;
     procedure ClasseParaComponentes; override;
+    procedure ImportarIni(FIni: TCustomIniFile); override;
 
     procedure Travar; override;
     procedure Destravar; override;
@@ -96,7 +95,8 @@ type
 implementation
 
 uses
-  ACBrLibBALClass, ACBrLibBALConsts, ACBrLibConsts, ACBrLibComum, ACBrUtil;
+  ACBrMonitorConsts, ACBrLibConsts, ACBrLibBALConsts,
+  ACBrLibBALClass, ACBrLibComum, ACBrUtil;
 
 { TBALConfig }
 
@@ -156,15 +156,6 @@ begin
   inherited Destroy;
 end;
 
-function TLibBALConfig.AtualizarArquivoConfiguracao: Boolean;
-var
-  Versao: String;
-begin
-  Versao := Ini.ReadString(CSessaoVersao, CLibBALNome, '0');
-  Result := (CompareVersions(CLibBALVersao, Versao) > 0) or
-            (inherited AtualizarArquivoConfiguracao);
-end;
-
 procedure TLibBALConfig.INIParaClasse;
 begin
   inherited INIParaClasse;
@@ -177,8 +168,6 @@ procedure TLibBALConfig.ClasseParaINI;
 begin
   inherited ClasseParaINI;
 
-  Ini.WriteString(CSessaoVersao, CLibBALNome, CLibBALVersao);
-
   FBALConfig.GravarIni(Ini);
   FDeviceConfig.GravarIni(Ini);
 end;
@@ -187,6 +176,16 @@ procedure TLibBALConfig.ClasseParaComponentes;
 begin
   if Assigned(Owner) then
     TACBrLibBAL(Owner).BALDM.AplicarConfiguracoes;
+end;
+
+procedure TLibBALConfig.ImportarIni(FIni: TCustomIniFile);
+begin
+  BALConfig.ArqLog    := FIni.ReadString(CSecBAL, CKeyBALArqLog, BALConfig.ArqLog);
+  BALConfig.Porta     := FIni.ReadString(CSecBAL, CKeyBALPorta, BALConfig.Porta);
+  BALConfig.Modelo    := TACBrBALModelo(FIni.ReadInteger(CSecBAL, CKeyBALModelo, Integer(BALConfig.Modelo)));
+  BALConfig.Intervalo := FIni.ReadInteger(CSecBAL, CKeyBALIntervalo, BALConfig.Intervalo);
+
+  DeviceConfig.ImportarSerialParams(FIni.ReadString(CSecBAL, CKeyBALDevice, ''));
 end;
 
 procedure TLibBALConfig.Travar;

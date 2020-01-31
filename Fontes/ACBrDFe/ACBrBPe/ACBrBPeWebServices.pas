@@ -129,6 +129,7 @@ type
     FxMotivo: String;
     FdhRecbto: TDateTime;
     FTMed: Integer;
+    FProtocolo: String;
     FMsgUnZip: String;
     FVersaoDF: TVersaoBPe;
 
@@ -159,6 +160,7 @@ type
     property xMotivo: String read FxMotivo;
     property dhRecbto: TDateTime read FdhRecbto;
     property TMed: Integer read FTMed;
+    property Protocolo: String read FProtocolo;
     property Lote: String read GetLote write FLote;
     property MsgUnZip: String read FMsgUnZip write FMsgUnZip;
 
@@ -229,7 +231,7 @@ type
 
     FEventoRetorno: TRetEventoBPe;
 
-    function GerarPathEvento(const ACNPJ: String = ''): String;
+    function GerarPathEvento(const ACNPJ: String = ''; const AIE: String = ''): String;
   protected
     procedure DefinirURL; override;
     procedure DefinirServicoEAction; override;
@@ -577,12 +579,13 @@ begin
   FPArqEnv := 'env-lot';
   FPArqResp := 'rec';
 
-  Fversao := '';
-  FTMed := 0;
-  FverAplic := '';
-  FcStat    := 0;
-  FxMotivo  := '';
-  FdhRecbto := 0;
+  Fversao    := '';
+  FTMed      := 0;
+  FverAplic  := '';
+  FcStat     := 0;
+  FxMotivo   := '';
+  FdhRecbto  := 0;
+  FProtocolo := '';
 
   if Assigned(FPConfiguracoesBPe) then
   begin
@@ -691,7 +694,7 @@ end;
 
 procedure TBPeRecepcao.SalvarEnvio;
 var
-  Prefixo, ArqEnv: String;
+  Prefixo, xArqEnv: String;
   IsUTF8: Boolean;
 begin
   if FPArqEnv = '' then
@@ -699,20 +702,20 @@ begin
 
   Prefixo := GerarPrefixoArquivo;
 
-  if FPConfiguracoes.Geral.Salvar then
+  if FPConfiguracoesBPe.Geral.Salvar then
   begin
-    ArqEnv := Prefixo + '-' + FPArqEnv + '.xml';
+    xArqEnv := Prefixo + '-' + FPArqEnv + '.xml';
 
     IsUTF8  := XmlEstaAssinado(FMsgUnZip);
-    FPDFeOwner.Gravar(ArqEnv, FMsgUnZip, '', IsUTF8);
+    FPDFeOwner.Gravar(xArqEnv, FMsgUnZip, '', IsUTF8);
   end;
 
-  if FPConfiguracoes.WebServices.Salvar then
+  if FPConfiguracoesBPe.WebServices.Salvar then
   begin
-    ArqEnv := Prefixo + '-' + FPArqEnv + '-soap.xml';
+    xArqEnv := Prefixo + '-' + FPArqEnv + '-soap.xml';
 
     IsUTF8  := XmlEstaAssinado(FPEnvelopeSoap);
-    FPDFeOwner.Gravar(ArqEnv, FPEnvelopeSoap, '', IsUTF8);
+    FPDFeOwner.Gravar(xArqEnv, FPEnvelopeSoap, '', IsUTF8);
   end;
 end;
 
@@ -738,10 +741,11 @@ begin
 
   if FBPeRetorno.ProtBPe.Count > 0 then
   begin
-    chBPe    := FBPeRetorno.ProtBPe[0].chBPe;
-    FcStat   := FBPeRetorno.protBPe[0].cStat;
-    FPMsg    := FBPeRetorno.protBPe[0].xMotivo;
-    FxMotivo := FBPeRetorno.protBPe[0].xMotivo;
+    chBPe      := FBPeRetorno.ProtBPe[0].chBPe;
+    FcStat     := FBPeRetorno.protBPe[0].cStat;
+    FPMsg      := FBPeRetorno.protBPe[0].xMotivo;
+    FxMotivo   := FBPeRetorno.protBPe[0].xMotivo;
+    FProtocolo := FBPeRetorno.ProtBPe[0].nProt;
   end;
 
   // Verificar se o BP-e foi autorizado com sucesso
@@ -1289,11 +1293,11 @@ begin
   FEventoRetorno := TRetEventoBPe.Create;
 end;
 
-function TBPeEnvEvento.GerarPathEvento(const ACNPJ: String): String;
+function TBPeEnvEvento.GerarPathEvento(const ACNPJ: String = ''; const AIE: String = ''): String;
 begin
   with FEvento.Evento.Items[0].infEvento do
   begin
-    Result := FPConfiguracoesBPe.Arquivos.GetPathEvento(tpEvento, ACNPJ);
+    Result := FPConfiguracoesBPe.Arquivos.GetPathEvento(tpEvento, ACNPJ, AIE);
   end;
 end;
 
@@ -1553,7 +1557,7 @@ begin
               if FPConfiguracoesBPe.Arquivos.Salvar then
               begin
                 NomeArq := OnlyNumber(FEvento.Evento.Items[i].infEvento.Id) + '-procEventoBPe.xml';
-                PathArq := PathWithDelim(GerarPathEvento(FEvento.Evento.Items[I].infEvento.CNPJ));
+                PathArq := PathWithDelim(GerarPathEvento(FEvento.Evento.Items[I].infEvento.CNPJ, FEvento.Evento.Items[I].infEvento.detEvento.IE));
 
                 FPDFeOwner.Gravar(NomeArq, Texto, PathArq);
                 FEventoRetorno.retEvento.Items[J].RetinfEvento.NomeArquivo := PathArq + NomeArq;
@@ -1580,29 +1584,29 @@ end;
 
 procedure TBPeEnvEvento.SalvarEnvio;
 begin
-  if ArqEnv = '' then
+  if FPArqEnv = '' then
     exit;
 
   if FPConfiguracoesBPe.Geral.Salvar then
-    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + ArqEnv + '.xml',
+    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + FPArqEnv + '.xml',
                       FPDadosMsg, GerarPathEvento(FCNPJ));
 
   if FPConfiguracoesBPe.WebServices.Salvar then
-    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + ArqEnv + '-soap.xml',
+    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + FPArqEnv + '-soap.xml',
       FPEnvelopeSoap, GerarPathEvento(FCNPJ));
 end;
 
 procedure TBPeEnvEvento.SalvarResposta;
 begin
-  if ArqResp = '' then
+  if FPArqResp = '' then
     exit;
 
   if FPConfiguracoesBPe.Geral.Salvar then
-    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + ArqResp + '.xml',
+    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + FPArqResp + '.xml',
                       FPRetWS, GerarPathEvento(FCNPJ));
 
   if FPConfiguracoesBPe.WebServices.Salvar then
-    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + ArqResp + '-soap.xml',
+    FPDFeOwner.Gravar(GerarPrefixoArquivo + '-' + FPArqResp + '-soap.xml',
       FPRetornoWS, GerarPathEvento(FCNPJ));
 end;
 
@@ -1827,11 +1831,13 @@ begin
       Result := FPConfiguracoesBPe.Arquivos.GetPathDownloadEvento(AItem.procEvento.tpEvento,
                                                           AItem.resDFe.xNome,
                                                           AItem.resDFe.CNPJCPF,
+                                                          AItem.resDFe.IE,
                                                           Data);
 
     schprocBPe:
       Result := FPConfiguracoesBPe.Arquivos.GetPathDownload(AItem.resDFe.xNome,
                                                         AItem.resDFe.CNPJCPF,
+                                                        AItem.resDFe.IE,
                                                         Data);
   end;
 end;

@@ -2,33 +2,32 @@
 { Projeto: Componentes ACBr                                                    }
 {  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
 { mentos de Automação Comercial utilizados no Brasil                           }
-
+{                                                                              }
 { Direitos Autorais Reservados (c) 2004 Daniel Simoes de Almeida               }
-
+{                                                                              }
 { Colaboradores nesse arquivo:                                                 }
-
+{                                                                              }
 {  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
 { Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
+{                                                                              }
 {  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
 { sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
 { Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
 { qualquer versão posterior.                                                   }
-
+{                                                                              }
 {  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM   }
 { NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU      }
 { ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor}
 { do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)              }
-
+{                                                                              }
 {  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto}
 { com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
 { no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
 { Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-
+{ http://www.opensource.org/licenses/lgpl-license.php                          }
+{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
 
 {******************************************************************************
@@ -46,7 +45,10 @@ interface
 
 uses
   Classes, SysUtils,
-  ACBrDevice, ACBrBase, ACBrEscPosHook;
+  ACBrDevice, ACBrBase, ACBrEscPosHook
+  {$IfDef MSWINDOWS}
+   ,ACBrWinUSBDevice
+  {$EndIf};
 
 type
 
@@ -138,7 +140,7 @@ type
   TACBrPosPaginaCodigo = (pcNone, pc437, pc850, pc852, pc860, pcUTF8, pc1252);
   TACBrPosDirecao = (dirEsquerdaParaDireita, dirTopoParaBaixo, dirDireitaParaEsquerda, dirBaixoParaTopo);
 
-  TACBrPosTipoStatus = (stErro, stNaoSerial, stPoucoPapel, stSemPapel,
+  TACBrPosTipoStatus = (stErro, stApenasEscrita, stPoucoPapel, stSemPapel,
                         stGavetaAberta, stImprimindo, stOffLine, stTampaAberta,
                         stErroLeitura);
   TACBrPosPrinterStatus = set of TACBrPosTipoStatus;
@@ -161,7 +163,7 @@ type
 
   TACBrPosPrinterModelo = (ppTexto, ppEscPosEpson, ppEscBematech, ppEscDaruma,
                            ppEscVox, ppEscDiebold, ppEscEpsonP2, ppCustomPos,
-                           ppEscPosStar, ppEscZJiang);
+                           ppEscPosStar, ppEscZJiang, ppEscGPrinter);
 
   { TACBrPosPrinterClass }
 
@@ -299,7 +301,7 @@ type
 
   { TACBrPosPrinter }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrPosPrinter = class(TACBrComponent)
   private
@@ -343,6 +345,7 @@ type
     function GetPorta: String;
     function GetTagsNaoSuportadas: TStringList;
     function GetTraduzirTags: Boolean;
+    function PodeLerDaPorta: Boolean;
     procedure SetAtivo(AValue: Boolean);
     procedure SetIgnorarTags(AValue: Boolean);
     procedure SetPorta(const AValue: String);
@@ -369,7 +372,6 @@ type
     procedure PosPrinterHookDesativar(const APort: String);
     procedure PosPrinterHookEnviaString(const cmd: AnsiString);
     procedure PosPrinterHookLeString(const NumBytes, ATimeOut: Integer; var Retorno: AnsiString);
-
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -484,7 +486,8 @@ uses
   ACBrUtil, ACBrImage, ACBrConsts,
   synacode,
   ACBrEscPosEpson, ACBrEscEpsonP2, ACBrEscBematech, ACBrEscDaruma,
-  ACBrEscElgin, ACBrEscDiebold, ACBrEscCustomPos, ACBrEscPosStar, ACBrEscZJiang,
+  ACBrEscElgin, ACBrEscDiebold, ACBrEscCustomPos, ACBrEscPosStar,
+  ACBrEscZJiang, ACBrEscGPrinter,
   ACBrEscPosHookElginDLL, ACBrEscPosHookEpsonDLL;
 
 { TACBrConfigModoPagina }
@@ -839,6 +842,10 @@ begin
   {$IFDEF COMPILER6_UP}
   FDevice.SetSubComponent( true );{ para gravar no DFM/XFM }
   {$ENDIF}
+  {$IfDef MSWINDOWS}
+  FDevice.WinUSB.HardwareType := htPOSPrinter;
+  {$EndIf}
+
   FPosPrinterClass := TACBrPosPrinterClass.Create(Self);
   FModelo := ppTexto;
   FHook := Nil;
@@ -1066,20 +1073,22 @@ end;
 
 procedure TACBrPosPrinter.Ativar;
 var
+  {$IfDef MSWINDOWS}
+  TipoHardware: TACBrUSBHardwareType;
+  ProtocoloACBr: Integer;
+  {$EndIf}
   DadosDevice: String;
 begin
   if FAtivo then
     Exit;
 
 {(*}
-  if FDevice.IsTXTFilePort then
-    DadosDevice := '  - Arquivo: '+FDevice.Porta
-  else if FDevice.IsDLLPort then
-    DadosDevice := '  - DLL....: '+FDevice.Porta
-  else if FDevice.IsSerialPort then
-    DadosDevice := '  - Serial.: '+FDevice.Porta+' - '+FDevice.DeviceToString(False)
-  else
-    DadosDevice := '  - Porta..: '+FDevice.Porta;
+  DadosDevice := '  - Porta..: '+FDevice.Porta + sLineBreak +
+                 '  - Tipo...: '+copy(GetEnumName(TypeInfo(TACBrDeviceType), integer(FDevice.DeviceType)),3,20);
+
+  if FDevice.IsSerialPort then
+    DadosDevice := DadosDevice + sLineBreak +
+                   '  - Params.: '+FDevice.DeviceToString(False);
 
   GravarLog(AnsiString(sLineBreak + StringOfChar('-', 80) + sLineBreak +
             'ATIVAR - ' + FormatDateTime('dd/mm/yy hh:nn:ss:zzz', now) + sLineBreak +
@@ -1091,6 +1100,17 @@ begin
   {*)}
 
   DetectarECriarHook;
+  {$IfDef MSWINDOWS}
+   ProtocoloACBr := 0;
+   TipoHardware := htPOSPrinter;
+   FDevice.DetectarTipoEProtocoloDispositivoUSB(TipoHardware, ProtocoloACBr);
+
+   if not (TipoHardware in [htUnknown, htPOSPrinter]) then
+     raise EPosPrinterException.Create(ACBrStr('Porta: '+FDevice.Porta+' não está conectada a uma Impressora'));
+
+   if (ProtocoloACBr > 0) then
+     Modelo := TACBrPosPrinterModelo(ProtocoloACBr);
+  {$EndIf}
 
   FDevice.Ativar;
   FAtivo := True;
@@ -1136,6 +1156,7 @@ begin
     ppCustomPos : FPosPrinterClass := TACBrEscCustomPos.Create(self);
     ppEscPosStar: FPosPrinterClass := TACBrEscPosStar.Create(Self);
     ppEscZJiang: FPosPrinterClass := TACBrEscZJiang.Create(Self);
+    ppEscGPrinter: FPosPrinterClass := TACBrEscGPrinter.Create(Self);
   else
     FPosPrinterClass := TACBrPosPrinterClass.Create(Self);
   end;
@@ -1829,7 +1850,7 @@ begin
   if Assigned(FOnGravarLog) then
     FOnGravarLog(AString, Tratado);
 
-  if not Tratado then
+  if (not Tratado) and (FArqLog <> '') then
   begin
     if AdicionaTempo then
       AString := '-- ' + FormatDateTime('dd/mm hh:nn:ss:zzz', now) + ' - ' + AString;
@@ -1908,17 +1929,18 @@ begin
   GravarLog('LerStatusImpressora( '+IntToStr(Tentativas)+' )');
 
   try
-    if not (FDevice.IsSerialPort or FDevice.IsTCPPort or FDevice.IsDLLPort) then
+    if not PodeLerDaPorta then
     begin
-      Result := [stNaoSerial];
+      Result := [stApenasEscrita];
       Exit;
     end;
 
     OldAtivo := Ativo;
     try
-      Ativo := True;
-      Falhas := 0;
+      Ativar;
+      AtivarPorta;
 
+      Falhas := 0;
       while Falhas < Tentativas do
       begin
         Result := [];
@@ -1939,6 +1961,8 @@ begin
       end;
     finally
       Ativo := OldAtivo;
+      if ControlePorta then
+        DesativarPorta;
     end;
   finally
     AStr := '';
@@ -1962,16 +1986,19 @@ begin
 
   OldAtivo := Ativo;
   try
-    Ativo := True;
-
-    if not (FDevice.IsSerialPort or FDevice.IsTCPPort or FDevice.IsDLLPort) then
-      raise EPosPrinterException.Create(ACBrStr('Leitura de Informações só disponivel em Portas Seriais ou TCP'));
+    if not PodeLerDaPorta then
+      raise EPosPrinterException.Create(ACBrStr('Leitura de Informações não disponível na porta: ')+
+                                        GetEnumName(TypeInfo(TACBrDeviceType), integer(FDevice.DeviceType)));
+    Ativar;
+    AtivarPorta;
 
     Result := FPosPrinterClass.LerInfo;
     if (Result <> '') then
       GravarLog('   '+Result, True);
   finally
     Ativo := OldAtivo;
+    if ControlePorta then
+      DesativarPorta;
   end;
 end;
 
@@ -2111,6 +2138,11 @@ end;
 function TACBrPosPrinter.GetTraduzirTags: Boolean;
 begin
   Result := FTagProcessor.TraduzirTags;
+end;
+
+function TACBrPosPrinter.PodeLerDaPorta: Boolean;
+begin
+   Result := (FDevice.DeviceType in [dtSerial, dtTCP, dtHook, dtUSB] )
 end;
 
 procedure TACBrPosPrinter.SetAtivo(AValue: Boolean);

@@ -34,7 +34,7 @@ unit pnfsEnvLoteRpsResposta;
 interface
 
 uses
-  SysUtils, Classes, Variants, Math, StrUtils, Contnrs,
+  SysUtils, Classes, Variants, StrUtils, Contnrs,
   ACBrUtil,
   pcnAuxiliar, pcnConversao, pcnLeitor, pnfsConversao, pnfsNFSe;
 
@@ -368,10 +368,11 @@ begin
       inc(i);
     end;
 
-    if Provedor = proISSDigital then
+    if Provedor in [proISSDigital, proElotech] then
     begin
       i := 0;
-      while Leitor.rExtrai(1, 'ListaMensagemRetorno', '', i + 1) <> '' do
+      while (Leitor.rExtrai(1, 'ListaMensagemRetorno', '', i + 1) <> '') or
+            (Leitor.rExtrai(1, 'ListaMensagemRetornoLote', '', i + 1) <> '') do
       begin
         InfRec.FMsgRetorno.New;
         InfRec.FMsgRetorno[i].FIdentificacaoRps.Numero := Leitor.rCampo(tcStr, 'Numero');
@@ -393,6 +394,17 @@ begin
       InfRec.FMsgRetorno[i].FCodigo   := Leitor.rCampo(tcStr, 'CodigoErro');
       InfRec.FMsgRetorno[i].FMensagem := Leitor.rCampo(tcStr, 'MensagemErro');
       InfRec.FMsgRetorno[i].FCorrecao := '';
+
+      inc(i);
+    end;
+
+    i := 0;
+    while Leitor.rExtrai(iNivel, 'Erro', '', i + 1) <> '' do
+    begin
+      InfRec.FMsgRetorno.New;
+      InfRec.FMsgRetorno[i].FCodigo   := Leitor.rCampo(tcStr, 'ErroID');
+      InfRec.FMsgRetorno[i].FMensagem := Leitor.rCampo(tcStr, 'ErroMensagem');
+      InfRec.FMsgRetorno[i].FCorrecao := Leitor.rCampo(tcStr, 'ErroSolucao');
 
       inc(i);
     end;
@@ -535,11 +547,17 @@ begin
     end
     else
     begin
-      i := 0;
-      FInfRec.FMsgRetorno.New;
-      FInfRec.FMsgRetorno[i].FCodigo   := '';
-      FInfRec.FMsgRetorno[i].FMensagem := Leitor.Grupo;
-      FInfRec.FMsgRetorno[i].FCorrecao := '';
+      if leitor.rExtrai(1, 'enviarResponse') <> '' then
+      begin
+        if leitor.rExtrai(2, 'enviarReturn') <> '' then
+        begin
+          i := 0;
+          FInfRec.FMsgRetorno.New;
+          FInfRec.FMsgRetorno[i].FCodigo   := '';
+          FInfRec.FMsgRetorno[i].FMensagem := Leitor.Grupo;
+          FInfRec.FMsgRetorno[i].FCorrecao := '';
+        end;
+      end;
     end;
   except
     Result := False;
@@ -1147,6 +1165,16 @@ begin
           end;
         end;
       end;
+    end 
+    else 
+    begin
+      FInfRec.MsgRetorno.New;
+      FInfRec.FMsgRetorno[i].FCodigo   := '00002'; // não tem codigo...
+
+      if Pos('Nao foi encontrado na tb.dcarq.unico a cidade(codmun) do Usuario:', leitor.Arquivo) > 0 then
+        FInfRec.FMsgRetorno[i].FMensagem := 'Usuário e/ou senha informados são inválidos'
+      else
+        FInfRec.FMsgRetorno[i].FMensagem := leitor.Arquivo;
     end;
   except
     Result := False;

@@ -6,7 +6,7 @@ unit ACBrCIOTContratos;
 interface
 
 uses
-  Classes, SysUtils, Dialogs, Forms, StrUtils,
+  Classes, SysUtils, Dialogs, Forms,
   ACBrCIOTConfiguracoes, ACBrDFeUtil,
   pcnCIOT, pcnCIOTR, pcnCIOTW, pcnConversao, pcnAuxiliar, pcnLeitor;
 
@@ -102,7 +102,7 @@ type
 implementation
 
 uses
-  ACBrCIOT, ACBrUtil, pcnConversaoCIOT, synautil;
+  ACBrCIOT, ACBrUtil, synautil;
 
 { Documento }
 
@@ -117,9 +117,9 @@ begin
   begin
     FCIOTW.Integradora := Configuracoes.Geral.Integradora;
 
-    FCIOT.Integradora.usuario        := Configuracoes.Geral.Usuario;
-    FCIOT.Integradora.senha          := Configuracoes.Geral.Senha;
-    FCIOT.Integradora.HashIntegrador := Configuracoes.Geral.HashIntegrador;
+    FCIOT.Integradora.usuario    := Configuracoes.Geral.Usuario;
+    FCIOT.Integradora.senha      := Configuracoes.Geral.Senha;
+    FCIOT.Integradora.Integrador := Configuracoes.Geral.HashIntegrador;
   end;
 end;
 

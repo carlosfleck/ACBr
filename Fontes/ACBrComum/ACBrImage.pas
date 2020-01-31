@@ -10,9 +10,6 @@
 {  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
 { Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
 {                                                                              }
-{  Algumas funçoes dessa Unit foram extraidas de outras Bibliotecas, veja no   }
-{ cabeçalho das Funçoes no código abaixo a origem das informaçoes, e autores...}
-{                                                                              }
 {  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
 { sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
 { Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
@@ -27,12 +24,16 @@
 { com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
 { no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
 { Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
+{ http://www.opensource.org/licenses/lgpl-license.php                          }
 {                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
+{                                                                              }
+{  Algumas funçoes dessa Unit foram extraidas de outras Bibliotecas, veja no   }
+{ cabeçalho das Funçoes no código abaixo a origem das informaçoes, e autores...}
+{                                                                              }
+{******************************************************************************} 
 
 {$I ACBr.inc}
 
@@ -46,7 +47,9 @@ uses
    {$IfDef FPC}
     ,LCLType, InterfaceBase
    {$Else}
-    ,windows
+    {$IfDef MSWINDOWS}
+     ,windows
+    {$EndIf}
    {$EndIf}
    {$IfDef FMX}
     ,FMX.Graphics, System.UITypes, FMX.Types
@@ -149,10 +152,10 @@ procedure BMPMonoToRasterStr(ABMPStream: TStream; InvertImg: Boolean; out
   AWidth: Integer; out AHeight: Integer; out ARasterStr: AnsiString);
 var
   bPixelOffset, bSizePixelArr, bWidth, bHeight: LongWord;
-  bPixel: Byte;
+  bPixel, PadByte: Byte;
   StreamLastPos, RowStart, BytesPerRow, i, RealWidth: Int64;
-  HasPadBits: Boolean;
-  BytesPerWidth: Integer;
+  IsPadByte, HasPadBits: Boolean;
+  BytesPerWidth, PadBits, j: Integer;
 begin
   // Inspiração:
   // http://www.nonov.io/convert_bmp_to_ascii
@@ -189,6 +192,17 @@ begin
   HasPadBits := (BytesPerRow > (trunc(bWidth/8)));
   BytesPerRow := ceil(bWidth / 8);
   AWidth := BytesPerRow*8;
+  PadByte := 0;
+  if HasPadBits then
+  begin
+    PadBits := Cardinal(AWidth) - bWidth;
+    PadByte := 1;
+    for j := 2 to PadBits do
+    begin
+      PadByte := PadByte shl 1;
+      PadByte := PadByte + 1;
+    end;
+  end;
 
   if (bSizePixelArr <= 0) then
     bSizePixelArr := ABMPStream.Size-bPixelOffset;
@@ -204,15 +218,14 @@ begin
     ABMPStream.Position := RowStart;
     while (i <= BytesPerRow) do
     begin
+      IsPadByte := HasPadBits and (i = BytesPerRow);
       bPixel := 0;
       ABMPStream.ReadBuffer(bPixel,1);
+      if IsPadByte then
+        bPixel := bPixel or PadByte;
+
       if InvertImg then
-      begin
-        if (not HasPadBits) or (i < BytesPerRow) then
-          bPixel := bPixel xor $FF
-        else
-          bPixel := bPixel xor bPixel;
-      end;
+        bPixel := bPixel xor $FF;
 
       ARasterStr := ARasterStr + AnsiChr(bPixel);
       inc(i);
@@ -372,6 +385,7 @@ var
   LenPixArrIn, LenPixArrOut, BytesPerRowIn, BytesPerRowOut, RowStart: Integer;
   AHeight, i, p, b: Integer;
   PixArr: array of Byte;
+  BMSig: array[0..1] of AnsiChar;
 begin
   BytesPerRowIn := ceil(AWidth / 8);
   LenPixArrIn := Length(ARasterStr);
@@ -411,8 +425,10 @@ begin
   begin
     Size := 0;  // Trunc Stream
 
+    BMSig[0] := 'B';
+    BMSig[1] := 'M';
     // BMP header   14 bytes
-    Write('BM',2);    // BitMap signature
+    WriteBuffer(BMSig,2);    // BitMap signature
     ALongWord := 14 + 40 + 8 + LenPixArrOut ;
     WriteBuffer(ALongWord, 4);  // Tamanho do arquivo
     ALongWord := 0;

@@ -39,11 +39,9 @@ uses
 {$ELSE}
 
 {$ENDIF}
-  SysUtils, Classes, StrUtils,
-  synacode, ACBrConsts,
-  pnfsNFSeW,
-  pcnAuxiliar, pcnConversao, pcnGerador,
-  pnfsNFSe, pnfsConversao, pnfsConsts;
+  SysUtils, Classes,
+  ACBrConsts,
+  pnfsNFSeW, pcnAuxiliar, pcnConversao, pcnGerador, pnfsNFSe, pnfsConversao;
 
 type
   { TNFSeW_AssessorPublico }
@@ -62,7 +60,7 @@ type
 implementation
 
 uses
-  ACBrUtil, MaskUtils;
+  ACBrUtil;
 
 {==============================================================================}
 { Essa unit tem por finalidade exclusiva de gerar o XML do RPS segundo o       }
@@ -98,7 +96,7 @@ begin
 
 
 // devem ser previamente cadastrados no sistema
-  Gerador.wCampoNFSe(tcStr, '', 'SITUACAO', 1, 1, 1, '1', '');
+  Gerador.wCampoNFSe(tcStr, '', 'SITUACAO', 1, 1, 1, NFSe.Situacao, '');
 
   if NFSe.Servico.Valores.IssRetido = stRetencao then
     Gerador.wCampoNFSe(tcStr, '', 'RETIDO', 1, 1, 1, 'S', '')
@@ -157,8 +155,11 @@ end;
 function TNFSeW_AssesorPublico.GerarXml: Boolean;
 begin
   Gerador.ListaDeAlertas.Clear;
+
   Gerador.ArquivoFormatoXML := '';
   Gerador.Prefixo           := FPrefixo4;
+
+  Gerador.Opcoes.QuebraLinha := FQuebradeLinha;
 
   FDefTipos := FServicoEnviar;
 

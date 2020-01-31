@@ -14,17 +14,6 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Const BUFFER_LENGTH As Long = 1024
-
-' UTF-8 Code Page'Sys call to convert multiple byte chars to a charPrivate
-Const CP_UTF8       As Long = 65001
-
-Private Declare Function MultiByteToWideChar _
-                Lib "kernel32" (ByVal CodePage As Long, _
-                                ByVal dwFlags As Long, _
-                                ByVal lpMultiByteStr As Long, _
-                                ByVal cchMultiByte As Long, _
-                                ByVal lpWideCharStr As Long, _
-                                ByVal cchWideChar As Long) As Long
                                 
 Private Declare Function SAT_Inicializar _
                 Lib "ACBrSAT32.dll" (ByVal eArqConfig As String, _
@@ -68,7 +57,8 @@ Private Declare Function SAT_DesInicializar Lib "ACBrSAT32.dll" () As Long
 Private Declare Function SAT_AssociarAssinatura _
                 Lib "ACBrSAT32.dll" (ByVal CNPJValue As String, _
                                       ByVal assinaturaCNPJs As String, _
-                                      ByVal valor As String) As Long
+                                      ByVal buffer As String, _
+                                      ByRef bufferLen As Long) As Long
                                       
 Private Declare Function SAT_BloquearSAT _
                 Lib "ACBrSAT32.dll" (ByVal buffer As String, _
@@ -149,7 +139,6 @@ Private Declare Function SAT_GerarPDFExtratoVenda _
                                       
 Private Declare Function SAT_GerarImpressaoFiscalMFe _
                 Lib "ACBrSAT32.dll" (ByVal eArquivoXml As String, _
-                                      ByVal eNomeArquivo As String, _
                                       ByVal buffer As String, _
                                       ByRef bufferLen As Long) As Long
                                       
@@ -165,6 +154,8 @@ Private Declare Function SAT_EnviarEmail _
 Public Sub InicializarLib(Optional ByVal eArqConfig As String = "", _
                           Optional ByVal eChaveCrypt As String = "")
 
+    SetLibPath
+    
     Dim retorno As Long
 
     retorno = SAT_Inicializar(eArqConfig, eChaveCrypt)
@@ -521,7 +512,7 @@ Public Function GerarPDFExtratoVenda(ByVal eArquivoXml As String, Optional ByVal
     GerarPDFExtratoVenda = processResult(buffer, bufferLen)
 End Function
 
-Public Function GerarImpressaoFiscalMFe(ByVal eArquivoXml As String, ByVal eNomeArquivo As String) As String
+Public Function GerarImpressaoFiscalMFe(ByVal eArquivoXml As String) As String
 
     Dim retorno   As Long
     Dim buffer    As String
@@ -531,7 +522,7 @@ Public Function GerarImpressaoFiscalMFe(ByVal eArquivoXml As String, ByVal eNome
     
     buffer = String$(bufferLen, " ")
     
-    retorno = SAT_GerarImpressaoFiscalMFe(eArquivoXml, eNomeArquivo, buffer, bufferLen)
+    retorno = SAT_GerarImpressaoFiscalMFe(eArquivoXml, buffer, bufferLen)
     CheckResult (retorno)
     
     GerarImpressaoFiscalMFe = processResult(buffer, bufferLen)
@@ -543,7 +534,8 @@ Public Sub EnviarEmail(ByVal eArquivoXml As String, ByVal ePara As String, _
     
     Dim retorno   As Long
     
-    retorno = SAT_EnviarEmail(eArquivoXml, ePara, eAssunto)
+    retorno = SAT_EnviarEmail(eArquivoXml, ePara, eAssunto, eNomeArquivo, sMensagem, _
+                              sCC, eAnexos)
     CheckResult (retorno)
 End Sub
 
@@ -569,22 +561,4 @@ Private Function processResult(ByRef buffer As String, ByRef bufferLen As Long) 
     End If
 
     processResult = Trim$(FromUTF8(buffer))
-End Function
-
-Private Function FromUTF8(ByRef utf8STR As String) As String
-    
-    Dim length As Long
-    Dim UTF8() As Byte
-    Dim lDataLength As Long
-
-    length = Len(utf8STR)
-    UTF8 = StrConv(utf8STR, vbFromUnicode)
-    
-    ' Get the length of the data.
-    lDataLength = MultiByteToWideChar(CP_UTF8, 0, VarPtr(UTF8(0)), length, 0, 0)
-    
-    ' Create array big enough
-    FromUTF8 = String$(lDataLength, 0)
-    
-    MultiByteToWideChar CP_UTF8, 0, VarPtr(UTF8(0)), length, StrPtr(FromUTF8), lDataLength
 End Function

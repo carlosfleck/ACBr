@@ -50,7 +50,7 @@ interface
 
 uses
   Classes, SysUtils, ACBrUtil,
-  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes,
+  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes, ACBrBase,
   ACBreSocialConfiguracoes, ACBreSocialWebServices, ACBreSocialEventos,
   pcnConversao, pcesConversaoeSocial;
 
@@ -81,7 +81,7 @@ type
 
   { TACBreSocial }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBreSocial = class(TACBrDFe)
   private

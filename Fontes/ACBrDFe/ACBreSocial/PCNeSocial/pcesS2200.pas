@@ -178,15 +178,17 @@ begin
     GerarIdeEvento2(self.IdeEvento);
     GerarIdeEmpregador(self.IdeEmpregador);
 
-    GerarTrabalhador(self.Trabalhador, 'trabalhador', 2);
+    GerarTrabalhador(self.Trabalhador, Self.Vinculo.cadIni, 'trabalhador', 2);
     GerarVinculo(self.Vinculo, 2);
 
     Gerador.wGrupo('/evtAdmissao');
 
     GerarRodape;
 
-    XML := Assinar(Gerador.ArquivoFormatoXML, 'evtAdmissao');
-    Validar(schevtAdmissao);
+    FXML := Gerador.ArquivoFormatoXML;
+//    XML := Assinar(Gerador.ArquivoFormatoXML, 'evtAdmissao');
+
+//    Validar(schevtAdmissao);
   except on e:exception do
     raise Exception.Create('ID: ' + Self.Id + sLineBreak + ' ' + e.Message);
   end;
@@ -597,8 +599,9 @@ begin
     end;
 
     GerarXML;
+    XML := FXML;
   finally
-     INIRec.Free;
+    INIRec.Free;
   end;
 end;
 

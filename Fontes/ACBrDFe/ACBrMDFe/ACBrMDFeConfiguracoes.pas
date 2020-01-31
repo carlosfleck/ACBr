@@ -51,10 +51,8 @@ type
   TGeralConfMDFe = class(TGeralConf)
   private
     FVersaoDF: TVersaoMDFe;
-    FGerarInfMDFeSupl: TForcarGeracaoTag;
 
     procedure SetVersaoDF(const Value: TVersaoMDFe);
-    procedure SetGerarInfMDFeSupl(const Value: TForcarGeracaoTag);
   public
     constructor Create(AOwner: TConfiguracoes); override;
     procedure Assign(DeGeralConfMDFe: TGeralConfMDFe); reintroduce;
@@ -63,8 +61,6 @@ type
 
   published
     property VersaoDF: TVersaoMDFe read FVersaoDF write SetVersaoDF default ve300;
-    property GerarInfMDFeSupl: TForcarGeracaoTag read FGerarInfMDFeSupl
-      write SetGerarInfMDFeSupl default fgtSempre;
   end;
 
   { TArquivosConfMDFe }
@@ -84,8 +80,8 @@ type
     procedure GravarIni(const AIni: TCustomIniFile); override;
     procedure LerIni(const AIni: TCustomIniFile); override;
 
-    function GetPathMDFe(Data: TDateTime = 0; const CNPJ: String = ''): String;
-    function GetPathEvento(tipoEvento: TpcnTpEvento; const CNPJ: String = ''; Data: TDateTime = 0): String;
+    function GetPathMDFe(Data: TDateTime = 0; const CNPJ: String = ''; const IE: String = ''): String;
+    function GetPathEvento(tipoEvento: TpcnTpEvento; const CNPJ: String = ''; const IE: String = ''; Data: TDateTime = 0): String;
   published
     property EmissaoPathMDFe: boolean read FEmissaoPathMDFe
       write FEmissaoPathMDFe default False;
@@ -170,7 +166,6 @@ begin
   inherited Assign(DeGeralConfMDFe);
 
   FVersaoDF := DeGeralConfMDFe.VersaoDF;
-  FGerarInfMDFeSupl := DeGeralConfMDFe.GerarInfMDFeSupl;
 end;
 
 constructor TGeralConfMDFe.Create(AOwner: TConfiguracoes);
@@ -178,7 +173,6 @@ begin
   inherited Create(AOwner);
 
   FVersaoDF := ve300;
-  FGerarInfMDFeSupl := fgtSempre;
 end;
 
 procedure TGeralConfMDFe.GravarIni(const AIni: TCustomIniFile);
@@ -186,7 +180,6 @@ begin
   inherited GravarIni(AIni);
 
   AIni.WriteInteger(fpConfiguracoes.SessaoIni, 'VersaoDF', Integer(VersaoDF));
-  AIni.WriteInteger(fpConfiguracoes.SessaoIni, 'GerarInfMDFeSupl', Integer(GerarInfMDFeSupl));
 end;
 
 procedure TGeralConfMDFe.LerIni(const AIni: TCustomIniFile);
@@ -194,12 +187,6 @@ begin
   inherited LerIni(AIni);
 
   VersaoDF := TVersaoMDFe(AIni.ReadInteger(fpConfiguracoes.SessaoIni, 'VersaoDF', Integer(VersaoDF)));
-  GerarInfMDFeSupl := TForcarGeracaoTag(AIni.ReadInteger(fpConfiguracoes.SessaoIni, 'GerarInfMDFeSupl', Integer(GerarInfMDFeSupl)));
-end;
-
-procedure TGeralConfMDFe.SetGerarInfMDFeSupl(const Value: TForcarGeracaoTag);
-begin
-  FGerarInfMDFeSupl := Value;
 end;
 
 procedure TGeralConfMDFe.SetVersaoDF(const Value: TVersaoMDFe);
@@ -240,11 +227,11 @@ begin
 end;
 
 function TArquivosConfMDFe.GetPathEvento(tipoEvento: TpcnTpEvento;
-  const CNPJ: String = ''; Data: TDateTime = 0): String;
+  const CNPJ: String = ''; const IE: String = ''; Data: TDateTime = 0): String;
 var
   Dir: String;
 begin
-  Dir := GetPath(FPathEvento, 'Evento', CNPJ, Data);
+  Dir := GetPath(FPathEvento, 'Evento', CNPJ, IE, Data);
 
   if AdicionarLiteral then
     Dir := PathWithDelim(Dir) + TpEventoToDescStr(tipoEvento);
@@ -255,9 +242,9 @@ begin
   Result := Dir;
 end;
 
-function TArquivosConfMDFe.GetPathMDFe(Data: TDateTime = 0; const CNPJ: String = ''): String;
+function TArquivosConfMDFe.GetPathMDFe(Data: TDateTime = 0; const CNPJ: String = ''; const IE: String = ''): String;
 begin
-  Result := GetPath(FPathMDFe, 'MDFe', CNPJ, Data, 'MDFe');
+  Result := GetPath(FPathMDFe, 'MDFe', CNPJ, IE, Data, 'MDFe');
 end;
 
 procedure TArquivosConfMDFe.GravarIni(const AIni: TCustomIniFile);

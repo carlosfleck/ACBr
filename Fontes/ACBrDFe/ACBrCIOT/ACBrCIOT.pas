@@ -7,9 +7,9 @@ interface
 
 uses
   Classes, SysUtils,
-  ACBrUtil, ACBrDFe, ACBrDFeConfiguracoes, ACBrDFeException,
+  ACBrUtil, ACBrDFe, ACBrDFeConfiguracoes, ACBrDFeException, ACBrBase,
   ACBrCIOTConfiguracoes, ACBrCIOTWebServices, ACBrCIOTContratos,
-  pcnConversao, pcnCIOT, pcnConversaoCIOT;
+  pcnConversao, pcnConversaoCIOT;
 
 const
   ACBRCIOT_VERSAO = '1.0.0a';
@@ -21,7 +21,7 @@ type
   EACBrCIOTException = class(EACBrDFeException);
 
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
 
   TACBrCIOT = class(TACBrDFe)
@@ -80,8 +80,8 @@ type
 implementation
 
 uses
-  strutils, dateutils,
-  pcnAuxiliar, synacode;
+  dateutils,
+  pcnAuxiliar;
 
 {$IFDEF FPC}
  {$R ACBrCIOTServicos.rc}

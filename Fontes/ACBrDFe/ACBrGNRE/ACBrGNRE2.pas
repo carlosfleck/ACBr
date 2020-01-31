@@ -50,10 +50,10 @@ interface
 
 uses
   Classes, SysUtils,
-  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes,
+  ACBrDFe, ACBrDFeException, ACBrDFeConfiguracoes, ACBrBase,
   ACBrGNREConfiguracoes, ACBrGNREWebServices, ACBrGNREGuias,
   ACBrGNREGuiasRetorno, ACBrGNREGuiaClass,
-  pgnreGNRE, pcnConversao, pgnreConversao,
+  pcnConversao, pgnreConversao,
   ACBrDFeUtil, ACBrUtil;
 
 const
@@ -65,9 +65,9 @@ type
   EACBrGNREException = class(EACBrDFeException);
 
   { TACBrGNRE }
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$ENDIF RTL230_UP}	
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
+  {$ENDIF RTL230_UP}
   TACBrGNRE = class(TACBrDFe)
   private
     FGNREGuia: TACBrGNREGuiaClass;
@@ -124,8 +124,8 @@ type
 implementation
 
 uses
-  strutils, dateutils,
-  pcnAuxiliar, synacode;
+  dateutils,
+  pcnAuxiliar;
 
 {$IFDEF FPC}
  {$R ACBrGNREServicos.rc}

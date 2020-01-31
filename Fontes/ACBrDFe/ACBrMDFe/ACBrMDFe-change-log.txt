@@ -47,6 +47,67 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+22/01/2020
+-- Diversos --
+[+] Implementado os novos campos e grupos conforme consta na NT 2020/001.
+[+] Implementado o Evento de Pagamento da Operação de Transporte.
+   Por: Italo Jurisato Junior
+
+31/12/2019
+-- ACBrMDFeManifestos --
+[+] Implementado os métodos: GerarMDFeIni e GerarIni, métodos a serem utilizados 
+    pelo ACBrMonitor e ACBrLibMDFe para gerar o arquivo INI com base no XML
+    carregado.
+   Por: Italo Jurisato Junior
+
+19/12/2019
+-- ACBrMDFeWebServices --
+[+] Incluido a propriedade Protocolo no retorno de envio do MDF-e.
+   Por: Italo Jurisato Junior
+
+04/12/2019
+-- ACBrMDFeDAMDFeRLRetrato --
+[+] Implementado a propriedade de configuração: ImprimeDadosExtras onde podemos
+    ativar/desativar as opções: 
+    deValorTotal (se ativo imprime no o valor total da carga)
+    e deRelacaoDFe (se ativo imprime a lista de documentos vinculados no MDF-e)
+    valor padrão para ambas opções é True (ativo).
+   Por: Italo Jurisato Junior
+
+16/10/2019
+-- ACBrMDFeDAMDFeRLRetrato --
+[*] Alteração no layout para ficar em conformidade com a nova versão 3.00a.
+   Por: Italo Jurisato Junior
+
+14/10/2019
+-- ACBrMDFeWebServices --
+[*] Não estava considerando o status de Encerrado, logo não atualizava o XML de
+    um MDF-e encerrado.
+   Por: Italo Jurisato Junior
+
+06/10/2019
+-- ACBrMDFeConfiguracoes --
+[*] Removido a propriedade de configuração: GerarInfMDFeSupl pois a geração da 
+    string do QR-Code no XML é obrigatória em ambos os ambientes.
+   Por: Italo Jurisato Junior
+
+01/10/2019
+-- ACBrMDFeManifestos --
+[*] Correções na rotina que le o arquivo INI que é utilizado pelo
+    ACBrMonitor.
+   Por: Italo Jurisato Junior
+
+24/09/2019
+-- ACBrMDFeManifestos --
+[*] Removido a condição que defini se é para gerar ou não o grupo
+    <infMDFeSupl>.
+   Por: Italo Jurisato Junior
+
+16/09/2019
+-- pmdfeEnvEventoMDFe --
+[*] Alterado o tamanho máximo da descrição do evento.
+   Por: Gleryston Matos
+
 05/09/2019
 -- ACBrMDFeManifestos --
 [*] Alterado o valor padrão do campo IE do proprietario do veiculo para

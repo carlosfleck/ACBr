@@ -1,34 +1,35 @@
-{******************************************************************************}
-{ Projeto: ACBrNFeMonitor                                                      }
-{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para }
-{ criar uma interface de comunicação com equipamentos de automacao comercial.  }
-
-{ Direitos Autorais Reservados (c) 2009 Daniel Simoes de Almeida               }
-
-{ Colaboradores nesse arquivo:                                                 }
-
-{  Você pode obter a última versão desse arquivo na página do Projeto ACBr     }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
-{  Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo   }
-{ sob os termos da Licença Pública Geral GNU, conforme publicada pela Free     }
-{ Software Foundation; tanto a versão 2 da Licença como (a seu critério)       }
-{ qualquer versão mais nova.                                                   }
-
-{  Este programa é distribuído na expectativa de ser útil, mas SEM NENHUMA     }
-{ GARANTIA; nem mesmo a garantia implícita de COMERCIALIZAÇÃO OU DE ADEQUAÇÃO A}
-{ QUALQUER PROPÓSITO EM PARTICULAR. Consulte a Licença Pública Geral GNU para  }
-{ obter mais detalhes. (Arquivo LICENCA.TXT ou LICENSE.TXT)                    }
-
-{  Você deve ter recebido uma cópia da Licença Pública Geral GNU junto com este}
-{ programa; se não, escreva para a Free Software Foundation, Inc., 59 Temple   }
-{ Place, Suite 330, Boston, MA 02111-1307, USA. Você também pode obter uma     }
-{ copia da licença em:  http://www.opensource.org/licenses/gpl-license.php     }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: ACBrMonitor                                                          }
+{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para  }
+{ criar uma interface de comunicação com equipamentos de automacao comercial.   }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2010 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo:                                                  }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 {$I ACBr.inc}
 
 unit DoACBrCTeUnit;
@@ -41,6 +42,9 @@ uses
   ACBrMonitorConsts, ACBrDFeUtil, UtilUnit, DoACBrDFeUnit,
   CmdUnit, ACBrLibConsReciDFe, ACBrLibDistribuicaoDFe,
   ACBrLibConsultaCadastro;
+
+const
+  cHOM_MSG = 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL';
 
 type
 
@@ -56,6 +60,7 @@ public
   function GerarCTeIni(XML: string): string;
   procedure RespostaConhecimentos(pImprimir: Boolean; pImpressora: String;
             pPreview: Boolean; pCopias: Integer; pPDF: Boolean);
+  procedure ImprimirCTe(pImpressora: String; pPreview: String; pCopias: Integer; pPDF: Boolean);
 
   property ACBrCTe: TACBrCTe read fACBrCTe;
 end;
@@ -452,6 +457,7 @@ begin
   ListaDeMetodos.Add(CMetodoLoadfromfile);
   ListaDeMetodos.Add(CMetodoLerini);
   ListaDeMetodos.Add(CMetodoSetcertificado);
+  ListaDeMetodos.Add(CMetodoObterCertificados);
   ListaDeMetodos.Add(CMetodoRestaurar);
   ListaDeMetodos.Add(CMetodoOcultar);
   ListaDeMetodos.Add(CMetodoEncerrarmonitor);
@@ -526,7 +532,9 @@ begin
     46 : AMetodoClass := TMetodoCertificadoDataVencimento; // DataVencimentoCertificado
     47 : AMetodoClass := TMetodoSetTipoImpressao;
 
-    48..62 : DoACbr(ACmd);
+    else
+      DoACbr(ACmd);
+
   end;
 
   if Assigned(AMetodoClass) then
@@ -555,6 +563,10 @@ begin
         if ('CTe' + WebServices.Retorno.CTeRetorno.ProtDFe.Items[i].chDFe =
           Conhecimentos.Items[j].CTe.infCTe.Id) then
         begin
+          //Informa Mensagem de Sem Valor Fiscal para documentos emitidos em Homologação
+          if Conhecimentos.Items[J].CTe.Ide.tpAmb = taHomologacao then
+            Conhecimentos.Items[J].CTe.dest.xNome:= cHOM_MSG;
+
           //RespostaItensCTe(J, I, True);
           fpCmd.Resposta :=  fpCmd.Resposta + sLineBreak +'[CTe_Arq' + Trim(IntToStr(
                          fACBrCTe.Conhecimentos.Items[J].CTe.ide.nCT)) +']' + sLineBreak +
@@ -591,6 +603,47 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+procedure TACBrObjetoCTe.ImprimirCTe(pImpressora: String; pPreview: String;
+  pCopias: Integer; pPDF: Boolean);
+var
+  ArqPDF : String;
+begin
+  with fACBrCTe do
+  begin
+    if (Conhecimentos.Items[0].Confirmado) then
+    begin
+      //Informa Mensagem de Sem Valor Fiscal para documentos emitidos em Homologação
+      if Conhecimentos.Items[0].CTe.Ide.tpAmb = taHomologacao then
+        Conhecimentos.Items[0].CTe.dest.xNome:= cHOM_MSG;
+
+      DoConfiguraDACTe(pPDF, Trim(pPreview) );
+      if NaoEstaVazio(pImpressora) then
+        DACTE.Impressora := pImpressora;
+
+      if pCopias > 0 then
+        DACTE.NumCopias := pCopias;
+
+      if pPDF then
+      begin
+        Conhecimentos.Items[0].ImprimirPDF;
+        ArqPDF := OnlyNumber(ACBrCTe.Conhecimentos.Items[0].CTe.infCTe.ID)+'-cte.pdf';
+
+        fpCmd.Resposta :=  fpCmd.Resposta + sLineBreak +
+                'PDF='+ PathWithDelim(ACBrCTe.DACTE.PathPDF) + ArqPDF + sLineBreak ;
+      end;
+
+      try
+        DoAntesDeImprimir(( StrToBoolDef( pPreview, False) ) or (MonitorConfig.DFE.Impressao.DANFE.MostrarPreview ));
+        Conhecimentos.Items[0].Imprimir;
+      finally
+        DoDepoisDeImprimir;
+      end;
+
+    end;
+
   end;
 end;
 
@@ -935,7 +988,7 @@ begin
     end;
 
     ACBrCTe.WebServices.ConsultaCadastro.Executar;
-    Resp := TConsultaCadastroResposta.Create(resINI);
+    Resp := TConsultaCadastroResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrCTe.WebServices.ConsultaCadastro.RetConsCad);
       fpCmd.Resposta:= Resp.Msg + sLineBreak + Resp.Gerar ;
@@ -974,7 +1027,7 @@ begin
   with TACBrObjetoCTe(fpObjetoDono) do
   begin
     ACBrCTe.WebServices.Inutiliza(ACNPJ, AJustificativa, AAno, AModelo, ASerie, ANumInicial, ANumFinal);
-    Resposta := TInutilizarCTeResposta.Create(resINI);
+    Resposta := TInutilizarCTeResposta.Create(TpResp, codUTF8);
     try
       Resposta.Processar(ACBrCTe);
       fpCmd.Resposta:= Resposta.Msg + sLineBreak + Resposta.Gerar ;
@@ -1052,7 +1105,11 @@ begin
             slReplay);
             // Lista de slReplay - TStrings
 
-          fpCmd.Resposta := 'Email enviado com sucesso';
+          if not(MonitorConfig.Email.SegundoPlano) then
+            fpCmd.Resposta := 'E-mail enviado com sucesso!'
+          else
+            fpCmd.Resposta := 'Enviando e-mail em segundo plano...';
+
         except
           on E: Exception do
             raise Exception.Create('Erro ao enviar email' + sLineBreak + E.Message);
@@ -1085,7 +1142,7 @@ begin
     ACBrCTe.WebServices.Recibo.Recibo := ARecibo;
     ACBrCTe.WebServices.Recibo.Executar;
 
-    RespRetorno := TRetornoResposta.Create('CTe', resINI);
+    RespRetorno := TRetornoResposta.Create('CTe', TpResp, codUTF8);
     try
       RespRetorno.Processar(ACBrCTe.WebServices.Retorno.CTeRetorno,
                             ACBrCTe.WebServices.Retorno.Recibo,
@@ -1135,7 +1192,7 @@ begin
 
 
       ACBrCTe.WebServices.Consulta.Executar;
-      Resposta := TConsultaCTeResposta.Create(resINI);
+      Resposta := TConsultaCTeResposta.Create(TpResp, codUTF8);
       try
         Resposta.Processar(ACBrCTe);
         fpCmd.Resposta := Resposta.Msg + sLineBreak + Resposta.Gerar;
@@ -1228,7 +1285,7 @@ begin
   begin
     if ACBrCTe.WebServices.StatusServico.Executar then
     begin
-      Resposta := TStatusServicoResposta.Create(resINI);
+      Resposta := TStatusServicoResposta.Create(TpResp, codUTF8);
       try
         Resposta.Processar(ACBrCTe);
         fpCmd.Resposta := Resposta.Msg + sLineBreak + Resposta.Gerar;
@@ -1383,6 +1440,7 @@ end;
           4 - MostrarPreview: 1 para mostrar preview (Default)
           5 - Numero de Copias: Inteiro com número de cópias (Default)
           6 - ImprimirPDF: 1 para imprimir PDF (Default)
+          7 - Assincrono: Boolean
 }
 procedure TMetodoCriarEnviarCTe.Executar;
 var
@@ -1394,6 +1452,7 @@ var
   APreview: Boolean;
   ACopias: Integer;
   APDF: Boolean;
+  Assincrono: Boolean;
   RespEnvio: TEnvioResposta;
   RespRetorno: TRetornoResposta;
 begin
@@ -1404,6 +1463,7 @@ begin
   APreview := StrToBoolDef(fpCmd.Params(4), False);
   ACopias := StrToIntDef(fpCmd.Params(5), 0);
   APDF := StrToBoolDef(fpCmd.Params(6), False);
+  Assincrono := StrToBoolDef( fpCmd.Params(7), True);
 
   with TACBrObjetoCTe(fpObjetoDono) do
   begin
@@ -1442,8 +1502,10 @@ begin
     else
       ACBrCTe.WebServices.Enviar.Lote := IntToStr(ALote);
 
+    ACBrCTe.WebServices.Enviar.Sincrono:= not(Assincrono);
+
     ACBrCTe.WebServices.Enviar.Executar;
-    RespEnvio := TEnvioResposta.Create(resINI);
+    RespEnvio := TEnvioResposta.Create(TpResp, codUTF8);
     try
        RespEnvio.Processar(ACBrCTe);
        fpCmd.Resposta := fpCmd.Resposta + RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -1451,22 +1513,28 @@ begin
        RespEnvio.Free;
     end;
 
-    ACBrCTe.WebServices.Retorno.Recibo := ACBrCTe.WebServices.Enviar.Recibo;
-    ACBrCTe.WebServices.Retorno.Executar;
-    RespRetorno := TRetornoResposta.Create('CTe', resINI);
-    try
-      RespRetorno.Processar(ACBrCTe.WebServices.Retorno.CTeRetorno,
-                            ACBrCTe.WebServices.Retorno.Recibo,
-                            ACBrCTe.WebServices.Retorno.Msg,
-                            ACBrCTe.WebServices.Retorno.Protocolo,
-                            ACBrCTe.WebServices.Retorno.ChaveCTe);
-      fpCmd.Resposta := fpCmd.Resposta + sLineBreak + RespRetorno.Msg
-                     + sLineBreak + RespRetorno.Gerar;
-    finally
-      RespRetorno.Free;
-    end;
+    if (ACBrCTe.WebServices.Enviar.Recibo <> '') then //Assincrono
+    begin
+      ACBrCTe.WebServices.Retorno.Recibo := ACBrCTe.WebServices.Enviar.Recibo;
+      ACBrCTe.WebServices.Retorno.Executar;
+      RespRetorno := TRetornoResposta.Create('CTe', TpResp, codUTF8);
+      try
+        RespRetorno.Processar(ACBrCTe.WebServices.Retorno.CTeRetorno,
+                              ACBrCTe.WebServices.Retorno.Recibo,
+                              ACBrCTe.WebServices.Retorno.Msg,
+                              ACBrCTe.WebServices.Retorno.Protocolo,
+                              ACBrCTe.WebServices.Retorno.ChaveCTe);
+        fpCmd.Resposta := fpCmd.Resposta + sLineBreak + RespRetorno.Msg
+                       + sLineBreak + RespRetorno.Gerar;
+      finally
+        RespRetorno.Free;
+      end;
+      RespostaConhecimentos(AImprime, AImpressora, APreview, ACopias, APDF);
+    end
+    else
+    if AImprime then //Sincrono
+      ImprimirCTe(AImpressora, BoolToStr(APreview,'1',''), ACopias, False);
 
-    RespostaConhecimentos(AImprime, AImpressora, APreview, ACopias, APDF);
   end;
 end;
 
@@ -1583,7 +1651,7 @@ begin
     ACBrCTe.WebServices.Enviar.Lote := IntToStr(ALoteEnvio);
 
     ACBrCTe.WebServices.Enviar.Executar;
-    RespEnvio := TEnvioResposta.Create(resINI);
+    RespEnvio := TEnvioResposta.Create(TpResp, codUTF8);
     try
        RespEnvio.Processar(ACBrCTe);
        fpCmd.Resposta := fpCmd.Resposta + RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -1593,7 +1661,7 @@ begin
 
     ACBrCTe.WebServices.Retorno.Recibo := ACBrCTe.WebServices.Enviar.Recibo;
     ACBrCTe.WebServices.Retorno.Executar;
-    RespRetorno := TRetornoResposta.Create('CTe', resINI);
+    RespRetorno := TRetornoResposta.Create('CTe', TpResp, codUTF8);
     try
       RespRetorno.Processar(ACBrCTe.WebServices.Retorno.CTeRetorno,
                             ACBrCTe.WebServices.Retorno.Recibo,
@@ -1618,6 +1686,7 @@ end;
           2 - Assina: 1 para assinar XML
           3 - Imprime: 1 Para True. Default 0
           4 - Nome Impressora: String com Nome da Impressora
+          5 - Assincrono : Boolean
 }
 procedure TMetodoEnviarCTe.Executar;
 var
@@ -1627,12 +1696,14 @@ var
   AAssina, AImprime: Boolean;
   RespEnvio: TEnvioResposta;
   RespRetorno: TRetornoResposta;
+  Assincrono : Boolean;
 begin
   APathorXML := fpCmd.Params(0);
   ALote := StrToIntDef(fpCmd.Params(1), 0);
   AAssina := StrToBoolDef(fpCmd.Params(2), False);
   AImprime := StrToBoolDef(fpCmd.Params(3), False);
   AImpressora := fpCmd.Params(4);
+  Assincrono := StrToBoolDef( fpCmd.Params(5), True);
 
   with TACBrObjetoCTe(fpObjetoDono) do
   begin
@@ -1651,8 +1722,10 @@ begin
       else
         ACBrCTe.WebServices.Enviar.Lote := IntToStr(ALote);
 
+      ACBrCTe.WebServices.Enviar.Sincrono:= not(Assincrono);
+
       ACBrCTe.WebServices.Enviar.Executar;
-      RespEnvio := TEnvioResposta.Create(resINI);
+      RespEnvio := TEnvioResposta.Create(TpResp, codUTF8);
       try
          RespEnvio.Processar(ACBrCTe);
          fpCmd.Resposta := fpCmd.Resposta + RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -1662,20 +1735,28 @@ begin
 
       ACBrCTe.WebServices.Retorno.Recibo := ACBrCTe.WebServices.Enviar.Recibo;
       ACBrCTe.WebServices.Retorno.Executar;
-      RespRetorno := TRetornoResposta.Create('CTe', resINI);
-      try
-        RespRetorno.Processar(ACBrCTe.WebServices.Retorno.CTeRetorno,
-                              ACBrCTe.WebServices.Retorno.Recibo,
-                              ACBrCTe.WebServices.Retorno.Msg,
-                              ACBrCTe.WebServices.Retorno.Protocolo,
-                              ACBrCTe.WebServices.Retorno.ChaveCTe);
-        fpCmd.Resposta := fpCmd.Resposta + sLineBreak + RespRetorno.Msg
-                       + sLineBreak + RespRetorno.Gerar;
-      finally
-        RespRetorno.Free;
-      end;
+      if (ACBrCTe.WebServices.Enviar.Recibo <> '') then //Assincrono
+      begin
+        ACBrCTe.WebServices.Retorno.Recibo := ACBrCTe.WebServices.Enviar.Recibo;
+        ACBrCTe.WebServices.Retorno.Executar;
+        RespRetorno := TRetornoResposta.Create('CTe', TpResp, codUTF8);
+        try
+          RespRetorno.Processar(ACBrCTe.WebServices.Retorno.CTeRetorno,
+                                ACBrCTe.WebServices.Retorno.Recibo,
+                                ACBrCTe.WebServices.Retorno.Msg,
+                                ACBrCTe.WebServices.Retorno.Protocolo,
+                                ACBrCTe.WebServices.Retorno.ChaveCTe);
+          fpCmd.Resposta := fpCmd.Resposta + sLineBreak + RespRetorno.Msg
+                         + sLineBreak + RespRetorno.Gerar;
+        finally
+          RespRetorno.Free;
+        end;
+        RespostaConhecimentos(AImprime, AImpressora, False, 0, False);
+      end
+      else
+      if AImprime then //Sincrono
+        ImprimirCTe(AImpressora, '', 0, False);
 
-      RespostaConhecimentos(AImprime, AImpressora, False, 0, False);
     finally
       CargaDFe.Free;
     end;
@@ -1850,7 +1931,7 @@ begin
     end;
 
     ACBrCTe.EnviarEvento(ALote);
-    Resposta := TCancelamentoResposta.Create(resINI);
+    Resposta := TCancelamentoResposta.Create(TpResp, codUTF8);
     try
       Resposta.Processar(ACBrCTe);
       fpCmd.Resposta := Resposta.XMotivo + sLineBreak + Resposta.Gerar;
@@ -2009,13 +2090,14 @@ end;
 }
 procedure TMetodoGetPathEvento.Executar;
 var
-  CodEvento: Integer;
+  CodEvento: String;
+  ok: Boolean;
 begin
-  CodEvento := StrToInt(fpCmd.Params(0));
+  CodEvento := fpCmd.Params(0);
 
   with TACBrObjetoCTe(fpObjetoDono) do
   begin
-    fpCmd.Resposta := ACBrCTe.Configuracoes.Arquivos.GetPathEvento(TpcnTpEvento(CodEvento));
+    fpCmd.Resposta := ACBrCTe.Configuracoes.Arquivos.GetPathEvento(StrToTpEventoCTe(ok ,CodEvento));
   end;
 end;
 
@@ -2055,7 +2137,7 @@ begin
     ACBrCTe.EventoCTe.LerFromIni( AArq, False );
 
     ACBrCTe.EnviarEvento(ACBrCTe.EventoCTe.idLote);
-    Resp := TEventoResposta.Create(resINI);
+    Resp := TEventoResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrCTe);
       fpCmd.Resposta:= sLineBreak + Resp.Gerar;
@@ -2087,7 +2169,7 @@ begin
     ACBrCTe.EventoCTe.LerFromIni( AArq, True );
 
     ACBrCTe.EnviarEvento(ACBrCTe.EventoCTe.idLote);
-    Resp := TEventoResposta.Create(resINI);
+    Resp := TEventoResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrCTe);
       fpCmd.Resposta:= sLineBreak + Resp.Gerar;
@@ -2120,7 +2202,7 @@ begin
 
     try
       ACBrCTe.EnviarEvento(ACBrCTe.EventoCTe.idLote);
-      Resp := TEventoResposta.Create(resINI);
+      Resp := TEventoResposta.Create(TpResp, codUTF8);
       try
         Resp.Processar(ACBrCTe);
         fpCmd.Resposta:= sLineBreak + Resp.Gerar;
@@ -2159,7 +2241,7 @@ begin
       raise Exception.Create('CNPJ/CPF '+ACNPJ+' inválido.');
 
     ACBrCTe.DistribuicaoDFePorChaveCTe(AUF, ACNPJ, AChave);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrCTe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrCTe.WebServices.DistribuicaoDFe.Msg,
@@ -2197,7 +2279,7 @@ begin
       raise Exception.Create('CNPJ/CPF '+ACNPJ+' inválido.');
 
     ACBrCTe.DistribuicaoDFePorUltNSU(AUF, ACNPJ, AUltNSU);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrCTe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrCTe.WebServices.DistribuicaoDFe.Msg,
@@ -2235,7 +2317,7 @@ begin
       raise Exception.Create('CNPJ/CPF '+ACNPJ+' inválido.');
 
     ACBrCTe.DistribuicaoDFePorNSU(AUF, ACNPJ, ANSU);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrCTe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrCTe.WebServices.DistribuicaoDFe.Msg,
@@ -2347,7 +2429,11 @@ begin
             '',
             slReplay); // Lista de slReplay - TStrings
 
-          fpCmd.Resposta := 'Email enviado com sucesso';
+          if not(MonitorConfig.Email.SegundoPlano) then
+            fpCmd.Resposta := 'E-mail enviado com sucesso!'
+          else
+            fpCmd.Resposta := 'Enviando e-mail em segundo plano...';
+
         except
           on E: Exception do
             raise Exception.Create('Erro ao enviar email' + sLineBreak + E.Message);
@@ -2452,7 +2538,11 @@ begin
             '',
             slReplay); // Lista de slreplay - TStrings
 
-          fpCmd.Resposta := 'Email enviado com sucesso';
+          if not(MonitorConfig.Email.SegundoPlano) then
+            fpCmd.Resposta := 'E-mail enviado com sucesso!'
+          else
+            fpCmd.Resposta := 'Enviando e-mail em segundo plano...';
+
         except
           on E: Exception do
             raise Exception.Create('Erro ao enviar email' + sLineBreak + E.Message);

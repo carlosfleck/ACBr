@@ -48,11 +48,10 @@ type
     FDeviceConfig: TDeviceConfig;
 
   protected
-    function AtualizarArquivoConfiguracao: Boolean; override;
-
     procedure INIParaClasse; override;
     procedure ClasseParaINI; override;
     procedure ClasseParaComponentes; override;
+    procedure ImportarIni(FIni: TCustomIniFile); override;
 
     procedure Travar; override;
     procedure Destravar; override;
@@ -68,7 +67,7 @@ type
 implementation
 
 uses
-  ACBrLibPosPrinterClass, ACBrLibPosPrinterConsts, ACBrLibConsts, ACBrLibComum,
+  ACBrLibPosPrinterClass, ACBrLibConsts, ACBrMonitorConsts, ACBrLibComum,
   ACBrUtil;
 
 { TLibPosPrinterConfig }
@@ -87,15 +86,6 @@ begin
   inherited Destroy;
 end;
 
-function TLibPosPrinterConfig.AtualizarArquivoConfiguracao: Boolean;
-var
-  Versao: String;
-begin
-  Versao := Ini.ReadString(CSessaoVersao, CLibPosPrinterNome, '0');
-  Result := (CompareVersions(CLibPosPrinterVersao, Versao) > 0) or
-            (inherited AtualizarArquivoConfiguracao);
-end;
-
 procedure TLibPosPrinterConfig.INIParaClasse;
 begin
   inherited INIParaClasse;
@@ -107,8 +97,6 @@ procedure TLibPosPrinterConfig.ClasseParaINI;
 begin
   inherited ClasseParaINI;
 
-  Ini.WriteString(CSessaoVersao, CLibPosPrinterNome, CLibPosPrinterVersao);
-
   FDeviceConfig.GravarIni(Ini);
 end;
 
@@ -116,6 +104,11 @@ procedure TLibPosPrinterConfig.ClasseParaComponentes;
 begin
   if Assigned(Owner) then
     TACBrLibPosPrinter(Owner).PosDM.AplicarConfiguracoes;
+end;
+
+procedure TLibPosPrinterConfig.ImportarIni(FIni: TCustomIniFile);
+begin
+  DeviceConfig.ImportarSerialParams(FIni.ReadString(CSecPosPrinter, CKeyPosPrinterSerialParams, ''));
 end;
 
 procedure TLibPosPrinterConfig.Travar;

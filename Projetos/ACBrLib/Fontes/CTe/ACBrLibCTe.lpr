@@ -51,11 +51,22 @@ exports
   // Arquivos
   CTE_CarregarXML,
   CTE_CarregarINI,
+  CTE_ObterXml,
+  CTE_GravarXml,
+  CTE_ObterIni,
+  CTE_GravarIni,
+  CTE_CarregarEventoXML,
+  CTE_CarregarEventoINI,
   CTE_LimparLista,
+  CTE_LimparListaEventos,
   CTE_Assinar,
   CTE_Validar,
   CTE_ValidarRegrasdeNegocios,
-  CTE_VerificarAssinatura;
+  CTE_VerificarAssinatura,
+  CTE_GerarChave,
+  CTE_ObterCertificados,
+  CTE_GetPath,
+  CTE_GetPathEvento;
 
 begin
   {$IFDEF DEBUG}

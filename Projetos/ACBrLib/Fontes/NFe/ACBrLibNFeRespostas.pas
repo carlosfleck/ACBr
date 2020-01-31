@@ -1,35 +1,35 @@
-{******************************************************************************}
-{ Projeto: Componentes ACBr                                                    }
-{  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
-{ mentos de Automação Comercial utilizados no Brasil                           }
-
-{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida               }
-
-{ Colaboradores nesse arquivo: Rafael Teno Dias                                }
-
-{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
-{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
-{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
-{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
-{ qualquer versão posterior.                                                   }
-
-{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM   }
-{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU      }
-{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor}
-{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)              }
-
-{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto}
-{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
-{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
-{ Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{        Rua Cel.Aureliano de Camargo, 973 - Tatuí - SP - 18270-170            }
-
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: Componentes ACBr                                                     }
+{  Biblioteca multiplataforma de componentes Delphi para interação com equipa-  }
+{ mentos de Automação Comercial utilizados no Brasil                            }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo: Rafael Teno Dias                                 }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 
 {$I ACBr.inc}
 
@@ -39,20 +39,20 @@ interface
 
 uses
   SysUtils, Classes, contnrs,
-  pcnEventoNFe, pcnRetEnvEventoNFe,
-  pcnRetConsReciDFe, pcnRetConsCad, pcnRetConsSitNFe,
-  ACBrLibResposta, ACBrNFe;
+  pcnEventoNFe, pcnRetEnvEventoNFe, pcnRetConsSitNFe,
+  ACBrLibResposta, ACBrLibConsReciDFe, ACBrNFe;
 
 type
 
   { TLibNFeResposta }
 
-  TLibNFeResposta = class(TACBrLibResposta)
+  TLibNFeResposta = class(TACBrLibRespostaBase)
   private
     FMsg: string;
 
   public
-    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
 
   published
     property Msg: string read FMsg write FMsg;
@@ -73,9 +73,10 @@ type
     FdhRecbto: TDateTime;
 
   public
-    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
 
-    procedure Processar(const ACBrNFe: TACBrNFe); virtual; abstract;
+    procedure Processar(const ACBrNFe: TACBrNFe); virtual; abstract; reintroduce;
 
   published
     property Msg: string read FMsg write FMsg;
@@ -96,7 +97,7 @@ type
     FdhRetorno: TDateTime;
     FxObs: string;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
 
@@ -114,7 +115,7 @@ type
     FXml: String;
     FNProt: String;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
 
@@ -130,18 +131,24 @@ type
   private
     FtMed: integer;
     FnRec: string;
+    FNProt: string;
+    FItemRetorno: TRetornoItemResposta;
+
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
+    destructor Destroy; override;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
 
   published
    property TMed: integer read FtMed write FtMed;
    property NRec: string read FnRec write FnRec;
+   property NProt: String read FNProt write FNProt;
+   property Retorno: TRetornoItemResposta read FItemRetorno;
+
   end;
 
   { TCancelamentoResposta }
-
   TCancelamentoResposta = class(TLibNFeServiceResposta)
   private
     FchNFe: string;
@@ -154,7 +161,7 @@ type
     Fxml: string;
     FArquivo: string;
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
 
@@ -171,8 +178,7 @@ type
   end;
 
   { TEventoItemResposta }
-
-  TEventoItemResposta = class(TACBrLibResposta)
+  TEventoItemResposta = class(TACBrLibRespostaBase)
   private
     FtpAmb: String;
     FverAplic: String;
@@ -192,7 +198,8 @@ type
     FxEvento: string;
     FXML: string;
   public
-    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const AInfEvento: TRetInfEvento);
 
@@ -217,7 +224,6 @@ type
   end;
 
   { TEventoResposta }
-
   TEventoResposta = class(TLibNFeServiceResposta)
   private
     FidLote: Integer;
@@ -227,7 +233,7 @@ type
     function GetItem(Index: Integer): TEventoItemResposta;
 
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
     destructor Destroy; override;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
@@ -247,7 +253,7 @@ type
     FNProt: String;
 
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
 
@@ -257,12 +263,13 @@ type
   end;
 
   { TConsultaNFeItemPedidoResposta }
-  TConsultaNFeItemPedidoResposta  = class(TACBrLibResposta)
+  TConsultaNFeItemPedidoResposta  = class(TACBrLibRespostaBase)
   private
     FnumItem: Integer;
     FqtdeItem: Double;
   public
-    constructor Create(const AId, AIndex: Integer; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const AId, AIndex: Integer; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const AItem: TitemPedidoCollectionItem);
 
@@ -273,11 +280,12 @@ type
   end;
 
   { TConsultaNFeChNFePendResposta }
-  TConsultaNFeChNFePendResposta  = class(TACBrLibResposta)
+  TConsultaNFeChNFePendResposta  = class(TACBrLibRespostaBase)
   private
     FchNFePend : String;
   public
-    constructor Create(const AId, AIndex, ASIndex: Integer; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const AId, AIndex, ASIndex: Integer; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
 
     procedure Processar(const ARetchNFePend: TRetchNFePendCollectionItem);
 
@@ -287,7 +295,7 @@ type
   end;
 
   { TConsultaNFeRetEventoResposta }
-   TConsultaNFeRetEventoResposta  = class(TACBrLibResposta)
+   TConsultaNFeRetEventoResposta  = class(TACBrLibRespostaBase)
    private
      FAId: Integer;
      FAIndex: Integer;
@@ -314,7 +322,8 @@ type
      function GetItem(Index: Integer): TConsultaNFeChNFePendResposta;
 
    public
-     constructor Create(const AId, AIndex: Integer; const ATipo: TACBrLibRespostaTipo); reintroduce;
+     constructor Create(const AId, AIndex: Integer; const ATipo: TACBrLibRespostaTipo;
+       const AFormato: TACBrLibCodificacao); reintroduce;
      destructor Destroy; override;
 
      procedure Processar(const ARetInfEvento: TRetInfEvento);
@@ -345,7 +354,7 @@ type
    end;
 
   { TConsultaNFeDetEventoResposta }
-  TConsultaNFeDetEventoResposta  = class(TACBrLibResposta)
+  TConsultaNFeDetEventoResposta  = class(TACBrLibRespostaBase)
   private
     FId: Integer;
     Fversao : String;
@@ -373,7 +382,8 @@ type
     function GetItem(Index: Integer): TConsultaNFeItemPedidoResposta;
 
   public
-    constructor Create(const AId: Integer; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const AId: Integer; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
     destructor Destroy; override;
 
     procedure Processar(const AEvento: TDetEvento);
@@ -406,7 +416,7 @@ type
   end;
 
   { TConsultaNFeProcEventoResposta }
-  TConsultaNFeProcEventoResposta  = class(TACBrLibResposta)
+  TConsultaNFeProcEventoResposta  = class(TACBrLibRespostaBase)
   private
     FID: Integer;
     FtpAmb: String;
@@ -423,7 +433,8 @@ type
     function GetEventos(Index: Integer): TConsultaNFeRetEventoResposta;
 
   public
-    constructor Create(const AId: Integer; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const AId: Integer; const ATipo: TACBrLibRespostaTipo;
+      const AFormato: TACBrLibCodificacao); reintroduce;
     destructor Destroy; override;
 
     procedure Processar(const AEvento: TRetEventoNFeCollectionItem); reintroduce;
@@ -459,7 +470,7 @@ type
     function GetEvento(Index: Integer): TConsultaNFeProcEventoResposta;
 
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
     destructor Destroy; override;
 
     procedure Processar(const ACBrNFe: TACBrNFe); override;
@@ -484,28 +495,25 @@ uses
   ACBrUtil, ACBrLibNFeConsts;
 
 { TLibNFeResposta }
-
 constructor TLibNFeResposta.Create(const ASessao: String;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(ASessao, ATipo);
+  inherited Create(ASessao, ATipo, AFormato);
 end;
 
 { TLibNFeServiceResposta }
-
 constructor TLibNFeServiceResposta.Create(const ASessao: String;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(ASessao, ATipo);
+  inherited Create(ASessao, ATipo, AFormato);
 end;
 
 { TConsultaNFeChNFePendResposta }
-
 constructor TConsultaNFeChNFePendResposta.Create(const AId, AIndex, ASIndex: Integer;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
   inherited Create('ChNFePend' + Trim(IntToStrZero(AId +1, 3)) + Trim(IntToStrZero(AIndex +1, 3))
-                + Trim(IntToStrZero(ASIndex +1, 3)), ATipo);
+                + Trim(IntToStrZero(ASIndex +1, 3)), ATipo, AFormato);
 end;
 
 procedure TConsultaNFeChNFePendResposta.Processar(const ARetchNFePend: TRetchNFePendCollectionItem);
@@ -514,11 +522,10 @@ begin
 end;
 
 { TConsultaNFeRetEventoResposta }
-
 constructor TConsultaNFeRetEventoResposta.Create(const AId, AIndex: Integer;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create('RetEvento' + Trim(IntToStrZero(AId, 3)) + Trim(IntToStrZero(AIndex, 3)), ATipo);
+  inherited Create('RetEvento' + Trim(IntToStrZero(AId, 3)) + Trim(IntToStrZero(AIndex, 3)), ATipo, AFormato);
   FItems := TObjectList.Create;
 
   FAId := AId;
@@ -576,18 +583,17 @@ begin
 
   for i := 0 to ARetInfEvento.chNFePend.Count - 1  do
    begin
-     Item := TConsultaNFeChNFePendResposta.Create(FAId, FAIndex, i+1, Tipo);
+     Item := TConsultaNFeChNFePendResposta.Create(FAId, FAIndex, i+1, Tipo, Formato);
      Item.Processar(ARetInfEvento.chNFePend.Items[i]);
      FItems.Add(Item);
    end;
 end;
 
 { TConsultaNFeItemPedidoResposta }
-
 constructor TConsultaNFeItemPedidoResposta.Create(const AId, AIndex: Integer;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create('ItemPedido' + Trim(IntToStrZero(AId, 3)) + Trim(IntToStrZero(AIndex, 3)), ATipo);
+  inherited Create('ItemPedido' + Trim(IntToStrZero(AId, 3)) + Trim(IntToStrZero(AIndex, 3)), ATipo, AFormato);
 end;
 
 procedure TConsultaNFeItemPedidoResposta.Processar(const AItem: TitemPedidoCollectionItem);
@@ -597,11 +603,10 @@ begin
 end;
 
 { TConsultaNFeDetEventoResposta }
-
 constructor TConsultaNFeDetEventoResposta.Create(const AId: Integer;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create('DetEvento' + Trim(IntToStrZero(AId, 3)), ATipo);
+  inherited Create('DetEvento' + Trim(IntToStrZero(AId, 3)), ATipo, AFormato);
   FItems := TObjectList.Create;
   FId := AID;
 end;
@@ -659,7 +664,7 @@ begin
 
    for i := 0 to AEvento.itemPedido.Count - 1  do
    begin
-     Item := TConsultaNFeItemPedidoResposta.Create(FId, i+1, Tipo);
+     Item := TConsultaNFeItemPedidoResposta.Create(FId, i+1, Tipo, Formato);
      Item.Processar(AEvento.itemPedido.Items[i]);
      FItems.Add(Item);
    end;
@@ -667,12 +672,11 @@ begin
 end;
 
 { TConsultaNFeProcEventoResposta }
-
 constructor TConsultaNFeProcEventoResposta.Create(const AId: Integer;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create('ProcEventoNFe' + Trim(IntToStrZero(AId, 3)), ATipo);
-  FDetEvento := TConsultaNFeDetEventoResposta.Create(AId, ATipo);
+  inherited Create('ProcEventoNFe' + Trim(IntToStrZero(AId, 3)), ATipo, AFormato);
+  FDetEvento := TConsultaNFeDetEventoResposta.Create(AId, ATipo, Formato);
   FRetEventos := TObjectList.Create;
   FID := AId;
 end;
@@ -723,17 +727,16 @@ begin
 
    for i := 0 to AEvento.RetEventoNFe.retEvento.Count - 1  do
    begin
-     RetEvento := TConsultaNFeRetEventoResposta.Create(FId, i+1, Tipo);
+     RetEvento := TConsultaNFeRetEventoResposta.Create(FId, i+1, Tipo, Formato);
      RetEvento.Processar(AEvento.RetEventoNFe.retEvento.Items[i].RetInfEvento);
      FRetEventos.Add(RetEvento);
    end;
 end;
 
 { TConsultaNFeInfCanResposta }
-
-constructor TConsultaNFeInfCanResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TConsultaNFeInfCanResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespConsultaInfCan, ATipo);
+  inherited Create(CSessaoRespConsultaInfCan, ATipo, AFormato);
 end;
 
 procedure TConsultaNFeInfCanResposta.Processar(const ACBrNFe: TACBrNFe);
@@ -752,11 +755,10 @@ begin
 end;
 
 { TEventoItemResposta }
-
 constructor TEventoItemResposta.Create(const ASessao: String;
-  const ATipo: TACBrLibRespostaTipo);
+  const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(ASessao, ATipo);
+  inherited Create(ASessao, ATipo, AFormato);
 end;
 
 procedure TEventoItemResposta.Processar(const AInfEvento: TRetInfEvento);
@@ -780,10 +782,9 @@ begin
 end;
 
 { TEventoResposta }
-
-constructor TEventoResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TEventoResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespEvento, ATipo);
+  inherited Create(CSessaoRespEvento, ATipo, AFormato);
 
   FItems := TObjectList.Create;
 end;
@@ -829,7 +830,7 @@ begin
 
     for I := 0 to EventoRetorno.retEvento.Count - 1 do
     begin
-      Item := TEventoItemResposta.Create('Evento' + Trim(IntToStrZero(I +1, 3)), Tipo);
+      Item := TEventoItemResposta.Create('Evento' + Trim(IntToStrZero(I +1, 3)), Tipo, Formato);
       Item.Processar(EventoRetorno.retEvento.Items[i].RetInfEvento);
       FItems.Add(Item);
     end;
@@ -837,10 +838,9 @@ begin
 end;
 
 { TCancelamentoResposta }
-
-constructor TCancelamentoResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TCancelamentoResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespCancelamento, ATipo);
+  inherited Create(CSessaoRespCancelamento, ATipo, AFormato);
 end;
 
 procedure TCancelamentoResposta.Processar(const ACBrNFe: TACBrNFe);
@@ -868,14 +868,20 @@ begin
 end;
 
 { TEnvioResposta }
-
-constructor TEnvioResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TEnvioResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespEnvio, ATipo);
+  inherited Create(CSessaoRespEnvio, ATipo, AFormato);
+end;
+
+destructor TEnvioResposta.Destroy;
+begin
+  if Assigned(FItemRetorno) then FreeAndNil(FItemRetorno);
 end;
 
 procedure TEnvioResposta.Processar(const ACBrNFe: TACBrNFe);
 begin
+  if Assigned(FItemRetorno) then FreeAndNil(FItemRetorno);
+
   with ACBrNFe.WebServices do
   begin
     Versao := Enviar.versao;
@@ -888,14 +894,29 @@ begin
     DhRecbto := Enviar.dhRecbto;
     Tmed := Enviar.TMed;
     Msg := Enviar.Msg;
+    NProt := Enviar.Protocolo;
+  end;
+
+  if (ACBrNFe.WebServices.Enviar.Sincrono) and (ACBrNFe.NotasFiscais.Count > 0) then
+  begin
+    FItemRetorno := TRetornoItemResposta.Create('NFe' + Trim(ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.chNFe), Tipo, Formato);
+    FItemRetorno.Id := 'ID' + ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.nProt;
+    FItemRetorno.tpAmb := TpAmbToStr(ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.tpAmb);
+    FItemRetorno.verAplic := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.verAplic;
+    FItemRetorno.chDFe := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.chNFe;
+    FItemRetorno.dhRecbto := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.dhRecbto;
+    FItemRetorno.nProt := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.nProt;
+    FItemRetorno.digVal := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.digVal;
+    FItemRetorno.cStat := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.cStat;
+    FItemRetorno.xMotivo := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.xMotivo;
+    FItemRetorno.XML := ACBrNFe.NotasFiscais.Items[0].NFe.procNFe.XML_prot;
   end;
 end;
 
 { TStatusServicoResposta }
-
-constructor TStatusServicoResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TStatusServicoResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespStatus, ATipo);
+  inherited Create(CSessaoRespStatus, ATipo, AFormato);
 end;
 
 procedure TStatusServicoResposta.Processar(const ACBrNFe: TACBrNFe);
@@ -917,10 +938,9 @@ begin
 end;
 
 { TInutilizarNFeResposta }
-
-constructor TInutilizarNFeResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TInutilizarNFeResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespInutilizacao, ATipo);
+  inherited Create(CSessaoRespInutilizacao, ATipo, AFormato);
 end;
 
 procedure TInutilizarNFeResposta.Processar(const ACBrNFe: TACBrNFe);
@@ -943,12 +963,11 @@ begin
 end;
 
 { TConsultaNFeResposta }
-
-constructor TConsultaNFeResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TConsultaNFeResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoRespConsulta, ATipo);
+  inherited Create(CSessaoRespConsulta, ATipo, AFormato);
 
-  FInfCan := TConsultaNFeInfCanResposta.Create(ATipo);
+  FInfCan := TConsultaNFeInfCanResposta.Create(ATipo, AFormato);
   FEventos := TObjectList.Create;
 end;
 
@@ -1015,7 +1034,7 @@ begin
   begin
     for I:= 0 to Consulta.procEventoNFe.Count-1 do
     begin
-      ProcEvento := TConsultaNFeProcEventoResposta.Create(I + 1, Tipo);
+      ProcEvento := TConsultaNFeProcEventoResposta.Create(I + 1, Tipo, Formato);
       ProcEvento.Processar(Consulta.procEventoNFe.Items[I]);
       FEventos.Add(ProcEvento);
     end;

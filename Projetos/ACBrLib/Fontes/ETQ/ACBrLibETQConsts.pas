@@ -41,10 +41,8 @@ uses
   Classes, SysUtils;
 
 const
-  CLibETQNome = 'ACBrLibETQ';
-  CLibETQVersao = '0.0.1';
-
   CSessaoETQ = 'ETQ';
+  CSessaoETQ_Device = 'ETQ_Device';
 
   CChaveLog = 'ArqLog';
   CChaveTemperatura = 'Temperatura';

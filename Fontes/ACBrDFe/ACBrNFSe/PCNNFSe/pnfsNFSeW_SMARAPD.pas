@@ -39,11 +39,9 @@ uses
 {$ELSE}
 
 {$ENDIF}
-  SysUtils, Classes, StrUtils,
-  synacode, ACBrConsts,
-  pnfsNFSeW,
-  pcnAuxiliar, pcnConversao, pcnGerador,
-  pnfsNFSe, pnfsConversao, pnfsConsts, pcnConsts;
+  SysUtils, Classes,
+  ACBrConsts,
+  pnfsNFSeW, pcnAuxiliar, pcnConversao, pcnGerador, pnfsNFSe, pnfsConversao;
 
 type
   { TNFSeW_SMARAPD }
@@ -227,8 +225,11 @@ end;
 function TNFSeW_SMARAPD.GerarXml: Boolean;
 begin
   Gerador.ArquivoFormatoXML := '';
-  Gerador.Prefixo := FPrefixo4;
+  Gerador.Prefixo           := FPrefixo4;
+
   Gerador.Opcoes.DecimalChar := ',';
+  Gerador.Opcoes.QuebraLinha := FQuebradeLinha;
+
   Atributo := '';
   Gerador.wGrupo('tbnfd');
   FNFSe.InfID.ID := OnlyNumber(FNFSe.IdentificacaoRps.Numero) + FNFSe.IdentificacaoRps.Serie;

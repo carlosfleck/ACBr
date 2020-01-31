@@ -320,9 +320,10 @@ begin
 
     GerarRodape;
 
-    XML := Assinar(Gerador.ArquivoFormatoXML, 'evtTabAmbiente');
-    
-    Validar(schevtTabAmbiente);
+    FXML := Gerador.ArquivoFormatoXML;
+//    XML := Assinar(Gerador.ArquivoFormatoXML, 'evtTabAmbiente');
+
+//    Validar(schevtTabAmbiente);
   except on e:exception do
     raise Exception.Create('ID: ' + Self.Id + sLineBreak + ' ' + e.Message);
   end;
@@ -384,16 +385,16 @@ begin
     end;
 
     GerarXML;
+    XML := FXML;
   finally
-     INIRec.Free;
+    INIRec.Free;
   end;
 end;
 
 function TEvtTabAmbiente.LerXML: Boolean;
 var
-  Leitor : TLeitor;
-  bOK : Boolean;
-  sEvento : String;
+  Leitor: TLeitor;
+  bOK: Boolean;
 begin
   Result := True;
   Leitor := TLeitor.Create;

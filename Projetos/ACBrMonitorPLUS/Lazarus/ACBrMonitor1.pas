@@ -1,34 +1,35 @@
-{******************************************************************************}
-{ Projeto: ACBr Monitor                                                        }
-{  Executavel multiplataforma que faz usocdo conjunto de componentes ACBr para }
-{ criar uma interface de comunicação com equipamentos de automacao comercial.  }
-{                                                                              }
-{ Direitos Autorais Reservados (c) 2010 Daniel Simões de Almeida               }
-{                                                                              }
-{ Colaboradores nesse arquivo:     2005 Fábio Rogério Baía                     }
-{                                                                              }
-{  Você pode obter a última versão desse arquivo na página do Projeto ACBr     }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-{                                                                              }
-{  Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo   }
-{ sob os termos da Licença Pública Geral GNU, conforme publicada pela Free     }
-{ Software Foundation; tanto a versão 2 da Licença como (a seu critério)       }
-{ qualquer versão mais nova.                                                   }
-{                                                                              }
-{  Este programa é distribuído na expectativa de ser útil, mas SEM NENHUMA     }
-{ GARANTIA; nem mesmo a garantia implícita de COMERCIALIZAÇÃO OU DE ADEQUAÇÃO A}
-{ QUALQUER PROPÓSITO EM PARTICULAR. Consulte a Licença Pública Geral GNU para  }
-{ obter mais detalhes. (Arquivo LICENCA.TXT ou LICENSE.TXT)                    }
-{                                                                              }
-{  Você deve ter recebido uma cópia da Licença Pública Geral GNU junto com este}
-{ programa; se não, escreva para a Free Software Foundation, Inc., 59 Temple   }
-{ Place, Suite 330, Boston, MA 02111-1307, USA. Você também pode obter uma     }
-{ copia da licença em:  http://www.opensource.org/licenses/gpl-license.php     }
-{                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{       Rua Coronel Aureliano de Camargo, 973 - Tatuí - SP - 18270-170         }
-{                                                                              }
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: ACBrMonitor                                                         }
+{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para  }
+{ criar uma interface de comunicação com equipamentos de automacao comercial.   }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2010 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo: 2005 Fábio Rogério Baía                          }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 
 {$mode objfpc}{$H+}
 
@@ -56,10 +57,9 @@ uses
   DoEmailUnit, DoCEPUnit, DoCHQUnit, DoGAVUnit, DoIBGEUnit, DoNcmUnit,
   DoLCBUnit, DoDISUnit, DoSedexUnit, DoETQUnit, DoACBrGNReUnit,
   DoPosPrinterUnit, DoECFUnit, DoECFObserver, DoECFBemafi32, DoSATUnit,
-  DoACBreSocialUnit, DoACBrBPeUnit;
+  DoACBreSocialUnit, DoACBrBPeUnit, ACBrLibResposta;
 
 const
-  //{$I versao.txt}
   CEstados: array[TACBrECFEstado] of string =
     ('Não Inicializada', 'Desconhecido', 'Livre', 'Venda',
     'Pagamento', 'Relatório', 'Bloqueada', 'Requer Z', 'Requer X',
@@ -142,6 +142,7 @@ type
     Bevel2: TBevel;
     Bevel3: TBevel;
     btnBoletoRelatorioRetorno: TPanel;
+    btnCancNFeSubs: TButton;
     btnDFeRespTecnico: TPanel;
     btnIntegrador: TPanel;
     btnGerarAssinaturaSAT: TButton;
@@ -258,17 +259,28 @@ type
     cbFormaEmissaoBPe: TComboBox;
     cbFormaEmissaoMDFe: TComboBox;
     cbFormaEmissaoGNRe: TComboBox;
-    cbTagInfSuplCTe: TComboBox;
     cbVersaoWSBPe: TComboBox;
     cbVersaoWSGNRE: TComboBox;
+    cbxExibeResumo: TCheckBox;
+    cbxExpandirDadosAdicionaisAuto: TCheckBox;
+    cbxImprimeContinuacaoDadosAdicionaisPrimeiraPagina: TCheckBox;
+    cbxValidarNumeroSessaoResposta: TCheckBox;
+    cbxImprimirLogoLateralNFCe: TCheckBox;
     cbxSepararPorNome: TCheckBox;
     ckCamposFatObrigatorio: TCheckBox;
+    cbFormatoDecimais: TComboBox;
+    cbTipoResposta: TComboBox;
+    edtMsgResumoCanhoto: TEdit;
+    edtSATCasasMaskQtd: TEdit;
+    edtSATMaskVUnit: TEdit;
     edtBOLDigitoAgConta: TEdit;
     edtArquivoWebServicesBPe: TEdit;
     edtEmailAssuntoSAT: TEdit;
     edtNumCopiaNFCe: TSpinEdit;
     edtPathDownload: TEdit;
     edtPathSchemasDFe: TEdit;
+    Label240: TLabel;
+    Label244: TLabel;
     grbPathSchemas: TGroupBox;
     GroupBox12: TGroupBox;
     GroupBox9: TGroupBox;
@@ -307,7 +319,6 @@ type
     cbLCBSufixoLeitor: TComboBox;
     cbLogComp: TCheckBox;
     cbModoEmissao: TCheckBox;
-    cbModoXML: TCheckBox;
     cbOrigem: TComboBox;
     cbxQRCodeLateral: TCheckBox;
     cbSenha: TCheckBox;
@@ -363,7 +374,6 @@ type
     cbxBOLUF: TComboBox;
     cbxCNAB: TComboBox;
     cbxEmissaoPathNFe: TCheckBox;
-    cbxExibeResumo: TCheckBox;
     cbxExibirCampoFatura: TCheckBox;
     cbxExibirEAN: TCheckBox;
     cbxExpandirLogo: TCheckBox;
@@ -528,7 +538,11 @@ type
     Label237: TLabel;
     Label238: TLabel;
     Label239: TLabel;
-    Label240: TLabel;
+    Label241: TLabel;
+    Label242: TLabel;
+    Label243: TLabel;
+    lbTipoResp: TLabel;
+    lblMsgCanhoto: TLabel;
     Label26: TLabel;
     lblIDCSRT: TLabel;
     lblCSRT: TLabel;
@@ -576,6 +590,8 @@ type
     PanelMenu: TPanel;
     PanelScroll: TPanel;
     PanelTitle: TPanel;
+    rgImprimeDescAcrescItemNFe: TRadioGroup;
+    rgrMsgCanhoto: TRadioGroup;
     rgImprimeTributos: TRadioGroup;
     rgInfAdicProduto: TRadioGroup;
     rdgImprimeChave1LinhaSAT: TRadioGroup;
@@ -602,6 +618,8 @@ type
     speAlturaCampos: TSpinEdit;
     spedtDecimaisVUnit: TSpinEdit;
     spedtCasasDecimaisQtd: TSpinEdit;
+    spedtSATCasasDecimaisQtd: TSpinEdit;
+    spedtSATDecimaisVUnit: TSpinEdit;
     speEspBorda: TSpinEdit;
     speFonteCampos: TSpinEdit;
     speFonteEndereco: TSpinEdit;
@@ -1221,6 +1239,8 @@ type
     procedure ACBrEAD1GetChavePrivada(var Chave: ansistring);
     procedure ACBrEAD1GetChavePublica(var Chave: ansistring);
     procedure ACBrGIF1Click(Sender: TObject);
+    procedure ACBrMail1MailException(const AMail: TACBrMail;
+      const E: Exception; var ThrowIt: Boolean);
     procedure ACBrMail1MailProcess(const AMail: TACBrMail;
       const aStatus: TMailStatus);
     procedure ACBrNFe1GerarLog(const ALogLine: string; var Tratado: boolean);
@@ -1259,6 +1279,7 @@ type
     procedure btnCancelarCTeClick(Sender: TObject);
     procedure btnCancMDFeClick(Sender: TObject);
     procedure btnCancNFClick(Sender: TObject);
+    procedure btnCancNFeSubsClick(Sender: TObject);
     procedure btnConsultarClick(Sender: TObject);
     procedure btnConsultarCTeClick(Sender: TObject);
     procedure btnConsultarMDFeClick(Sender: TObject);
@@ -1335,6 +1356,7 @@ type
     procedure cbxBOLBancoChange(Sender: TObject);
     procedure cbxBOLF_JChange(Sender: TObject);
     procedure cbCEPWebServiceChange(Sender: TObject);
+    procedure cbxExibeResumoChange(Sender: TObject);
     procedure cbxImpDescPorcChange(Sender: TObject);
     procedure cbXMLSignLibChange(Sender: TObject);
     procedure cbxModeloSATChange(Sender: TObject);
@@ -1359,6 +1381,7 @@ type
     procedure chECFIgnorarTagsFormatacaoClick(Sender: TObject);
     procedure chRFDChange(Sender: TObject);
     procedure ckSalvarClick(Sender: TObject);
+    procedure cbFormatoDecimaisChange(Sender: TObject);
     procedure deBOLDirArquivoExit(Sender: TObject);
     procedure deBOLDirLogoExit(Sender: TObject);
     procedure deBolDirRemessaExit(Sender: TObject);
@@ -1370,6 +1393,7 @@ type
     procedure edEmailEnderecoExit(Sender: TObject);
     procedure edSATLogChange(Sender: TObject);
     procedure edTimeZoneStrEditingDone(Sender: TObject);
+    procedure OnMascaraFormatKeyPress(Sender: TObject; var Key: char);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);{%h-}
     procedure FormCreate(Sender: TObject);
     procedure ACBrECF1MsgAguarde(Mensagem: string);
@@ -1379,7 +1403,6 @@ type
     procedure bECFTestarClick(Sender: TObject);
     procedure bECFLeituraXClick(Sender: TObject);
     procedure bECFAtivarClick(Sender: TObject);
-    procedure Label138Click(Sender: TObject);
     procedure meUSUHoraCadastroExit(Sender: TObject);
     procedure meRFDHoraSwBasicoExit(Sender: TObject);
     procedure pgBoletoChange(Sender: TObject);
@@ -1533,6 +1556,7 @@ type
     procedure PathClick(Sender: TObject);
     procedure ACT_ButtonMouseEnter(Sender: TObject);
     procedure ACT_ButtonMouseLeave(Sender: TObject);
+    function ValidaArquivo(APath:String; AArquivoDefault: String = ''): String;
   private
     ACBrMonitorINI: string;
     Inicio, fsMonitorarPasta: boolean;
@@ -1659,6 +1683,8 @@ type
     procedure ValidarIntegradorNFCe(ChaveNFe: String = '');
     function RespostaIntegrador():String;
     function SubstituirVariaveis(const ATexto: String): String;
+    procedure OnFormataDecimalSAT;
+    procedure OnMensagemCanhotoNFe;
 
     property MonitorConfig: TMonitorConfig read FMonitorConfig;
   end;
@@ -1732,12 +1758,14 @@ var
   IFormaEmissaoNFe, IFormaEmissaoCTe, IFormaEmissaoGNRe,
   IFormaEmissaoMDFe, IFormaEmissaoBPe: TpcnTipoEmissao;
   IForcarTagICMSSubs: TForcarGeracaoTag;
-  IGerarTagInfComplCTe: TForcarGeracaoTag;
+  IpcnImprimeDescAcrescItem: TpcnImprimeDescAcrescItem;
+  IACBrLibRespostaTipo: TACBrLibRespostaTipo;
   iETQModelo : TACBrETQModelo ;
   iETQDPI: TACBrETQDPI;
   iETQUnidade: TACBrETQUnidade;
   iETQBackFeed: TACBrETQBackFeed;
   iETQOrigem: TACBrETQOrigem;
+  iFormatoDecimal: TDetFormato;
   M: Integer;
   K: Integer;
   vFormatSettings: TFormatSettings;
@@ -2099,6 +2127,10 @@ begin
   For iETQUnidade := Low(TACBrETQUnidade) to High(TACBrETQUnidade) do
      cbUnidade.Items.Add( GetEnumName(TypeInfo(TACBrETQUnidade), integer(iETQUnidade) ) ) ;
 
+  cbFormatoDecimais.Items.Clear ;
+  For iFormatoDecimal := Low(TDetFormato) to High(TDetFormato) do
+     cbFormatoDecimais.Items.Add( GetEnumName(TypeInfo(TDetFormato), integer(iFormatoDecimal) ) ) ;
+
   cbETQPorta.Items.Clear;
   ACBrETQ1.Device.AcharPortasSeriais( cbETQPorta.Items );
 
@@ -2182,16 +2214,22 @@ begin
     cbTagRejeicao938.Items.Add(GetEnumName(TypeInfo(TForcarGeracaoTag), integer(IForcarTagICMSSubs)));
   cbTagRejeicao938.ItemIndex := 0;
 
-  cbTagInfSuplCTe.Items.Clear;
-  for IGerarTagInfComplCTe := Low(TForcarGeracaoTag) to High(TForcarGeracaoTag) do
-    cbTagInfSuplCTe.Items.Add(GetEnumName(TypeInfo(TForcarGeracaoTag), integer(IGerarTagInfComplCTe)));
-  cbTagInfSuplCTe.ItemIndex := 0;
+  rgImprimeDescAcrescItemNFe.Items.Clear;
+  for IpcnImprimeDescAcrescItem := Low(TpcnImprimeDescAcrescItem) to High(TpcnImprimeDescAcrescItem) do
+    rgImprimeDescAcrescItemNFe.Items.Add(copy( GetEnumName(TypeInfo(TpcnImprimeDescAcrescItem), integer(IpcnImprimeDescAcrescItem)), 5, 8) );
+  rgImprimeDescAcrescItemNFe.ItemIndex := 0;
+
+  cbTipoResposta.Items.Clear;
+  for IACBrLibRespostaTipo := Low(TACBrLibRespostaTipo) to High(TACBrLibRespostaTipo) do
+    cbTipoResposta.Items.Add(copy( GetEnumName(TypeInfo(TACBrLibRespostaTipo), integer(IACBrLibRespostaTipo)), 4, 4) );
+  cbTipoResposta.ItemIndex := 0;
 
   FileVerInfo:=TFileVersionInfo.Create(nil);
   try
     FileVerInfo.FileName:=paramstr(0);
     FileVerInfo.ReadFileInfo;
-    sVersaoACBr := FileVerInfo.VersionStrings.Values['FileVersion'];
+    sVersaoACBr := FileVerInfo.VersionStrings.Values['FileVersion'] + ' - ' +
+                   {$IfDef CPU64}'x64'{$Else}'x86'{$EndIf};
   finally
     FileVerInfo.Free;
   end;
@@ -2301,6 +2339,17 @@ begin
   OpenURL('http://www.projetoacbr.com.br/forum/index.php?/page/SAC/sobre_o_sac.html');
 end;
 
+procedure TFrmACBrMonitor.ACBrMail1MailException(const AMail: TACBrMail;
+  const E: Exception; var ThrowIt: Boolean);
+begin
+  if ACBrMail1.UseThread then
+  begin
+    ThrowIt := False;
+    Resposta('', 'ERRO: ' + 'Erro ao Enviar email: ('+ E.Message + ')');
+  end;
+
+end;
+
 procedure TFrmACBrMonitor.ACBrMail1MailProcess(const AMail: TACBrMail;
   const aStatus: TMailStatus);
 begin
@@ -2332,6 +2381,7 @@ begin
         AddLinesLog(ACBrMail1.GetLastSmtpError)
       else
         AddLinesLog('Email: Enviado com sucesso');
+
     end;
   end;
 end;
@@ -2913,6 +2963,53 @@ begin
       infEvento.dhEvento := now;
       infEvento.tpEvento := teCancelamento;
       infEvento.detEvento.xJust := vAux;
+    end;
+    ACBrNFe1.EnviarEvento(StrToInt(idLote));
+    ExibeResp(ACBrNFe1.WebServices.EnvEvento.RetWS);
+  end;
+end;
+
+procedure TFrmACBrMonitor.btnCancNFeSubsClick(Sender: TObject);
+var
+  idLote, vAux, chRef: string;
+begin
+  LimparResp;
+  OpenDialog1.Title := 'Selecione a NFE para Cancelamento';
+  OpenDialog1.DefaultExt := '*-nfe.XML';
+  OpenDialog1.Filter :=
+    'Arquivos NFE (*-nfe.XML)|*-nfe.XML|Arquivos XML (*.XML)|*.XML|Todos os Arquivos (*.*)|*.*';
+  OpenDialog1.InitialDir := ACBrNFe1.Configuracoes.Arquivos.PathSalvar;
+  if OpenDialog1.Execute then
+  begin
+    ACBrNFe1.NotasFiscais.Clear;
+    ACBrNFe1.NotasFiscais.LoadFromFile(OpenDialog1.FileName);
+    idLote := '1';
+    vAux := '';
+    if not (InputQuery('WebServices Eventos: Cancelamento Subst',
+      'Identificador de controle do Lote de envio do Evento', idLote)) then
+      exit;
+
+    if not (InputQuery('WebServices Cancelamento Subst', 'Justificativa', vAux)) then
+      exit;
+
+    if not (InputQuery('WebServices Cancelamento Subst', 'Chave NFe Referencia', chRef)) then
+      exit;
+
+    ACBrNFe1.EventoNFe.Evento.Clear;
+    ACBrNFe1.EventoNFe.idLote := StrToInt(idLote);
+    with ACBrNFe1.EventoNFe.Evento.New do
+    begin
+      infEvento.dhEvento := now;
+
+      infEvento.chNFe    := Copy(ACBrNFe1.NotasFiscais.Items[0].NFe.infNFe.ID, 4, 44);
+      infEvento.CNPJ     := ACBrNFe1.NotasFiscais.Items[0].NFe.emit.CNPJCPF;
+      infEvento.tpEvento := teCancSubst;
+      infEvento.nSeqEvento := 1;
+      infEvento.detEvento.xJust := vAux;
+      infEvento.detEvento.nProt := ACBrNFe1.NotasFiscais.Items[0].NFe.procNFe.nProt;
+      InfEvento.detEvento.chNFeRef := chRef;
+      InfEvento.detEvento.verAplic := '1.0';
+      InfEvento.detEvento.cOrgaoAutor:= ACBrNFe1.NotasFiscais.Items[0].NFe.Ide.cUF;
     end;
     ACBrNFe1.EnviarEvento(StrToInt(idLote));
     ExibeResp(ACBrNFe1.WebServices.EnvEvento.RetWS);
@@ -3672,6 +3769,11 @@ begin
   edCEPChaveBuscarCEP.Enabled := (ACBrCEP1.WebService in [wsBuscarCep, wsCepLivre]);
 end;
 
+procedure TFrmACBrMonitor.cbxExibeResumoChange(Sender: TObject);
+begin
+  OnMensagemCanhotoNFe;
+end;
+
 procedure TFrmACBrMonitor.cbxImpDescPorcChange(Sender: TObject);
 begin
   cbxImpValLiq.Enabled := not cbxImpDescPorc.Checked;
@@ -3849,6 +3951,11 @@ begin
   sbPathSalvar.Enabled := ckSalvar.Checked;
 end;
 
+procedure TFrmACBrMonitor.cbFormatoDecimaisChange(Sender: TObject);
+begin
+  OnFormataDecimalSAT;
+end;
+
 procedure TFrmACBrMonitor.deBOLDirArquivoExit(Sender: TObject);
 begin
   if trim(deBOLDirArquivo.Text) <> '' then
@@ -3949,6 +4056,18 @@ begin
   finally
     edTimeZoneStr.Caption := ACBrNFe1.Configuracoes.WebServices.TimeZoneConf.TimeZoneStr;
   end;
+end;
+
+procedure TFrmACBrMonitor.OnMascaraFormatKeyPress(Sender: TObject; var Key: char);
+begin
+  if (Key = '.')
+        or ((Key = ',') and (Pos(',', TEdit(Sender).Text) < 1))
+        or (Key in ['0'..'9'])
+        or (Key = Char(VK_BACK))
+        or (Key = Char(VK_END)) then
+    Exit;
+
+    Key := #0;
 end;
 
 {------------------------------------------------------------------------------}
@@ -4347,6 +4466,7 @@ begin
     cbMostrarNaBarraDeTarefas.Checked := MostrarNaBarraDeTarefas;
     cbRetirarAcentosNaResposta.Checked:= RetirarAcentosNaResposta;
     chkMostraLogNaTela.Checked        := MostraLogEmRespostasEnviadas and cbLog.Checked;
+    cbTipoResposta.ItemIndex          := TipoResposta;
 
     if AtualizaMonitoramento then
     begin
@@ -4607,19 +4727,18 @@ begin
     ACBrNFeDANFeESCPOS1.PosPrinter.Device.Desativar;
     ACBrBPeDABPeESCPOS1.PosPrinter.Device.Desativar;
 
-    cbModoXML.Checked                  := ModoXML;
     cbRetirarAcentos.Checked           := RetirarAcentos;
     edLogComp.Text                     := Arquivo_Log_Comp;
     cbLogComp.Checked                  := Gravar_Log_Comp;
     sedLogLinhasComp.Value             := Linhas_Log_Comp;
     ArqLogCompTXT                      := AcertaPath(edLogComp.Text);
-    edtArquivoWebServicesNFe.Text      := ArquivoWebServices;
-    edtArquivoWebServicesCTe.Text      := ArquivoWebServicesCTe;
-    edtArquivoWebServicesMDFe.Text     := ArquivoWebServicesMDFe;
-    edtArquivoWebServicesBPe.Text      := ArquivoWebServicesBPe;
-    edtArquivoWebServicesGNRe.Text     := ArquivoWebServicesGNRe;
-    edtArquivoWebServiceseSocial.Text  := ArquivoWebServiceseSocial;
-    edtArquivoWebServicesReinf.Text    := ArquivoWebServicesReinf;
+    edtArquivoWebServicesNFe.Text      := ValidaArquivo(ArquivoWebServices, CACBrNFeServicosIni);
+    edtArquivoWebServicesCTe.Text      := ValidaArquivo(ArquivoWebServicesCTe, CACBrCTeServicosIni);
+    edtArquivoWebServicesMDFe.Text     := ValidaArquivo(ArquivoWebServicesMDFe, CACBrMDFeServicosIni);
+    edtArquivoWebServicesBPe.Text      := ValidaArquivo(ArquivoWebServicesBPe, CACBrBPeServicosIni);
+    edtArquivoWebServicesGNRe.Text     := ValidaArquivo(ArquivoWebServicesGNRe, CACBrGNREServicosIni);
+    edtArquivoWebServiceseSocial.Text  := ValidaArquivo(ArquivoWebServiceseSocial, CACBreSocialServicosIni);
+    edtArquivoWebServicesReinf.Text    := ValidaArquivo(ArquivoWebServicesReinf, CACBrReinfServicosIni);
     cbValidarDigest.Checked            := ValidarDigest;
     edtTimeoutWebServices.Value        := TimeoutWebService;
     cbModoEmissao.Checked              := IgnorarComandoModoEmissao;
@@ -4673,7 +4792,6 @@ begin
       cbVersaoWSQRCode.ItemIndex       := cbVersaoWSQRCode.Items.IndexOf(VersaoQRCode);
       ckCamposFatObrigatorio.Checked   := CamposFatObrig;
       cbTagRejeicao938.ItemIndex       := TagRejeicao938;
-      cbTagInfSuplCTe.ItemIndex        := TagQRCodeCTe;
 
     end;
 
@@ -4742,6 +4860,7 @@ begin
       cbxImprimirNomeFantasiaNFCe.Checked := ImprimeNomeFantasia;
       cbxExibeTotalTributosItem.Checked   := ExibeTotalTributosItem;
       rgImprimeTributos.ItemIndex         := ImprimeTributos;
+      cbxImprimirLogoLateralNFCe.Checked  := LogoLateral;
     end;
 
     with Impressao.NFCe.Emissao.DANFCe do
@@ -4792,6 +4911,8 @@ begin
       spedtCasasDecimaisQtd.Value         := DecimaisQTD;
       spedtDecimaisVUnit.Value            := DecimaisValor;
       cbxExibeResumo.Checked              := ExibeResumo;
+      edtMsgResumoCanhoto.Text            := TextoResumoCanhoto;
+      OnMensagemCanhotoNFe;
       cbxImprimirTributos.Checked         := ImprimirTributosItem;
       cbxImpValLiq.Checked                := ImprimirValLiq;
       cbxUnComTributavel.ItemIndex        := UNComercialETributavel;
@@ -4808,6 +4929,9 @@ begin
       cbxImpDocsReferenciados.Checked     := ImprimirDadosDocReferenciados;
       rgInfAdicProduto.ItemIndex          := ExibirBandInforAdicProduto;
       cbxExibirLogoEmCima.Checked         := LogoEmCima;
+      cbxExpandirDadosAdicionaisAuto.Checked:= ExpandirDadosAdicionaisAuto;
+      cbxImprimeContinuacaoDadosAdicionaisPrimeiraPagina.Checked:= ImprimeContinuacaoDadosAdicionaisPrimeiraPagina;
+      rgImprimeDescAcrescItemNFe.ItemIndex:= ImprimeDescAcrescItemNFe;
     end;
 
     with Impressao.DACTE do
@@ -4980,6 +5104,7 @@ begin
     cbxSATSalvarEnvio.Checked          := SalvarEnvio;
     cbxSATSepararPorCNPJ.Checked       := SepararPorCNPJ;
     cbxSATSepararPorMES.Checked        := SepararPorMES;
+    cbxValidarNumeroSessaoResposta.Checked:= ValidarNumeroSessaoResposta;
 
     with SATImpressao.SATExtrato do
     begin
@@ -4989,18 +5114,34 @@ begin
       ACBrSATExtratoESCPOS1.ImprimeCodigoEan               := UsaCodigoEanImpressao;
       ACBrSATExtratoESCPOS1.ImprimeQRCodeLateral           := ImprimeQRCodeLateral;
       ACBrSATExtratoESCPOS1.ImprimeLogoLateral             := ImprimeLogoLateral;
+      ACBrSATExtratoESCPOS1.CasasDecimais.qCom             := ExtratoDecimaisQTD;
+      ACBrSATExtratoESCPOS1.CasasDecimais.vUnCom           := ExtratoDecimaisValor;
+      ACBrSATExtratoESCPOS1.CasasDecimais.MaskqCom         := ExtratoMaskQTD;
+      ACBrSATExtratoESCPOS1.CasasDecimais.MaskvUnCom       := ExtratoMaskValor;
+      ACBrSATExtratoESCPOS1.CasasDecimais.Formato          := TDetFormato( cbFormatoDecimais.ItemIndex );
 
       ACBrSATExtratoFortes1.ImprimeDescAcrescItem          := ImprimeDescAcrescItem;
       ACBrSATExtratoFortes1.ImprimeEmUmaLinha              := ImprimeEmUmaLinha;
       ACBrSATExtratoFortes1.ImprimeCodigoEan               := UsaCodigoEanImpressao;
       ACBrSATExtratoFortes1.ImprimeQRCodeLateral           := ImprimeQRCodeLateral;
       ACBrSATExtratoFortes1.ImprimeLogoLateral             := ImprimeLogoLateral;
+      ACBrSATExtratoFortes1.CasasDecimais.qCom             := ExtratoDecimaisQTD;
+      ACBrSATExtratoFortes1.CasasDecimais.vUnCom           := ExtratoDecimaisValor;
+      ACBrSATExtratoFortes1.CasasDecimais.MaskqCom         := ExtratoMaskQTD;
+      ACBrSATExtratoFortes1.CasasDecimais.MaskvUnCom       := ExtratoMaskValor;
+      ACBrSATExtratoFortes1.CasasDecimais.Formato          := TDetFormato( cbFormatoDecimais.ItemIndex );
 
       cbxImprimirDescAcresItemSAT.Checked   := ACBrSATExtratoESCPOS1.ImprimeDescAcrescItem;
       cbxImprimirItem1LinhaSAT.Checked      := ACBrSATExtratoESCPOS1.ImprimeEmUmaLinha;
       cbxImprimirCodEANitemSAT.Checked      := ACBrSATExtratoESCPOS1.ImprimeCodigoEan;
       cbxQRCodeLateral.Checked              := ACBrSATExtratoESCPOS1.ImprimeQRCodeLateral;
       cbxLogoLateral.Checked                := ACBrSATExtratoESCPOS1.ImprimeLogoLateral;
+      spedtSATCasasDecimaisQtd.Value        := ExtratoDecimaisQTD;
+      spedtSATDecimaisVUnit.Value           := ExtratoDecimaisValor;
+      edtSATCasasMaskQtd.Text               := ExtratoMaskQTD;
+      edtSATMaskVUnit.Text                  := ExtratoMaskValor;
+      cbFormatoDecimais.ItemIndex           := FormatoDecimal;
+      OnFormataDecimalSAT;
 
       rdgImprimeChave1LinhaSAT.ItemIndex    := ImprimeChaveEmUmaLinha;
       ACBrSATExtratoESCPOS1.ImprimeChaveEmUmaLinha := TAutoSimNao(rdgImprimeChave1LinhaSAT.ItemIndex);
@@ -5606,6 +5747,7 @@ begin
       MostrarNaBarraDeTarefas     := cbMostrarNaBarraDeTarefas.Checked;
       RetirarAcentosNaResposta    := cbRetirarAcentosNaResposta.Checked;
       MostraLogEmRespostasEnviadas:= chkMostraLogNaTela.Checked;
+      TipoResposta                := cbTipoResposta.ItemIndex;
     end;
 
     { Parametros do ECF }
@@ -5765,7 +5907,6 @@ begin
     with FMonitorConfig.DFE do
     begin
       IgnorarComandoModoEmissao := cbModoEmissao.Checked;
-      ModoXML                   := cbModoXML.Checked;
       RetirarAcentos            := cbRetirarAcentos.Checked;
       Gravar_Log_Comp           := cbLogComp.Checked;
       Arquivo_Log_Comp          := edLogComp.Text;
@@ -5829,7 +5970,6 @@ begin
         FormaEmissaoGNRe         := cbFormaEmissaoGNRe.ItemIndex;
         CamposFatObrig           := ckCamposFatObrigatorio.Checked;
         TagRejeicao938           := cbTagRejeicao938.ItemIndex;
-        TagQRCodeCTe             := cbTagInfSuplCTe.ItemIndex;
       end;
 
       with ESocial do
@@ -5894,6 +6034,7 @@ begin
         ImprimeNomeFantasia       := cbxImprimirNomeFantasiaNFCe.Checked;
         ExibeTotalTributosItem    := cbxExibeTotalTributosItem.Checked;
         ImprimeTributos           := rgImprimeTributos.ItemIndex;
+        LogoLateral               := cbxImprimirLogoLateralNFCe.Checked;
       end;
 
       with Impressao.NFCe.Emissao.DANFCe do
@@ -5944,6 +6085,7 @@ begin
         DecimaisQTD                := spedtCasasDecimaisQtd.Value;
         DecimaisValor              := spedtDecimaisVUnit.Value;
         ExibeResumo                := cbxExibeResumo.Checked;
+        TextoResumoCanhoto         := trim(edtMsgResumoCanhoto.Text);
         ImprimirTributosItem       := cbxImprimirTributos.Checked;
         ImprimirValLiq             := cbxImpValLiq.Checked;
         UNComercialETributavel     := cbxUnComTributavel.ItemIndex;
@@ -5960,6 +6102,9 @@ begin
         ImprimirDadosDocReferenciados  := cbxImpDocsReferenciados.Checked;
         ExibirBandInforAdicProduto     := rgInfAdicProduto.ItemIndex;
         LogoEmCima                     := cbxExibirLogoEmCima.Checked;
+        ExpandirDadosAdicionaisAuto    := cbxExpandirDadosAdicionaisAuto.Checked;
+        ImprimeContinuacaoDadosAdicionaisPrimeiraPagina := cbxImprimeContinuacaoDadosAdicionaisPrimeiraPagina.Checked;
+        ImprimeDescAcrescItemNFe   := rgImprimeDescAcrescItemNFe.ItemIndex;
       end;
 
       with Impressao.DACTE do
@@ -6011,6 +6156,7 @@ begin
       SalvarEnvio                      := cbxSATSalvarEnvio.Checked;
       SepararPorCNPJ                   := cbxSATSepararPorCNPJ.Checked;
       SepararPorMES                    := cbxSATSepararPorMES.Checked;
+      ValidarNumeroSessaoResposta      := cbxValidarNumeroSessaoResposta.Checked;
 
       with SATImpressao.SATExtrato do
       begin
@@ -6021,6 +6167,12 @@ begin
         UsaCodigoEanImpressao          := cbxImprimirCodEANitemSAT.Checked;
         ImprimeQRCodeLateral           := cbxQRCodeLateral.Checked;
         ImprimeLogoLateral             := cbxLogoLateral.Checked;
+        ExtratoDecimaisQTD             := spedtSATCasasDecimaisQtd.Value;
+        ExtratoDecimaisValor           := spedtSATDecimaisVUnit.Value;
+        ExtratoMaskQTD                 := edtSATCasasMaskQtd.Text;
+        ExtratoMaskValor               := edtSATMaskVUnit.Text;
+        FormatoDecimal                 := cbFormatoDecimais.ItemIndex;
+
       end;
 
       with SATImpressao.SATEmit do
@@ -6358,7 +6510,10 @@ begin
   end;
 
   if not SenhaOk then
-    raise Exception.Create('Senha [' + Senha + '] inválida');
+  begin
+    MessageDlg('Senha inválida!!!', mtWarning, [mbOK], 0);
+    raise Exception.Create('Senha inválida');
+  end;
 
   fsCNPJSWOK := False;
   PanelScroll.Visible := True;
@@ -6982,11 +7137,6 @@ begin
   AvaliaEstadoTsRFD;
 end;
 
-procedure TFrmACBrMonitor.Label138Click(Sender: TObject);
-begin
-
-end;
-
 procedure TFrmACBrMonitor.meUSUHoraCadastroExit(Sender: TObject);
 begin
   try
@@ -7382,7 +7532,7 @@ begin
   Conexao := TCPBlockSocket;
   mCmd.Lines.Clear;
   fsProcessar.Clear;
-  Resp := 'ACBrMonitor/ACBrNFeMonitor PLUS Ver. ' + sVersaoACBr + sLineBreak + 'Conectado em: ' +
+  Resp := 'ACBrMonitorPLUS Ver. ' + sVersaoACBr + sLineBreak + 'Conectado em: ' +
     FormatDateTime('dd/mm/yy hh:nn:ss', now) + sLineBreak + 'Maquina: ' +
     Conexao.GetRemoteSinIP + sLineBreak + 'Esperando por comandos.';
 
@@ -8412,6 +8562,7 @@ begin
     Config.PaginaDeCodigo     := sePagCod.Value;
     Config.EhUTF8             := cbxUTF8.Checked;
     Config.infCFe_versaoDadosEnt := sfeVersaoEnt.Value;
+    ValidarNumeroSessaoResposta := cbxValidarNumeroSessaoResposta.Checked;
 
     ConfigArquivos.PastaCFeVenda := PathWithDelim(edSATPathArqs.Text)+'Vendas';
     ConfigArquivos.PastaCFeCancelamento := PathWithDelim(edSATPathArqs.Text)+'Cancelamentos';
@@ -8732,7 +8883,9 @@ begin
        ACBrNFe1.DANFE.Cancelada := True
     else
        ACBrNFe1.DANFE.Cancelada := False;
-  end;
+  end
+  else if NaoEstaVazio(cbxImpressora.Text) then
+    ACBrNFe1.DANFE.Impressora := cbxImpressora.Text;
 
   if GerarPDF and not DirectoryExists(PathWithDelim(edtPathPDF.Text))then
     ForceDirectories(PathWithDelim(edtPathPDF.Text));
@@ -8763,6 +8916,7 @@ begin
     begin
       (ACBrNFe1.DANFE as TACBrNFeDANFEClass).ImprimeDescPorPercentual := cbxImpDescPorc.Checked;
       (ACBrNFe1.DANFE as TACBrNFeDANFEClass).ExibeResumoCanhoto       := cbxExibeResumo.Checked;
+      (ACBrNFe1.DANFE as TACBrNFeDANFEClass).TextoResumoCanhoto       := edtMsgResumoCanhoto.Text;
       (ACBrNFe1.DANFE as TACBrNFeDANFEClass).FormularioContinuo       := cbxFormCont.Checked;
       (ACBrNFe1.DANFE as TACBrNFeDANFEClass).PosCanhoto               := TPosRecibo( rgLocalCanhoto.ItemIndex );
     end;
@@ -8785,6 +8939,9 @@ begin
       ACBrNFeDANFeRL1.ExibeDadosDocReferenciados := cbxImpDocsReferenciados.Checked;
       ACBrNFeDANFeRL1.ExibeInforAdicProduto := TinfAdcProd(rgInfAdicProduto.ItemIndex);
       ACBrNFeDANFeRL1.LogoemCima := cbxExibirLogoEmCima.Checked;
+      ACBrNFeDANFeRL1.ExpandirDadosAdicionaisAuto:= cbxExpandirDadosAdicionaisAuto.Checked;
+      ACBrNFeDANFeRL1.ImprimeContinuacaoDadosAdicionaisPrimeiraPagina:= cbxImprimeContinuacaoDadosAdicionaisPrimeiraPagina.Checked;
+      ACBrNFeDANFeRL1.ImprimeDescAcrescItem:= TpcnImprimeDescAcrescItem(rgImprimeDescAcrescItemNFe.ItemIndex);
     end
     else if ACBrNFe1.DANFE = ACBrNFeDANFCeFortesA4_1 then
     begin
@@ -8822,6 +8979,7 @@ begin
       ACBrNFeDANFCeFortes1.ExibeTotalTributosItem:= cbxExibeTotalTributosItem.Checked;
       ACBrNFeDANFCeFortes1.ImprimeTributos       := TpcnTributos(rgImprimeTributos.ItemIndex);
       ACBrNFeDANFCeFortes1.NumCopias             := edtNumCopiaNFCe.Value;
+      ACBrNFEDANFCeFortes1.ImprimeLogoLateral    := cbxImprimirLogoLateralNFCe.Checked;
 
       ACBrNFeDANFCeFortes1.DescricaoPagamentos   := [];
       for tDescPagto:= Low(tDescPagto) to High(tDescPagto) do
@@ -8849,6 +9007,7 @@ begin
       ACBrNFeDANFeESCPOS1.ExibeTotalTributosItem:= cbxExibeTotalTributosItem.Checked;
       ACBrNFeDANFeESCPOS1.ImprimeTributos       := TpcnTributos(rgImprimeTributos.ItemIndex);
       ACBrNFeDANFeESCPOS1.NumCopias             := edtNumCopiaNFCe.Value;
+      ACBrNFeDANFeESCPOS1.ImprimeLogoLateral    := cbxImprimirLogoLateralNFCe.Checked;
 
       ACBrNFeDANFeESCPOS1.DescricaoPagamentos   := [];
       for tDescPagto:= Low(tDescPagto) to High(tDescPagto) do
@@ -9321,11 +9480,68 @@ begin
   begin
     with Geral do
     begin
-      Salvar         := ckSalvar.Checked;
-      SSLLib         := TSSLLib(cbSSLLib.ItemIndex);
-      SSLCryptLib    := TSSLCryptLib(cbCryptLib.ItemIndex);
-      SSLHttpLib     := TSSLHttpLib(cbHttpLib.ItemIndex);
-      SSLXmlSignLib  := TSSLXmlSignLib(cbXmlSignLib.ItemIndex);
+      Salvar := ckSalvar.Checked;
+
+      try
+        SSLLib := TSSLLib(cbSSLLib.ItemIndex);
+      Except
+        on E: Exception do
+        begin
+          {$IFDEF LINUX}
+            SSLLib  := libOpenSSL;
+          {$ELSE}
+            SSLLib  := libWinCrypt;
+          {$ENDIF}
+          cbSSLLib.ItemIndex := Integer( SSLLib );
+          AddLinesLog(E.Message
+                      + sLineBreak + Format(SErroSSLDesabilitado, [GetEnumName(TypeInfo(TSSLLib), Integer( SSLLib ) )]) );
+        end;
+      end;
+
+      try
+        SSLCryptLib := TSSLCryptLib(cbCryptLib.ItemIndex);
+      Except
+        on E: Exception do
+        begin
+          {$IFDEF LINUX}
+            SSLCryptLib  := cryOpenSSL;
+          {$ELSE}
+            SSLCryptLib  := cryWinCrypt;
+          {$ENDIF}
+          cbCryptLib.ItemIndex := Integer( SSLCryptLib );
+          AddLinesLog(E.Message
+                      + sLineBreak + Format(SErroSSLDesabilitado, [GetEnumName(TypeInfo(TSSLCryptLib), Integer( SSLCryptLib ) )]) );
+        end;
+      end;
+
+      try
+        SSLHttpLib := TSSLHttpLib(cbHttpLib.ItemIndex);
+      Except
+        on E: Exception do
+        begin
+          {$IFDEF LINUX}
+            SSLHttpLib  := httpOpenSSL;
+          {$ELSE}
+            SSLHttpLib  := httpWinHttp;
+          {$ENDIF}
+          cbHttpLib.ItemIndex := Integer( SSLHttpLib );
+          AddLinesLog(E.Message
+                      + sLineBreak + Format(SErroSSLDesabilitado, [GetEnumName(TypeInfo(TSSLHttpLib), Integer( SSLHttpLib ) )]) );
+        end;
+      end;
+
+      try
+        SSLXmlSignLib := TSSLXmlSignLib(cbXmlSignLib.ItemIndex);
+      Except
+        on E: Exception do
+        begin
+          SSLXmlSignLib  := xsLibXml2;
+          cbXmlSignLib.ItemIndex := Integer( SSLXmlSignLib );
+          AddLinesLog(E.Message
+                      + sLineBreak + Format(SErroSSLDesabilitado, [GetEnumName(TypeInfo(TSSLXmlSignLib), Integer( SSLXmlSignLib ) )]) );
+        end;
+      end;
+
       ValidarDigest  := cbValidarDigest.Checked;
       RetirarAcentos := cbRetirarAcentos.Checked;
     end;
@@ -9421,7 +9637,6 @@ begin
   begin
     TConfiguracoesCTe(Configuracoes).Geral.FormaEmissao := StrToTpEmis(OK, IntToStr(cbFormaEmissaoCTe.ItemIndex + 1));
     TConfiguracoesCTe(Configuracoes).Geral.VersaoDF     := StrToVersaoCTe(ok, cbVersaoWSCTe.Text);
-    TConfiguracoesCTe(Configuracoes).Geral.GerarInfCTeSupl := TForcarGeracaoTag(cbTagInfSuplCTe.ItemIndex);
 
     TConfiguracoesCTe(Configuracoes).Arquivos.IniServicos    := edtArquivoWebServicesCTe.Text;
     TConfiguracoesCTe(Configuracoes).Arquivos.EmissaoPathCTe := cbxEmissaoPathNFe.Checked;
@@ -9966,6 +10181,21 @@ begin
   end;
 end;
 
+procedure TFrmACBrMonitor.OnFormataDecimalSAT;
+begin
+  spedtSATCasasDecimaisQtd.Enabled:= cbFormatoDecimais.ItemIndex = 0;
+  spedtSATDecimaisVUnit.Enabled:= cbFormatoDecimais.ItemIndex = 0;
+  edtSATCasasMaskQtd.Enabled:= cbFormatoDecimais.ItemIndex = 1;
+  edtSATMaskVUnit.Enabled:= cbFormatoDecimais.ItemIndex = 1;
+end;
+
+procedure TFrmACBrMonitor.OnMensagemCanhotoNFe;
+begin
+  lblMsgCanhoto.Enabled:= cbxExibeResumo.Checked;
+  edtMsgResumoCanhoto.Enabled:= cbxExibeResumo.Checked;
+
+end;
+
 procedure TFrmACBrMonitor.sbSerialClick(Sender: TObject);
 var
   frConfiguraSerial: TfrConfiguraSerial;
@@ -10129,6 +10359,31 @@ begin
     else
        TPanel(Sender).Color := TCores.SubButtons;
   end;
+end;
+
+function TFrmACBrMonitor.ValidaArquivo(APath: String; AArquivoDefault: String): String;
+var
+  ErroStr: String;
+begin
+  ErroStr := '';
+  Result := Trim(APath);
+
+  if not FileExists(Result) then
+  begin
+    Result := ApplicationPath + AArquivoDefault;
+    if not FileExists(Result) then
+      ErroStr := 'ATENÇÃO: Arquivo ' + APath + ' não encontrado!!!';
+  end
+  else if VerificaArquivoDesatualizado(Result) then
+  begin
+    ErroStr := 'ATENÇÃO: Arquivo ' + ExtractFileName(Result)
+              + ' disponível em: ' + ExtractFileDir(Result) + ' está desatualizado!!!';
+    Result := ApplicationPath + ExtractFileName(Result);
+  end;
+
+  if (ErroStr <> '') then
+    AddLinesLog( ErroStr );
+
 end;
 
 function TFrmACBrMonitor.IsVisible: Boolean;

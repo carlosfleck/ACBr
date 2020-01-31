@@ -1,34 +1,35 @@
-{******************************************************************************}
-{ Projeto: ACBrNFeMonitor                                                      }
-{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para }
-{ criar uma interface de comunicação com equipamentos de automacao comercial.  }
-
-{ Direitos Autorais Reservados (c) 2009 Daniel Simoes de Almeida               }
-
-{ Colaboradores nesse arquivo:                                                 }
-
-{  Você pode obter a última versão desse arquivo na página do Projeto ACBr     }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
-{  Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo   }
-{ sob os termos da Licença Pública Geral GNU, conforme publicada pela Free     }
-{ Software Foundation; tanto a versão 2 da Licença como (a seu critério)       }
-{ qualquer versão mais nova.                                                   }
-
-{  Este programa é distribuído na expectativa de ser útil, mas SEM NENHUMA     }
-{ GARANTIA; nem mesmo a garantia implícita de COMERCIALIZAÇÃO OU DE ADEQUAÇÃO A}
-{ QUALQUER PROPÓSITO EM PARTICULAR. Consulte a Licença Pública Geral GNU para  }
-{ obter mais detalhes. (Arquivo LICENCA.TXT ou LICENSE.TXT)                    }
-
-{  Você deve ter recebido uma cópia da Licença Pública Geral GNU junto com este}
-{ programa; se não, escreva para a Free Software Foundation, Inc., 59 Temple   }
-{ Place, Suite 330, Boston, MA 02111-1307, USA. Você também pode obter uma     }
-{ copia da licença em:  http://www.opensource.org/licenses/gpl-license.php     }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: ACBrMonitor                                                          }
+{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para  }
+{ criar uma interface de comunicação com equipamentos de automacao comercial.   }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2010 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo:                                                  }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 {$I ACBr.inc}
 
 unit DoACBrNFeUnit;
@@ -41,6 +42,9 @@ uses
   ACBrMonitorConsts, ACBrDFeUtil, UtilUnit, DoACBrDFeUnit,
   CmdUnit, ACBrNFeDANFeRLClass, ACBrPosPrinter, ACBrNFeDANFeESCPOS,
   ACBrLibConsultaCadastro;
+
+const
+  cHOM_MSG = 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL';
 
 type
 
@@ -56,7 +60,6 @@ public
   function GerarNFeIni(XML: string): string;
   procedure RespostaImpressao(pImprimir: Boolean; pImpressora: String;
             pPreview: String; pCopias: Integer; pPDF: Boolean);
-  procedure RespostaItensNFe(NotasFiscaisID: integer = 0; ItemID: integer = 0; Gerar: boolean = False);  //
   Procedure LerIniNFe(ArqINI: String);
   procedure ImprimirNFe(pImpressora: String; pPreview: String; pCopias: Integer; pPDF: Boolean);
   procedure RespostaIntegrador;
@@ -516,6 +519,7 @@ begin
   ListaDeMetodos.Add(CMetodoLoadfromfile);
   ListaDeMetodos.Add(CMetodoLerini);
   ListaDeMetodos.Add(CMetodoSetcertificado);
+  ListaDeMetodos.Add(CMetodoObterCertificados);
   ListaDeMetodos.Add(CMetodoRestaurar);
   ListaDeMetodos.Add(CMetodoOcultar);
   ListaDeMetodos.Add(CMetodoEncerrarmonitor);
@@ -630,9 +634,28 @@ begin
           NotasFiscais.Items[J].NFe.infNFe.Id) then
         begin
           //RespostaItensNFe(J, I, True);
+
+          //Informa Mensagem de Sem Valor Fiscal para documentos emitidos em Homologação
+          if NotasFiscais.Items[J].NFe.Ide.tpAmb = taHomologacao then
+            NotasFiscais.Items[J].NFe.Dest.xNome:= cHOM_MSG;
+          if (NotasFiscais.Items[J].NFe.ide.modelo = 65)
+             and (NotasFiscais.Items[J].NFe.Ide.tpAmb = taHomologacao)
+             and ( NotasFiscais.Items[J].NFe.Det[0].Prod.nItem = 1) then
+                 NotasFiscais.Items[J].NFe.Det[0].Prod.xProd:= cHOM_MSG;
+
           fpCmd.Resposta :=  fpCmd.Resposta + sLineBreak +'[NFe_Arq' + Trim(IntToStr(
                          fACBrNFe.NotasFiscais.Items[J].NFe.Ide.nNF)) +']' + sLineBreak +
                          'Arquivo=' + fACBrNFe.NotasFiscais.Items[J].NomeArq;
+
+          if pPDF then
+          begin
+            DoConfiguraDANFe(pPDF, Trim(pPreview) );
+            NotasFiscais.Items[J].ImprimirPDF;
+            ArqPDF := OnlyNumber(ACBrNFe.NotasFiscais.Items[J].NFe.infNFe.ID)+'-nfe.pdf';
+
+            fpCmd.Resposta :=  fpCmd.Resposta + sLineBreak +
+              'PDF='+ PathWithDelim(ACBrNFe.DANFE.PathPDF) + ArqPDF + sLineBreak;
+          end;
 
           DoConfiguraDANFe(False, Trim(pPreview) );
 
@@ -641,15 +664,6 @@ begin
 
           if pCopias > 0 then
             DANFE.NumCopias := pCopias;
-
-          if pPDF then
-          begin
-            NotasFiscais.Items[J].ImprimirPDF;
-            ArqPDF := OnlyNumber(ACBrNFe.NotasFiscais.Items[J].NFe.infNFe.ID)+'-nfe.pdf';
-
-            fpCmd.Resposta :=  fpCmd.Resposta + sLineBreak +
-              'PDF='+ PathWithDelim(ACBrNFe.DANFE.PathPDF) + ArqPDF + sLineBreak;
-          end;
 
           if (NotasFiscais.Items[J].Confirmada) and (pImprimir) then
           begin
@@ -665,41 +679,6 @@ begin
         end;
       end;
     end;
-  end;
-end;
-
-procedure TACBrObjetoNFe.RespostaItensNFe(NotasFiscaisID: integer;
-  ItemID: integer; Gerar: boolean);
-var
-  Resp: TRetornoItemResposta;
-begin
-  Resp := TRetornoItemResposta.Create(
-    'NFe' + Trim(IntToStr(
-    fACBrNFe.NotasFiscais.Items[NotasFiscaisID].NFe.Ide.nNF)), resINI);
-  try
-    with fACBrNFe.WebServices.Retorno.NFeRetorno.ProtDFe.Items[ItemID] do
-    begin
-      //Resp.Versao := verAplic;
-      Resp.TpAmb := TpAmbToStr(TpAmb);
-      Resp.VerAplic := VerAplic;
-      Resp.CStat := cStat;
-      Resp.XMotivo := XMotivo;
-      //Resp.CUF := fACBrNFe.WebServices.Retorno.NFeRetorno.cUF;
-      //Resp.ChNFe := chDFe;
-      Resp.DhRecbto := dhRecbto;
-      Resp.NProt := nProt;
-      Resp.DigVal := digVal;
-
-      //if Gerar then
-        //Resp.Arquivo := fACBrNFe.NotasFiscais.Items[NotasFiscaisID].NomeArq+sLineBreak;
-          {PathWithDelim(fACBrNFe.Configuracoes.Arquivos.PathSalvar) +
-          OnlyNumber(fACBrNFe.NotasFiscais.Items[NotasFiscaisID].NFe.infNFe.ID) +
-          '-nfe.xml';}
-
-      fpCmd.Resposta := fpCmd.Resposta + Resp.Gerar;
-    end;
-  finally
-    Resp.Free;
   end;
 end;
 
@@ -728,6 +707,15 @@ begin
   begin
     if (NotasFiscais.Items[0].Confirmada) then
     begin
+
+      //Informa Mensagem de Sem Valor Fiscal para documentos emitidos em Homologação
+      if NotasFiscais.Items[0].NFe.Ide.tpAmb = taHomologacao then
+        NotasFiscais.Items[0].NFe.Dest.xNome:= cHOM_MSG;
+      if (NotasFiscais.Items[0].NFe.ide.modelo = 65)
+         and (NotasFiscais.Items[0].NFe.Ide.tpAmb = taHomologacao)
+         and ( NotasFiscais.Items[0].NFe.Det[0].Prod.nItem = 1) then
+             NotasFiscais.Items[0].NFe.Det[0].Prod.xProd:= cHOM_MSG;
+
       DoConfiguraDANFe(pPDF, Trim(pPreview) );
       if NaoEstaVazio(pImpressora) then
         DANFe.Impressora := pImpressora;
@@ -758,35 +746,18 @@ begin
 end;
 
 function TACBrObjetoNFe.GerarNFeIni(XML: string): string;
-var
-  INIRec: TMemIniFile;
-  IniNFe: TStringList;
-  LocNFeR: TNFeR;
 begin
-  INIRec := TMemIniFile.Create('NFe.ini');
-
   fACBrNFe.NotasFiscais.Clear;
   if FilesExists(XML) then
     fACBrNFe.NotasFiscais.LoadFromFile(XML)
   else
   begin
-    LocNFeR := TNFeR.Create(fACBrNFe.NotasFiscais.Add.NFe);
-    try
-      LocNFeR.Leitor.Arquivo := ConvertStrRecived(XML);
-      LocNFeR.LerXml;
-      fACBrNFe.NotasFiscais.Items[0].XML := LocNFeR.Leitor.Arquivo;
-      fACBrNFe.NotasFiscais.GerarNFe;
-    finally
-      LocNFeR.Free;
-    end;
+    fACBrNFe.NotasFiscais.LoadFromString(ConvertStrRecived(XML));
+    fACBrNFe.NotasFiscais.GerarNFe;
   end;
 
-  IniNFe := TStringList.Create;
-  IniNFe.Text := fACBrNFe.NotasFiscais.GerarIni();
-  INIRec.SetStrings(IniNFe);
-  INIRec.Free;
-  Result := IniNFe.Text;
-  IniNFe.Free;
+  Result := fACBrNFe.NotasFiscais.GerarIni();
+  WriteToTxt('NFe.ini', Result);
 end;
 
 procedure TACBrObjetoNFe.RespostaIntegrador;
@@ -1064,12 +1035,15 @@ end;
 { TMetodoSetLogoMarca }
 
 { Params: 0 - Logo: String com path da logo
+          1 - NFCe: 1 para atualizar Logo da NFCe
 }
 procedure TMetodoSetLogoMarca.Executar;
 var
   ALogo: String;
+  ANFCe: Boolean;
 begin
   ALogo := fpCmd.Params(0);
+  ANFCe := StrToBoolDef( fpCmd.Params(1), False);
 
   if not FileExists(ALogo) then
     raise Exception.Create('Arquivo não encontrado.');
@@ -1077,7 +1051,12 @@ begin
   with TACBrObjetoNFe(fpObjetoDono) do
   begin
     with MonitorConfig.DFE.Impressao.Geral do
-        Logomarca := ALogo;
+    begin
+      if not(ANFCe) then
+        Logomarca := ALogo
+      else
+        LogoMarcaNFCeSAT := ALogo ;
+    end;
 
     MonitorConfig.SalvarArquivo;
   end;
@@ -1136,7 +1115,7 @@ begin
 
     DoValidarIntegradorNFCe();
     ACBrNFe.WebServices.ConsultaCadastro.Executar;
-    Resp := TConsultaCadastroResposta.Create(resINI);
+    Resp := TConsultaCadastroResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe.WebServices.ConsultaCadastro.RetConsCad);
       fpCmd.Resposta:= Resp.Msg + sLineBreak + Resp.Gerar ;
@@ -1177,7 +1156,7 @@ begin
     DoValidarIntegradorNFCe( IntToStrZero(0,20) + IntToStr(AModelo));
 
     ACBrNFe.WebServices.Inutiliza(ACNPJ, AJustificativa, AAno, AModelo, ASerie, ANumInicial, ANumFinal);
-    Resposta := TInutilizarNFeResposta.Create(resINI);
+    Resposta := TInutilizarNFeResposta.Create(TpResp, codUTF8);
     try
       Resposta.Processar(ACBrNFe);
       fpCmd.Resposta:= Resposta.Msg + sLineBreak + Resposta.Gerar ;
@@ -1251,7 +1230,11 @@ begin
             slReplay);
             // Lista de ReplayTo - TStrings
 
-          fpCmd.Resposta := 'Email enviado com sucesso';
+          if not(MonitorConfig.Email.SegundoPlano) then
+            fpCmd.Resposta := 'E-mail enviado com sucesso!'
+          else
+            fpCmd.Resposta := 'Enviando e-mail em segundo plano...';
+
         except
           on E: Exception do
             raise Exception.Create('Erro ao enviar email' + sLineBreak + E.Message);
@@ -1278,7 +1261,7 @@ end;
 procedure TMetodoReciboNFe.Executar;
 var
   ARecibo: String;
-  RespRetorno: TRetornoResposta;
+  RespRetorno: TReciboResposta;
 begin
   ARecibo := fpCmd.Params(0);
 
@@ -1287,15 +1270,13 @@ begin
     ACBrNFe.WebServices.Recibo.Recibo := ARecibo;
     DoValidarIntegradorNFCe();
 
-    ACBrNFe.WebServices.Retorno.Executar;
-    RespRetorno := TRetornoResposta.Create('NFe', resINI);
+    ACBrNFe.WebServices.Recibo.Executar;
+    RespRetorno := TReciboResposta.Create('NFe', TpResp, codUTF8);
     try
-      RespRetorno.Processar(ACBrNFe.WebServices.Retorno.NFeRetorno,
-                            ACBrNFe.WebServices.Retorno.Recibo,
-                            ACBrNFe.WebServices.Retorno.Msg,
-                            ACBrNFe.WebServices.Retorno.Protocolo,
-                            ACBrNFe.WebServices.Retorno.ChaveNFe);
-      fpCmd.Resposta := RespRetorno.Msg + sLineBreak + RespRetorno.Gerar;
+
+      RespRetorno.Processar(ACBrNFe.WebServices.Recibo.NFeRetorno,
+                            ACBrNFe.WebServices.Recibo.Recibo);
+      fpCmd.Resposta := RespRetorno.XMotivo + sLineBreak + RespRetorno.Gerar;
       if ACBrNFe.Configuracoes.Geral.Salvar then
         fpCmd.Resposta := fpCmd.Resposta + sLineBreak + 'Arquivo=' + ACBrNFe.Configuracoes.Arquivos.PathSalvar +
                       ARecibo + '-pro-rec.xml';
@@ -1338,13 +1319,19 @@ begin
       DoValidarIntegradorNFCe(ACBrNFe.WebServices.Consulta.NFeChave);
 
       ACBrNFe.WebServices.Consulta.Executar;
-      Resposta := TConsultaNFeResposta.Create(resINI);
+      Resposta := TConsultaNFeResposta.Create(TpResp, codUTF8);
       try
         Resposta.Processar(ACBrNFe);
         fpCmd.Resposta := Resposta.Msg + sLineBreak + Resposta.Gerar;
 
-        if  FilesExists( AXML ) then
-          fpCmd.Resposta :=  fpCmd.Resposta + sLineBreak + 'Arquivo=' + AXML;
+        if (ACBrNFe.NotasFiscais.Count > 0) then
+        begin
+          if NaoEstaVazio(ACBrNFe.NotasFiscais.Items[0].NomeArq) then
+            fpCmd.Resposta := fpCmd.Resposta + sLineBreak + 'Arquivo=' + ACBrNFe.NotasFiscais.Items[0].NomeArq;
+        end
+        else if ACBrNFe.Configuracoes.Geral.Salvar then
+            fpCmd.Resposta := fpCmd.Resposta + sLineBreak + 'Arquivo='
+            + PathWithDelim(ACBrNFe.Configuracoes.Arquivos.PathSalvar) + AXML + '-sit.xml';
 
       finally
         Resposta.Free;
@@ -1390,7 +1377,7 @@ begin
       if NaoEstaVazio(ACBrNFe.NotasFiscais.Items[0].NomeArq) then
         fpCmd.Resposta := ACBrNFe.NotasFiscais.Items[0].NomeArq
       else
-        fpCmd.Resposta := PathWithDelim(ACBrNFe.Configuracoes.Arquivos.PathSalvar)
+        fpCmd.Resposta := PathWithDelim(ACBrNFe.Configuracoes.Arquivos.GetPathNFe())
           + StringReplace(ACBrNFe.NotasFiscais.Items[0].NFe.infNFe.ID,
           'NFe', '', [rfIgnoreCase]) + '-nfe.xml';
     finally
@@ -1432,7 +1419,7 @@ begin
   begin
     DoValidarIntegradorNFCe();
     ACBrNFe.WebServices.StatusServico.Executar;
-    Resposta := TStatusServicoResposta.Create(resINI);
+    Resposta := TStatusServicoResposta.Create(TpResp, codUTF8);
     try
       Resposta.Processar(ACBrNFe);
       fpCmd.Resposta := Resposta.Msg + sLineBreak + Resposta.Gerar;
@@ -1517,7 +1504,6 @@ begin
     DanfeRL:= TACBrNFeDANFeRL.Create(ACBrNFe);
     try
       ACBrNFe.DANFE:= DanfeRL;
-      ACBrNFe.DANFE.Impressora := ' ';
       DoConfiguraDANFe(False, Trim(APreview) );
 
       if NaoEstaVazio(AImpressora) then
@@ -1689,7 +1675,7 @@ begin
       DoValidarIntegradorNFCe(ACBrNFe.NotasFiscais.Items[0].NFe.infNFe.ID);
 
     ACBrNFe.WebServices.Enviar.Executar;
-    RespEnvio := TEnvioResposta.Create(resINI);
+    RespEnvio := TEnvioResposta.Create( TpResp, codUTF8);
     try
        RespEnvio.Processar(ACBrNFe);
        fpCmd.Resposta := fpCmd.Resposta + RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -1702,7 +1688,7 @@ begin
        ACBrNFe.WebServices.Retorno.Recibo := ACBrNFe.WebServices.Enviar.Recibo;
        ACBrNFe.WebServices.Retorno.Executar;
 
-       RespRetorno := TRetornoResposta.Create('NFe', resINI);
+       RespRetorno := TRetornoResposta.Create('NFe', TpResp, codUTF8);
        try
          RespRetorno.Processar(ACBrNFe.WebServices.Retorno.NFeRetorno,
                                ACBrNFe.WebServices.Retorno.Recibo,
@@ -1842,7 +1828,7 @@ begin
       DoValidarIntegradorNFCe(ACBrNFe.NotasFiscais.Items[0].NFe.infNFe.ID);
 
     ACBrNFe.WebServices.Enviar.Executar;
-    RespEnvio := TEnvioResposta.Create(resINI);
+    RespEnvio := TEnvioResposta.Create(TpResp, codUTF8);
     try
       RespEnvio.Processar(ACBrNFe);
       fpCmd.Resposta := RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -1853,7 +1839,7 @@ begin
     begin
       ACBrNFe.WebServices.Retorno.Recibo := ACBrNFe.WebServices.Enviar.Recibo;
       ACBrNFe.WebServices.Retorno.Executar;
-      RespRetorno := TRetornoResposta.Create('NFe', resINI);
+      RespRetorno := TRetornoResposta.Create('NFe', TpResp, codUTF8);
       try
          RespRetorno.Processar(ACBrNFe.WebServices.Retorno.NFeRetorno,
                                ACBrNFe.WebServices.Retorno.Recibo,
@@ -1931,7 +1917,7 @@ begin
         DoValidarIntegradorNFCe(ACBrNFe.NotasFiscais.Items[0].NFe.infNFe.ID);
 
       ACBrNFe.WebServices.Enviar.Executar;
-      RespEnvio := TEnvioResposta.Create(resINI);
+      RespEnvio := TEnvioResposta.Create(TpResp, codUTF8);
       try
         RespEnvio.Processar(ACBrNFe);
         fpCmd.Resposta := RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -1942,7 +1928,7 @@ begin
       begin
         ACBrNFe.WebServices.Retorno.Recibo := ACBrNFe.WebServices.Enviar.Recibo;
         ACBrNFe.WebServices.Retorno.Executar;
-        RespRetorno := TRetornoResposta.Create('NFe', resINI);
+        RespRetorno := TRetornoResposta.Create('NFe', TpResp, codUTF8);
         try
            RespRetorno.Processar(ACBrNFe.WebServices.Retorno.NFeRetorno,
                                  ACBrNFe.WebServices.Retorno.Recibo,
@@ -2131,6 +2117,9 @@ begin
 
   with TACBrObjetoNFe(fpObjetoDono) do
   begin
+    ACBrNFe.WebServices.Consulta.Clear;
+    ACBrNFe.NotasFiscais.Clear;
+
     if not ValidarChave(AChave) then
       raise Exception.Create('Chave ' + AChave + ' inválida.')
     else
@@ -2160,7 +2149,7 @@ begin
     end;
     DoValidarIntegradorNFCe(AChave);
     ACBrNFe.EnviarEvento(ALote);
-    Resposta := TCancelamentoResposta.Create(resINI);
+    Resposta := TCancelamentoResposta.Create(TpResp, codUTF8);
     try
       Resposta.Processar(ACBrNFe);
       fpCmd.Resposta := Resposta.XMotivo + sLineBreak + Resposta.Gerar;
@@ -2423,12 +2412,13 @@ end;
 }
 procedure TMetodoGetPathEvento.Executar;
 var
-  CodEvento: Integer;
+  CodEvento: String;
+  ok: Boolean;
 begin
-  CodEvento := StrToInt(fpCmd.Params(0));
+  CodEvento := fpCmd.Params(0);
   with TACBrObjetoNFe(fpObjetoDono) do
   begin
-    fpCmd.Resposta := ACBrNFe.Configuracoes.Arquivos.GetPathEvento(TpcnTpEvento(CodEvento));
+    fpCmd.Resposta := ACBrNFe.Configuracoes.Arquivos.GetPathEvento(StrToTpEventoNFe(ok ,CodEvento));
   end;
 end;
 
@@ -2464,7 +2454,7 @@ begin
       DoValidarIntegradorNFCe(ACBrNFe.EventoNFe.Evento.Items[0].InfEvento.chNFe);
 
     ACBrNFe.EnviarEvento(ACBrNFe.EventoNFe.idLote);
-    Resp := TEventoResposta.Create(resINI);
+    Resp := TEventoResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe);
       fpCmd.Resposta:= sLineBreak + Resp.Gerar;
@@ -2497,7 +2487,7 @@ begin
     if ACBrNFe.EventoNFe.Evento.Count > 0 then
       DoValidarIntegradorNFCe(ACBrNFe.EventoNFe.Evento.Items[0].InfEvento.chNFe);
     ACBrNFe.EnviarEvento(ACBrNFe.EventoNFe.idLote);
-    Resp := TEventoResposta.Create(resINI);
+    Resp := TEventoResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe);
       fpCmd.Resposta:= sLineBreak + Resp.Gerar ;
@@ -2526,7 +2516,7 @@ begin
   begin
     ACBrNFe.EventoNFe.Evento.Clear;
     CargaDFeEvento := TACBrCarregarNFeEvento.Create(ACBrNFe, AArq);
-    Resp := TEventoResposta.Create(resINI);
+    Resp := TEventoResposta.Create(TpResp, codUTF8);
     try
       if ACBrNFe.EventoNFe.Evento.Count > 0 then
         DoValidarIntegradorNFCe(ACBrNFe.EventoNFe.Evento.Items[0].InfEvento.chNFe);
@@ -2568,7 +2558,7 @@ begin
 
     DoValidarIntegradorNFCe();
     ACBrNFe.DistribuicaoDFePorChaveNFe(AUF, ACNPJ, AChave);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrNFe.WebServices.DistribuicaoDFe.Msg,
@@ -2609,7 +2599,7 @@ begin
     DoValidarIntegradorNFCe();
 
     ACBrNFe.DistribuicaoDFePorUltNSU(AUF, ACNPJ, AUltNSU);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrNFe.WebServices.DistribuicaoDFe.Msg,
@@ -2649,7 +2639,7 @@ begin
 
     DoValidarIntegradorNFCe();
     ACBrNFe.DistribuicaoDFePorNSU(AUF, ACNPJ, ANSU);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrNFe.WebServices.DistribuicaoDFe.Msg,
@@ -2759,7 +2749,11 @@ begin
             '',
             slReplay); // Lista com Endereços Replay - TStrings
 
-          fpCmd.Resposta := 'Email enviado com sucesso';
+          if not(MonitorConfig.Email.SegundoPlano) then
+            fpCmd.Resposta := 'E-mail enviado com sucesso!'
+          else
+            fpCmd.Resposta := 'Enviando e-mail em segundo plano...';
+
         except
           on E: Exception do
             raise Exception.Create('Erro ao enviar email' + sLineBreak + E.Message);
@@ -2863,7 +2857,11 @@ begin
             '',
             slReplay); // Lista de slReplay - TStrings
 
-          fpCmd.Resposta := 'Email enviado com sucesso';
+          if not(MonitorConfig.Email.SegundoPlano) then
+            fpCmd.Resposta := 'E-mail enviado com sucesso!'
+          else
+            fpCmd.Resposta := 'Enviando e-mail em segundo plano...';
+
         except
           on E: Exception do
             raise Exception.Create('Erro ao enviar email' + sLineBreak + E.Message);
@@ -3128,7 +3126,7 @@ begin
       DoValidarIntegradorNFCe(ACBrNFe.NotasFiscais.Items[0].NFe.infNFe.ID);
 
     ACBrNFe.WebServices.Enviar.Executar;
-    RespEnvio := TEnvioResposta.Create(resINI);
+    RespEnvio := TEnvioResposta.Create(TpResp, codUTF8);
     try
       RespEnvio.Processar(ACBrNFe);
       fpCmd.Resposta := fpCmd.Resposta + RespEnvio.Msg + sLineBreak + RespEnvio.Gerar;
@@ -3139,7 +3137,7 @@ begin
     begin
       ACBrNFe.WebServices.Retorno.Recibo := ACBrNFe.WebServices.Enviar.Recibo;
       ACBrNFe.WebServices.Retorno.Executar;
-      RespRetorno := TRetornoResposta.Create('NFe', resINI);
+      RespRetorno := TRetornoResposta.Create('NFe', TpResp, codUTF8);
       try
          RespRetorno.Processar(ACBrNFe.WebServices.Retorno.NFeRetorno,
                                ACBrNFe.WebServices.Retorno.Recibo,
@@ -3254,7 +3252,7 @@ begin
 
     DoValidarIntegradorNFCe();
     ACBrNFe.DistribuicaoDFe(AUF, ACNPJ, AUltNSU, ANSU, AChave);
-    Resp:= TDistribuicaoDFeResposta.Create(resINI);
+    Resp:= TDistribuicaoDFeResposta.Create(TpResp, codUTF8);
     try
       Resp.Processar(ACBrNFe.WebServices.DistribuicaoDFe.retDistDFeInt,
                      ACBrNFe.WebServices.DistribuicaoDFe.Msg,

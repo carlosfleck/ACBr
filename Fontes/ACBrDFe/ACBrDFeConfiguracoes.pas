@@ -1,37 +1,34 @@
 {******************************************************************************}
-{ Projeto: Componente ACBrNFe                                                  }
-{  Biblioteca multiplataforma de componentes Delphi para emissão de Nota Fiscal}
-{ eletrônica - NFe - http://www.nfe.fazenda.gov.br                             }
-
-{ Direitos Autorais Reservados (c) 2008 Wemerson Souto                         }
-{                                       Daniel Simoes de Almeida               }
-{                                       André Ferreira de Moraes               }
-
-{ Colaboradores nesse arquivo:                                                 }
-
-{  Você pode obter a última versão desse arquivo na pagina do Projeto ACBr     }
-{ Componentes localizado em http://www.sourceforge.net/projects/acbr           }
-
-
+{ Projeto: Componentes ACBr                                                    }
+{  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
+{ mentos de Automação Comercial utilizados no Brasil                           }
+{                                                                              }
+{ Direitos Autorais Reservados (c) 2004 Daniel Simoes de Almeida               }
+{                                                                              }
+{ Colaboradores nesse arquivo:  André Ferreira de Moraes                       }
+{                               Wemerson Souto                                 }
+{                                                                              }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
+{                                                                              }
 {  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
 { sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
 { Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
 { qualquer versão posterior.                                                   }
-
+{                                                                              }
 {  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM   }
 { NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU      }
 { ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor}
 { do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)              }
-
+{                                                                              }
 {  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto}
 { com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
 { no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
 { Você também pode obter uma copia da licença em:                              }
 { http://www.opensource.org/licenses/lgpl-license.php                          }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-
+{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
 
 {$I ACBr.inc}
@@ -51,7 +48,7 @@ const
 
 type
 
-  TTagOrdenacaoPath = (opNenhum, opCNPJ, opModelo, opData, opLiteral);
+  TTagOrdenacaoPath = (opNenhum, opCNPJ, opModelo, opData, opLiteral, opIE);
 
   TConfiguracoes = class;
 
@@ -298,6 +295,7 @@ type
     FSalvar: Boolean;
     FAdicionarLiteral: Boolean;
     FSepararPorCNPJ: Boolean;
+    FSepararPorIE: Boolean;
     FSepararPorModelo: Boolean;
     FOrdenacaoPath: TOrdenacaoPath;
     FSepararPorAno: Boolean;
@@ -320,10 +318,10 @@ type
     procedure GravarIni( const AIni: TCustomIniFile ); virtual;
     procedure LerIni( const AIni: TCustomIniFile ); virtual;
 
-    function GetPath(const APath: String; const ALiteral: String; const CNPJ: String = '';
+    function GetPath(const APath: String; const ALiteral: String; const CNPJ: string = ''; const IE: String = '';
       Data: TDateTime = 0; const ModeloDescr: String = ''): String; virtual;
-    function GetPathDownload(const xNome: String = ''; const CNPJ: String = ''; Data: TDateTime = 0): String;
-    function GetPathDownloadEvento(tipoEvento: TpcnTpEvento; const xNome: String = ''; const CNPJ: String = ''; Data: TDateTime = 0): String;
+    function GetPathDownload(const xNome: String = ''; const CNPJ: String = ''; const IE: String = ''; Data: TDateTime = 0): String;
+    function GetPathDownloadEvento(tipoEvento: TpcnTpEvento; const xNome: String = ''; const CNPJ: String = ''; const IE: String = ''; Data: TDateTime = 0): String;
   published
     property PathSalvar: String read GetPathSalvar write FPathSalvar;
     property PathSchemas: String read GetPathSchemas write FPathSchemas;
@@ -332,6 +330,7 @@ type
     property Salvar: Boolean read FSalvar write FSalvar default True;
     property AdicionarLiteral: Boolean read FAdicionarLiteral write FAdicionarLiteral default False;
     property SepararPorCNPJ: Boolean read FSepararPorCNPJ write FSepararPorCNPJ default False;
+    property SepararPorIE: Boolean read FSepararPorIE write FSepararPorIE default False;
     property SepararPorModelo: Boolean read FSepararPorModelo write FSepararPorModelo default False;
     property OrdenacaoPath: TOrdenacaoPath read FOrdenacaoPath write FOrdenacaoPath;
     property SepararPorAno: Boolean read FSepararPorAno write SetSepararPorAno default False;
@@ -1132,6 +1131,7 @@ begin
   FSepararPorAno := False;
   FAdicionarLiteral := False;
   FSepararPorCNPJ := False;
+  FSepararPorIE := False;
   FSepararPorModelo := False;
 end;
 
@@ -1153,6 +1153,7 @@ begin
   Salvar           := DeArquivosConf.Salvar;
   AdicionarLiteral := DeArquivosConf.AdicionarLiteral;
   SepararPorCNPJ   := DeArquivosConf.SepararPorCNPJ;
+  SepararPorIE     := DeArquivosConf.SepararPorIE;
   SepararPorModelo := DeArquivosConf.SepararPorModelo;
   SepararPorMes    := DeArquivosConf.SepararPorMes;
   SepararPorDia    := DeArquivosConf.SepararPorDia;
@@ -1175,6 +1176,7 @@ begin
   AIni.WriteBool(fpConfiguracoes.SessaoIni, 'SalvarArq', Salvar);
   AIni.WriteBool(fpConfiguracoes.SessaoIni, 'AdicionarLiteral', AdicionarLiteral);
   AIni.WriteBool(fpConfiguracoes.SessaoIni, 'SepararPorCNPJ', SepararPorCNPJ);
+  AIni.WriteBool(fpConfiguracoes.SessaoIni, 'SepararPorIE', SepararPorIE);
   AIni.WriteBool(fpConfiguracoes.SessaoIni, 'SepararPorModelo', SepararPorModelo);
   AIni.WriteBool(fpConfiguracoes.SessaoIni, 'SepararPorAno', SepararPorAno);
   AIni.WriteBool(fpConfiguracoes.SessaoIni, 'SepararPorMes', SepararPorMes);
@@ -1194,6 +1196,7 @@ begin
   Salvar := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'SalvarArq', Salvar);
   AdicionarLiteral := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'AdicionarLiteral', AdicionarLiteral);
   SepararPorCNPJ := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'SepararPorCNPJ', SepararPorCNPJ);
+  SepararPorIE := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'SepararPorIE', SepararPorIE);
   SepararPorModelo := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'SepararPorModelo', SepararPorModelo);
   SepararPorAno := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'SepararPorAno', SepararPorAno);
   SepararPorMes := AIni.ReadBool(fpConfiguracoes.SessaoIni, 'SepararPorMes', SepararPorMes);
@@ -1253,8 +1256,8 @@ begin
   Result := FIniServicos;
 end;
 
-function TArquivosConf.GetPath(const APath: String; const ALiteral: String; const CNPJ: String;
-  Data: TDateTime; const ModeloDescr: String): String;
+function TArquivosConf.GetPath(const APath: String; const ALiteral: String; const CNPJ: String = ''; const IE: String = '';
+  Data: TDateTime = 0; const ModeloDescr: String = ''): String;
 
   procedure AddPathOrder(AAdicionar: Boolean; AItemOrdenacaoPath: TTagOrdenacaoPath);
   begin
@@ -1264,7 +1267,7 @@ function TArquivosConf.GetPath(const APath: String; const ALiteral: String; cons
 
 var
   wDia, wMes, wAno: word;
-  Dir, Modelo, sAno, sMes, sDia, CNPJ_temp: String;
+  Dir, Modelo, sAno, sMes, sDia, CNPJ_temp, IE_temp: String;
   LenLiteral, i: integer;
 begin
   if EstaVazio(APath) then
@@ -1276,6 +1279,7 @@ begin
   if (FOrdenacaoPath.Count = 0) then
   begin
     AddPathOrder(SepararPorCNPJ, opCNPJ);
+    AddPathOrder(SepararPorIE, opIE);
     AddPathOrder(SepararPorModelo, opModelo);
     AddPathOrder((SepararPorAno or SepararPorMes or SepararPorDia), opData);
     AddPathOrder(AdicionarLiteral, opLiteral);
@@ -1294,6 +1298,14 @@ begin
 
           if NaoEstaVazio(CNPJ_temp) then
             Dir := PathWithDelim(Dir) + CNPJ_temp;
+        end;
+
+      opIE:
+        begin
+          IE_temp := OnlyNumber(IE);
+
+          if NaoEstaVazio(IE_temp) then
+            Dir := PathWithDelim(Dir) + IE_temp;
         end;
 
       opModelo:
@@ -1351,7 +1363,7 @@ begin
   Result := Dir;
 end;
 
-function TArquivosConf.GetPathDownload(const xNome, CNPJ: String;
+function TArquivosConf.GetPathDownload(const xNome, CNPJ, IE: String;
   Data: TDateTime): String;
 var
   rPathDown: String;
@@ -1365,11 +1377,11 @@ begin
   else
      rPathDown := FDownloadDFe.PathDownload;
 
-  Result := GetPath(rPathDown, 'Down', CNPJ, Data);
+  Result := GetPath(rPathDown, 'Down', CNPJ, IE, Data);
 end;
 
 function TArquivosConf.GetPathDownloadEvento(tipoEvento: TpcnTpEvento;
-  const xNome, CNPJ: String; Data: TDateTime): String;
+  const xNome, CNPJ, IE: String; Data: TDateTime): String;
 var
   rPathDown: String;
 begin
@@ -1383,7 +1395,7 @@ begin
   else
      rPathDown := FDownloadDFe.PathDownload;
 
-  rPathDown := GetPath(rPathDown, 'Evento', CNPJ, Data);
+  rPathDown := GetPath(rPathDown, 'Evento', CNPJ, IE, Data);
 
   if AdicionarLiteral then
     rPathDown := PathWithDelim(rPathDown) + TpEventoToDescStr(tipoEvento);

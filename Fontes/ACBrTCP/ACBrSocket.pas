@@ -29,9 +29,8 @@
 { Você também pode obter uma copia da licença em:                              }
 { http://www.opensource.org/licenses/lgpl-license.php                          }
 {                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
 
 {******************************************************************************
@@ -123,10 +122,10 @@ TACBrTCPServerThread = class(TThread)
 { Componente ACBrTCPServer - Servidor TCP muito simples }
 
 { TACBrTCPServer }
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
-TACBrTCPServer = class( TACBrComponent )
+  TACBrTCPServer = class( TACBrComponent )
   private
     { Propriedades do Componente ACBrTCPServer }
     fsACBrTCPServerDaemon: TACBrTCPServerDaemon ;
@@ -186,15 +185,16 @@ TACBrTCPServer = class( TACBrComponent )
                                                       write fsOnRecebeDados ;
 end ;
 
+  TACBrOnAntesAbrirHTTP = procedure( var AURL : String ) of object ;
+
+  EACBrHTTPError = class( Exception ) ;
+
 { TACBrHTTP }
 
-TACBrOnAntesAbrirHTTP = procedure( var AURL : String ) of object ;
-
-EACBrHTTPError = class( Exception ) ;
-	{$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
-TACBrHTTP = class( TACBrComponent )
+  TACBrHTTP = class( TACBrComponent )
   private
     fHTTPSend : THTTPSend ;
     FIsUTF8: Boolean;

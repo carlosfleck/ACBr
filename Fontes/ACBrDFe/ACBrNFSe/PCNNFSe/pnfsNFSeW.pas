@@ -39,8 +39,8 @@ uses
 {$ELSE}
 
 {$ENDIF}
-  SysUtils, Classes, StrUtils,
-  synacode, pcnGerador, pnfsNFSe, pnfsConversao;
+  SysUtils, Classes,
+  pcnGerador, pnfsNFSe, pcnConversao, pnfsConversao;
 
 type
 
@@ -69,6 +69,7 @@ type
     FServicoEnviar: String;
     FQuebradeLinha: String;
     FVersaoDados: String;
+    FAmbiente: TpcnTipoAmbiente;
 
   public
     constructor Create(ANFSeW: TNFSeW); virtual;
@@ -92,6 +93,7 @@ type
     property ServicoEnviar: String   read FServicoEnviar write FServicoEnviar;
     property QuebradeLinha: String   read FQuebradeLinha write FQuebradeLinha;
     property VersaoDados: String     read FVersaoDados   write FVersaoDados;
+    property Ambiente: TpcnTipoAmbiente read FAmbiente write FAmbiente default taHomologacao;
   end;
 
   { TNFSeW }
@@ -140,7 +142,8 @@ uses
   pnfsNFSeW_ABRASFv1, pnfsNFSeW_ABRASFv2, pnfsNFSeW_EGoverneISS, pnfsNFSeW_EL,
   pnfsNFSeW_Equiplano, pnfsNFSeW_Infisc, pnfsNFSeW_ISSDSF, pnfsNFSeW_Governa,
   pnfsNFSeW_SP, pnfsNFSeW_CONAM, pnfsNFSeW_Agili, pnfsNFSeW_SMARAPD, pnfsNFSeW_IPM,
-  pnfsNFSeW_AssessorPublico, pnfsNFSeW_WEBFISCO;
+  pnfsNFSeW_AssessorPublico, pnfsNFSeW_WebFisco, pnfsNFSeW_Lencois, pnfsNFSeW_Giap,
+  pnfsNFSeW_Elotech;
 
 { TNFSeW }
 
@@ -190,6 +193,7 @@ begin
     loEGoverneISS: FNFSeWClass := TNFSeW_EGoverneISS.Create(Self);
     loEL:          FNFSeWClass := TNFSeW_EL.Create(Self);
     loEquiplano:   FNFSeWClass := TNFSeW_Equiplano.Create(Self);
+    loElotech:     FNFSeWClass := TNFSeW_Elotech.Create(Self);
     loGoverna:     FNFSeWClass := TNFSeW_Governa.Create(Self);
     loInfisc:      FNFSeWClass := TNFSeW_Infisc.Create(Self);
     loISSDSF:      FNFSeWClass := TNFSeW_ISSDSF.Create(Self);
@@ -199,7 +203,9 @@ begin
     loSMARAPD:     FNFSeWClass := TNFSeW_SMARAPD.Create(Self);
     loIPM:         FNFSeWClass := TNFSeW_IPM.Create(Self);
     loAssessorPublico : FNFSeWClass := TNFSeW_AssesorPublico.Create(Self);
-    loWEBFISCO:    FNFSeWClass := TNFSeW_WEBFISCO.Create(Self);
+    loWebFisco:    FNFSeWClass := TNFSeW_WebFisco.Create(Self);
+    loLencois:     FNFSeWClass := TNFSeW_Lencois.Create(Self);
+    loGiap:        FNFSeWClass := TNFSeW_Giap.Create(Self);
   else
     FNFSeWClass := TNFSeWClass.Create(Self);
   end;

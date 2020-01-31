@@ -1,35 +1,35 @@
-{******************************************************************************}
-{ Projeto: Componentes ACBr                                                    }
-{  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
-{ mentos de Automação Comercial utilizados no Brasil                           }
-
-{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida               }
-
-{ Colaboradores nesse arquivo: Rafael Teno Dias                                }
-
-{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
-{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
-{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
-{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
-{ qualquer versão posterior.                                                   }
-
-{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM   }
-{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU      }
-{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor}
-{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)              }
-
-{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto}
-{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
-{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
-{ Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{        Rua Cel.Aureliano de Camargo, 973 - Tatuí - SP - 18270-170            }
-
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: Componentes ACBr                                                     }
+{  Biblioteca multiplataforma de componentes Delphi para interação com equipa-  }
+{ mentos de Automação Comercial utilizados no Brasil                            }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo: Rafael Teno Dias                                 }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 
 {$I ACBr.inc}
 
@@ -44,49 +44,58 @@ uses
 
 const
   CSessaoHttpResposta = 'RespostaHttp';
+  CSessionFormat = '%s%.3d';
 
 type
-  { TACBrLibResposta }
   TACBrLibRespostaTipo = (resINI, resXML, resJSON);
+  TACBrLibCodificacao = (codUTF8, codANSI);
 
-  TACBrLibResposta = class abstract
+  TArrayOfVariant = array of Variant;
+  TArrayOfObject = array of TObject;
+  TArrayOfClass = array of TClass;
+
+  { TACBrLibRespostaBase }
+  TACBrLibRespostaBase = class abstract
   private
     FSessao: String;
     FTipo: TACBrLibRespostaTipo;
+    FFormato: TACBrLibCodificacao;
 
-    function GerarXml: String;
-    function GerarIni: String;
-    function GerarJson: String;
+    function GerarXml: Ansistring;
+    function GerarIni: Ansistring;
+    function GerarJson: Ansistring;
 
   protected
     procedure GravarXml(const xDoc: TXMLDocument; const RootNode: TDomNode; const Target: TObject); virtual;
-    procedure GravarIni(const AIni: TCustomIniFile; const ASessao: String; const Target: TObject; IsCollection: Boolean = false); virtual;
+    procedure GravarIni(const AIni: TCustomIniFile; const ASessao: String; const Target: TObject; const APrefix: String = ''); virtual;
     procedure GravarJson(const JSON: TJSONObject; const ASessao: String; const Target: TObject); virtual;
 
   public
-    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo);
+    constructor Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 
     property Sessao: String read FSessao;
     property Tipo: TACBrLibRespostaTipo read FTipo;
+    property Formato: TACBrLibCodificacao read FFormato;
 
-    function Gerar: String; virtual;
+    function Gerar: Ansistring; virtual;
 
   end;
 
-  TACBrLibResposta<T: TACBrComponent> = class abstract(TACBrLibResposta)
+  { TACBrLibResposta }
+  TACBrLibResposta<T: TACBrComponent> = class abstract(TACBrLibRespostaBase)
   public
     procedure Processar(const Control: T); virtual; abstract;
   end;
 
   { TACBrLibHttpResposta }
-  TACBrLibHttpResposta = class(TACBrLibResposta)
+  TACBrLibHttpResposta = class(TACBrLibRespostaBase)
   private
     FWebService: string;
     FCodigoHTTP: Integer;
     FMsg: string;
 
   public
-    constructor Create(const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
   published
     property WebService: String read FWebService write FWebService;
@@ -96,12 +105,12 @@ type
   end;
 
   { TLibImpressaoResposta }
-  TLibImpressaoResposta = class(TACBrLibResposta)
+  TLibImpressaoResposta = class(TACBrLibRespostaBase)
   private
     FMsg: string;
 
   public
-    constructor Create(const QtdImpresso: Integer; const ATipo: TACBrLibRespostaTipo); reintroduce;
+    constructor Create(const QtdImpresso: Integer; const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao); reintroduce;
 
   published
     property Msg: string read FMsg write FMsg;
@@ -114,14 +123,15 @@ uses
   math;
 
 { TACBrLibResposta }
-constructor TACBrLibResposta.Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo);
+constructor TACBrLibRespostaBase.Create(const ASessao: String; const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
   inherited Create;
   FSessao := ASessao;
   FTipo := ATipo;
+  FFormato := AFormato;
 end;
 
-function TACBrLibResposta.GerarXml: String;
+function TACBrLibRespostaBase.GerarXml: Ansistring;
 var
   xDoc: TXMLDocument;
   RootNode: TDomNode;
@@ -145,49 +155,108 @@ begin
   end;
 end;
 
-procedure TACBrLibResposta.GravarXml(const xDoc: TXMLDocument; const RootNode: TDomNode; const Target: TObject);
+procedure TACBrLibRespostaBase.GravarXml(const xDoc: TXMLDocument; const RootNode: TDomNode; const Target: TObject);
 Var
   PropList: TPropInfoList;
-  i: Integer;
+  i, j: Integer;
   PI: PPropInfo;
-  PT: PTypeInfo;
-  ParentNode, Node: TDomNode;
+  TI: PTypeInfo;
+  TD: PTypeData;
+  ClassObject: TObject;
+  CollectionObject: TCollection;
+  CollectionItem: TCollectionItem;
+  ListObject: TList;
+  Item: TObject;
+  ParentNode: TDomNode;
   FloatValue: Extended;
 begin
   PropList := TPropInfoList.Create(Target, tkProperties);
-
   try
     for i := 0 to PropList.Count - 1 do
     begin
       PI := PropList.Items[i];
-      PT := PI^.PropType;
-      ParentNode := xDoc.CreateElement(Pi^.Name);
-      case PT^.Kind of
+      TI := PI^.PropType;
+      TD := GetTypeData(TI);
+      case TI^.Kind of
+        tkClass:
+          begin
+            if TD.ClassType = nil then continue;
+
+            ClassObject := GetObjectProp(Target, PI);
+            if not Assigned(ClassObject) or (ClassObject = nil) then continue;
+
+            if (TD.ClassType.InheritsFrom(TCollection)) then
+            begin
+              ParentNode := xDoc.CreateElement(Pi^.Name);
+              CollectionObject := TCollection(ClassObject);
+              for j := 0 to CollectionObject.Count - 1 do
+              begin
+                CollectionItem := CollectionObject.Items[j];
+                GravarXml(xDoc, ParentNode, CollectionItem);
+              end;
+            end
+            else if (TD.ClassType.InheritsFrom(TList)) then
+            begin
+              ParentNode := xDoc.CreateElement(Pi^.Name);
+              ListObject := TList(ClassObject);
+              for j := 0 to ListObject.Count - 1 do
+              begin
+                Item := ListObject.Items[j];
+                GravarXml(xDoc, ParentNode, Item);
+              end;
+            end
+            else
+            begin
+              if (TD.ClassType.InheritsFrom(TACBrLibRespostaBase)) then
+                ParentNode := xDoc.CreateElement(TACBrLibRespostaBase(ClassObject).Sessao)
+              else
+                ParentNode := xDoc.CreateElement(Pi^.Name);
+
+              GravarXml(xDoc, ParentNode, ClassObject);
+            end;
+          end;
         tkSet,
         tkEnumeration,
         tkInteger,
         tkBool,
         tkInt64:
-          Node := xDoc.CreateTextNode(IntToStr(GetOrdProp(Target, PI)));
+          begin
+            ParentNode := xDoc.CreateElement(Pi^.Name);
+            ParentNode.AppendChild(xDoc.CreateTextNode(IntToStr(GetOrdProp(Target, PI))));
+          end;
         tkWString,
         tkUString,
         tkSString,
         tkLString,
         tkAString:
-          Node := xDoc.CreateTextNode(Trim(GetStrProp(Target, PI)));
+          begin
+            ParentNode := xDoc.CreateElement(Pi^.Name);
+            ParentNode.AppendChild(xDoc.CreateTextNode(Trim(GetStrProp(Target, PI))));
+          end;
         tkFloat:
           begin
+            ParentNode := xDoc.CreateElement(Pi^.Name);
             FloatValue := GetFloatProp(Target, PI);
-            if(PT = TypeInfo(TDateTime))then
+
+            if (TI = TypeInfo(TDate)) then
             begin
               if not IsZero(FloatValue) then
-                Node := xDoc.CreateTextNode(DateTimeToStr(FloatValue));
+                ParentNode.AppendChild(xDoc.CreateTextNode(DateToStr(FloatValue)));
+            end
+            else if (TI = TypeInfo(TTime)) then
+            begin
+              if not IsZero(FloatValue) then
+                ParentNode.AppendChild(xDoc.CreateTextNode(TimeToStr(FloatValue)));
+            end
+            else if(TI = TypeInfo(TDateTime))then
+            begin
+              if not IsZero(FloatValue) then
+                ParentNode.AppendChild(xDoc.CreateTextNode(DateTimeToStr(FloatValue)));
             end
             else
-              Node := xDoc.CreateTextNode(FloatToStr(FloatValue));
+              ParentNode.AppendChild(xDoc.CreateTextNode(FloatToStr(FloatValue)));
           end;
       end;
-      ParentNode.AppendChild(Node);
       RootNode.AppendChild(ParentNode);
     end;
   finally
@@ -196,7 +265,7 @@ begin
   end;
 end;
 
-function TACBrLibResposta.GerarIni: String;
+function TACBrLibRespostaBase.GerarIni: Ansistring;
 var
   AIni: TMemIniFile;
   TList: TStringList;
@@ -217,16 +286,19 @@ begin
   end;
 end;
 
-procedure TACBrLibResposta.GravarIni(const AIni: TCustomIniFile; const ASessao: String; const Target: TObject; IsCollection: Boolean);
+procedure TACBrLibRespostaBase.GravarIni(const AIni: TCustomIniFile; const ASessao: String; const Target: TObject; const APrefix: String);
 var
   PropList: TPropInfoList;
   i, j: Integer;
   PI: PPropInfo;
-  PT: PTypeInfo;
+  TI: PTypeInfo;
+  TD: PTypeData;
   Sessao: String;
   ClassObject: TObject;
   CollectionObject: TCollection;
   CollectionItem: TCollectionItem;
+  ListObject: TList;
+  Item: TObject;
   FloatValue: Extended;
 begin
   PropList := TPropInfoList.Create(Target, tkProperties);
@@ -235,41 +307,53 @@ begin
     for i := 0 to PropList.Count - 1 do
     begin
       PI := PropList.Items[i];
-      PT := PI^.PropType;
-      case PT^.Kind of
+      TI := PI^.PropType;
+      TD := GetTypeData(TI);
+      case TI^.Kind of
         tkClass:
           begin
-            ClassObject := GetObjectProp(Target, PI);
-            if ClassObject = nil then continue;
+            if TD.ClassType = nil then continue;
 
-            if (ClassObject.InheritsFrom(TCollection)) then
+            ClassObject := GetObjectProp(Target, PI);
+            if not Assigned(ClassObject) or (ClassObject = nil) then continue;
+
+            if (TD.ClassType.InheritsFrom(TCollection)) then
             begin
               CollectionObject := TCollection(ClassObject);
               for j := 0 to CollectionObject.Count - 1 do
               begin
                 CollectionItem := CollectionObject.Items[j];
-                Sessao := IfThen(IsCollection, ASessao + PI.Name, PI.Name);
-                GravarIni(AIni, Sessao + FormatFloat('000', J+1), CollectionItem, True)
+                Sessao := IfThen(NaoEstaVazio(APrefix), PI.Name + APrefix, PI.Name);
+                GravarIni(AIni, Format(CSessionFormat, [Sessao, J+1]), CollectionItem, APrefix + Trim(IntToStrZero(J +1, 3)))
+              end;
+            end
+            else if (TD.ClassType.InheritsFrom(TList)) then
+            begin
+              ListObject := TList(ClassObject);
+              for j := 0 to ListObject.Count - 1 do
+              begin
+                Item := ListObject.Items[j];
+                Sessao := IfThen(NaoEstaVazio(APrefix), PI.Name + APrefix, PI.Name);
+                GravarIni(AIni, Format(CSessionFormat, [Sessao, J+1]), Item, APrefix + Trim(IntToStrZero(J +1, 3)))
               end;
             end
             else
             begin
-              if (ClassObject.InheritsFrom(TACBrLibResposta)) then
+              if (TD.ClassType.InheritsFrom(TACBrLibRespostaBase)) then
               begin
-                Sessao := IfThen(IsCollection, ASessao + TACBrLibResposta(ClassObject).Sessao, TACBrLibResposta(ClassObject).Sessao);
-                GravarIni(AIni, Sessao, ClassObject, IsCollection)
+                Sessao := IfThen(NaoEstaVazio(APrefix), TACBrLibRespostaBase(ClassObject).Sessao + APrefix,
+                                                        TACBrLibRespostaBase(ClassObject).Sessao);
+                GravarIni(AIni, Sessao, ClassObject, APrefix)
               end
               else
               begin
-                Sessao := IfThen(IsCollection, ASessao + PI.Name, PI.Name);
-                GravarIni(AIni, PI.Name, ClassObject, IsCollection);
+                Sessao := IfThen(NaoEstaVazio(APrefix), PI.Name + APrefix, PI.Name);
+                GravarIni(AIni, PI.Name, ClassObject, APrefix);
               end;
             end;
           end;
         tkSet:
-          begin
             AIni.WriteString(ASessao, PI^.Name, GetSetProp(Target, PI, True));
-          end;
         tkBool,
         tkEnumeration,
         tkInteger,
@@ -284,7 +368,17 @@ begin
         tkFloat:
           begin
             FloatValue := GetFloatProp(Target, PI);
-            if (PT = TypeInfo(TDateTime)) then
+            if (TI = TypeInfo(TDate)) then
+            begin
+              if not IsZero(FloatValue) then
+                AIni.WriteDate(ASessao, PI^.Name, FloatValue);
+            end
+            else if (TI = TypeInfo(TTime)) then
+            begin
+              if not IsZero(FloatValue) then
+                AIni.WriteTime(ASessao, PI^.Name, FloatValue);
+            end
+            else if (TI = TypeInfo(TDateTime)) then
             begin
               if not IsZero(FloatValue) then
                 AIni.WriteDateTime(ASessao, PI^.Name, FloatValue);
@@ -300,7 +394,7 @@ begin
   end;
 end;
 
-function TACBrLibResposta.GerarJson: String;
+function TACBrLibRespostaBase.GerarJson: Ansistring;
 var
   JSON: TJSONObject;
 begin
@@ -314,13 +408,19 @@ begin
   end;
 end;
 
-procedure TACBrLibResposta.GravarJson(const JSON: TJSONObject; const ASessao: String; const Target: TObject);
+procedure TACBrLibRespostaBase.GravarJson(const JSON: TJSONObject; const ASessao: String; const Target: TObject);
 var
   PropList: TPropInfoList;
-  i: Integer;
+  i, j: Integer;
   PI: PPropInfo;
-  PT: PTypeInfo;
-  Aux: Double;
+  TI: PTypeInfo;
+  TD: PTypeData;
+  ClassObject: TObject;
+  CollectionObject: TCollection;
+  CollectionItem: TCollectionItem;
+  ListObject: TList;
+  Item: TObject;
+  FloatValue: Double;
   JSONRoot: TJSONObject;
 begin
   JSONRoot := TJSONObject.Create;
@@ -331,9 +431,44 @@ begin
     for i := 0 to PropList.Count - 1 do
     begin
       PI := PropList.Items[i];
-      PT := PI^.PropType;
-      case PT^.Kind of
-        tkSet,
+      TI := PI^.PropType;
+      TD := GetTypeData(TI);
+      case TI^.Kind of
+        tkClass:
+          begin
+            if TD.ClassType = nil then continue;
+
+            ClassObject := GetObjectProp(Target, PI);
+            if not Assigned(ClassObject) or (ClassObject = nil) then continue;
+
+            if (TD.ClassType.InheritsFrom(TCollection)) then
+            begin
+              CollectionObject := TCollection(ClassObject);
+              for j := 0 to CollectionObject.Count - 1 do
+              begin
+                CollectionItem := CollectionObject.Items[j];
+                GravarJson(JSONRoot, Format(CSessionFormat, [PI.Name, J+1]), CollectionItem)
+              end;
+            end
+            else if (TD.ClassType.InheritsFrom(TList)) then
+            begin
+              ListObject := TList(ClassObject);
+              for j := 0 to ListObject.Count - 1 do
+              begin
+                Item := ListObject.Items[j];
+                GravarJson(JSONRoot, Format(CSessionFormat, [PI.Name, J+1]), Item)
+              end;
+            end
+            else
+            begin
+              if (TD.ClassType.InheritsFrom(TACBrLibRespostaBase)) then
+                GravarJson(JSONRoot, TACBrLibRespostaBase(ClassObject).Sessao, ClassObject)
+              else
+                GravarJson(JSONRoot, PI.Name, ClassObject);
+            end;
+          end;
+        tkSet:
+          JSONRoot.Add(PI^.Name, GetSetProp(Target, PI, True));
         tkEnumeration,
         tkInteger,
         tkBool,
@@ -346,14 +481,27 @@ begin
         tkAString:
           JSONRoot.Add(PI^.Name, Trim(GetStrProp(Target, PI)));
         tkFloat:
-          if (PT = TypeInfo(TDateTime)) then
           begin
-            Aux := GetFloatProp(Target, PI);
-            if not IsZero(Aux) then
-              JSONRoot.Add(PI^.Name, FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', TDateTime(Aux)));
-          end
-          else
-            JSONRoot.Add(PI^.Name, GetFloatProp(Target, PI));
+            FloatValue := GetFloatProp(Target, PI);
+
+            if (TI = TypeInfo(TDate)) then
+            begin
+              if not IsZero(FloatValue) then
+                JSONRoot.Add(PI^.Name, DateToStr(FloatValue));
+            end
+            else if (TI = TypeInfo(TTime)) then
+            begin
+              if not IsZero(FloatValue) then
+                JSONRoot.Add(PI^.Name, TimeToStr(FloatValue));
+            end
+            else if (TI = TypeInfo(TDateTime)) then
+            begin
+              if not IsZero(FloatValue) then
+                JSONRoot.Add(PI^.Name, FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', FloatValue));
+            end
+            else
+              JSONRoot.Add(PI^.Name, FloatValue);
+          end;
       end;
     end;
   finally
@@ -362,7 +510,7 @@ begin
   end;
 end;
 
-function TACBrLibResposta.Gerar: String;
+function TACBrLibRespostaBase.Gerar: Ansistring;
 begin
   case FTipo of
     resXML: Result := GerarXml;
@@ -370,18 +518,21 @@ begin
     else
       Result := GerarIni;
   end;
+
+  if FFormato = codANSI then
+    Result := ACBrUTF8ToAnsi(Result);
 end;
 
 { TACBrLibHttpResposta }
-constructor TACBrLibHttpResposta.Create(const ATipo: TACBrLibRespostaTipo);
+constructor TACBrLibHttpResposta.Create(const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create(CSessaoHttpResposta, ATipo);
+  inherited Create(CSessaoHttpResposta, ATipo, AFormato);
 end;
 
 { TLibImpressaoResposta }
-constructor TLibImpressaoResposta.Create(const QtdImpresso: Integer; const ATipo: TACBrLibRespostaTipo);
+constructor TLibImpressaoResposta.Create(const QtdImpresso: Integer; const ATipo: TACBrLibRespostaTipo; const AFormato: TACBrLibCodificacao);
 begin
-  inherited Create('Impressao', ATipo);
+  inherited Create('Impressao', ATipo, AFormato);
   Msg := Format('%d Documento (s) impresso(s) com sucesso', [QtdImpresso]);
 end;
 

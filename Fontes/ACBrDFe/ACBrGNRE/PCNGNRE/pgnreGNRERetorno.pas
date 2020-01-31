@@ -50,11 +50,9 @@ unit pgnreGNRERetorno;
 interface
 
 uses
-  SysUtils, Classes, pcnAuxiliar, pcnConversao, pcnLeitor,
+  SysUtils, Classes, pcnAuxiliar, pcnConversao,
   pgnreRetConsResLoteGNRE;
-(*
- pgnreConversao;
-*)
+
 type
   TGNRERetorno = class(TPersistent)
   private
@@ -95,6 +93,8 @@ type
     FGuiaGeradaContingencia: Integer;
     FReservado: string;
     FInfoCabec: TInfoCabec;
+    FtipoGnre: string;
+    FValorICMS: Currency;
   public
     constructor Create;
     destructor Destroy; override;
@@ -136,6 +136,9 @@ type
     property GuiaGeradaContingencia: Integer read FGuiaGeradaContingencia write FGuiaGeradaContingencia;
     property Reservado: string read FReservado write FReservado;
     property InfoCabec: TInfoCabec read FInfoCabec write FInfoCabec;
+    // Versao 2.00
+    property tipoGnre: string read FtipoGnre write FtipoGnre;
+    property ValorICMS: Currency read FValorICMS write FValorICMS;
   end;
 
 implementation

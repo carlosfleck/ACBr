@@ -143,9 +143,9 @@ begin
 end;
 
 function TCIOTW_REPOM.GerarXml: Boolean;
-var
-  Ok: Boolean;
-  versao: Integer;
+//var
+//  Ok: Boolean;
+//  versao: Integer;
 begin
   Gerador.ListaDeAlertas.Clear;
   Gerador.ArquivoFormatoXML := '';
@@ -153,8 +153,8 @@ begin
   Gerador.LayoutArquivoTXT.Clear;
   Gerador.ArquivoFormatoTXT := '';
 
-  VersaoDF := DblToVersaoCIOT(Ok, CIOT.OperacaoTransporte.Versao);
-  versao := VersaoCIOTToInt(VersaoDF);
+//  VersaoDF := DblToVersaoCIOT(Ok, CIOT.OperacaoTransporte.Versao);
+//  versao := VersaoCIOTToInt(VersaoDF);
 
   // Implementar
 

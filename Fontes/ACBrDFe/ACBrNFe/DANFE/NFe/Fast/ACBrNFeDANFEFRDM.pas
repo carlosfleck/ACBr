@@ -136,6 +136,7 @@ type
     FBorderIcon : TBorderIcons;
     FIncorporarFontesPdf: Boolean;
     FIncorporarBackgroundPdf: Boolean;
+    FOtimizaImpressaoPdf: Boolean;
 
     procedure frxReportBeforePrint(Sender: TfrxReportComponent);
     procedure frxReportPreview(Sender: TObject);
@@ -158,6 +159,7 @@ type
     procedure CarregaInformacoesAdicionais;
 
     function CollateBr(const Str: String): String;
+    procedure AjustaMargensReports;
 
   public
     constructor Create(AOwner: TComponent);
@@ -186,9 +188,10 @@ type
     property BorderIcon: TBorderIcons read FBorderIcon write FBorderIcon;
     property IncorporarBackgroundPdf: Boolean read FIncorporarBackgroundPdf write FIncorporarBackgroundPdf;
     property IncorporarFontesPdf: Boolean read FIncorporarFontesPdf write FIncorporarFontesPdf;
+    property OtimizaImpressaoPdf: Boolean read FOtimizaImpressaoPdf write FOtimizaImpressaoPdf;
 
     function PrepareReport(ANFE: TNFe = nil): Boolean;
-    function PrepareReportEvento: Boolean;
+    function PrepareReportEvento(ANFE: TNFe = nil): Boolean;
     function PrepareReportInutilizacao: Boolean;
 
     function GetPreparedReport: TfrxReport;
@@ -224,6 +227,7 @@ begin
   FBorderIcon := [biSystemMenu,biMaximize,biMinimize];
   FIncorporarFontesPdf := True;
   FIncorporarBackgroundPdf := True;
+  FOtimizaImpressaoPdf := True;
 
   FDANFEClassOwner := TACBrDFeDANFeReport(AOwner);
 
@@ -245,9 +249,9 @@ begin
   FfrxPDFExport := TfrxPDFExport.Create(AOwner);
   with FfrxPDFExport do
   begin
-     PrintOptimized := True;
      Background    := FIncorporarBackgroundPdf;
      EmbeddedFonts := FIncorporarFontesPdf;
+     PrintOptimized := FOtimizaImpressaoPdf;
      Subject       := 'Exportando DANFE para PDF';
      ShowProgress  := False;
   end;
@@ -473,6 +477,7 @@ begin
         FieldDefs.Add('QrCodeCarregado', ftGraphic, 1000);
         FieldDefs.Add('QrCodeLateral', ftString, 1);
         FieldDefs.Add('ImprimeEm1Linha', ftString, 1);
+        FieldDefs.Add('ImprimeEmDuasLinhas', ftString, 1);
         FieldDefs.Add('DescricaoViaEstabelec', ftString, 30);
         FieldDefs.Add('QtdeItens', ftInteger);
         FieldDefs.Add('ExpandirDadosAdicionaisAuto', ftString, 1);
@@ -770,6 +775,7 @@ begin
       begin
          FieldDefs.Add('OBS', ftString, 6900);
          FieldDefs.Add('LinhasOBS', ftInteger);
+         FieldDefs.Add('MensagemSEFAZ', ftString, 200);
          CreateDataSet;
       end;
    end;
@@ -1309,40 +1315,44 @@ var
   i: Integer;
   vTroco: Currency;
 begin
-  with cdsPagamento do
+  cdsPagamento.Close;
+  cdsPagamento.CreateDataSet;
+
+  if (FDANFEClassOwner is TACBrNFeDANFEFR)
+    and (TACBrNFeDANFEFR(FDANFEClassOwner).ExibeCampoDePagamento <> eipQuadro) then
   begin
-    Close;
-    CreateDataSet;
-    for i := 0 to NFe.Pag.Count - 1 do
-    begin
-      Append;
-      with FNFe.Pag[i] do
-      begin
-        if FDANFEClassOwner is TACBrNFeDANFCEClass then
-          FieldByName('tPag').AsString := TACBrNFeDANFCEClass(FDANFEClassOwner).ManterDescricaoPagamentos(FNFe.pag[i])
-        else
-          FieldByName('tPag').AsString := FormaPagamentoToDescricao(tPag);
-        FieldByName('vPag').AsFloat   := vPag;
-        // ver tpIntegra
-        FieldByName('CNPJ').AsString  := FormatarCNPJ(CNPJ);
-        FieldByName('tBand').AsString := BandeiraCartaoToDescStr( tBand );
-        FieldByName('cAut').AsString  := cAut;
-      end;
-      Post;
-    end;
+    Exit;
+  end;
 
-    // acrescenta o troco
-    vTroco := FNFe.pag.vTroco;
-    if (vTroco = 0) and (FDANFEClassOwner is TACBrNFeDANFCEClass) then
-      vTroco := TACBrNFeDANFCEClass(FDANFEClassOwner).vTroco;
-
-    if vTroco > 0 then
+  for i := 0 to NFe.Pag.Count - 1 do
+  begin
+    cdsPagamento.Append;
+    with FNFe.Pag[i] do
     begin
-      Append;
-      FieldByName('tPag').AsString  := 'Troco R$';
-      FieldByName('vPag').AsFloat   := vTroco;
-      Post;
+      if FDANFEClassOwner is TACBrNFeDANFCEClass then
+        cdsPagamento.FieldByName('tPag').AsString := TACBrNFeDANFCEClass(FDANFEClassOwner).ManterDescricaoPagamentos(FNFe.pag[i])
+      else
+        cdsPagamento.FieldByName('tPag').AsString := FormaPagamentoToDescricao(tPag);
+      cdsPagamento.FieldByName('vPag').AsFloat   := vPag;
+      // ver tpIntegra
+      cdsPagamento.FieldByName('CNPJ').AsString  := FormatarCNPJ(CNPJ);
+      cdsPagamento.FieldByName('tBand').AsString := BandeiraCartaoToDescStr( tBand );
+      cdsPagamento.FieldByName('cAut').AsString  := cAut;
     end;
+    cdsPagamento.Post;
+  end;
+
+  // acrescenta o troco
+  vTroco := FNFe.pag.vTroco;
+  if (vTroco = 0) and (FDANFEClassOwner is TACBrNFeDANFCEClass) then
+    vTroco := TACBrNFeDANFCEClass(FDANFEClassOwner).vTroco;
+
+  if vTroco > 0 then
+  begin
+    cdsPagamento.Append;
+    cdsPagamento.FieldByName('tPag').AsString  := 'Troco R$';
+    cdsPagamento.FieldByName('vPag').AsFloat   := vTroco;
+    cdsPagamento.Post;
   end;
 end;
 
@@ -1426,6 +1436,7 @@ begin
     if (FDANFEClassOwner is TACBrNFeDANFEClass) then
     begin
       wObs := TACBrNFeDANFEClass(FDANFEClassOwner).ManterDocreferenciados(FNFe) +
+              TACBrNFeDANFEClass(FDANFEClassOwner).ManterPagamentos(FNFe) +
               FDANFEClassOwner.ManterInfAdFisco(FNFe) +
               FDANFEClassOwner.ManterObsFisco(FNFe) +
               FDANFEClassOwner.ManterProcreferenciado(FNFe) +
@@ -1459,6 +1470,7 @@ begin
       Append;
       FieldByName('OBS').AsString        := BufferInfCpl;
       FieldByName('LinhasOBS').AsInteger := wLinhasObs;
+      FieldByName('MensagemSEFAZ').AsString := FNFe.procNFe.xMsg;
       Post;
     end;
 	
@@ -1737,13 +1749,14 @@ begin
     FieldByName('Mask_vUnCom').AsString                 := FDANFEClassOwner.CasasDecimais.MaskvUnCom;
     FieldByName('Casas_qCom').AsInteger                 := FDANFEClassOwner.CasasDecimais.qCom;
     FieldByName('Casas_vUnCom').AsInteger               := FDANFEClassOwner.CasasDecimais.vUnCom;
-    FieldByName('ImprimeEm1Linha').AsString             := IfThen(FDANFEClassOwner.ImprimeEmUmaLinha, 'S', 'N');
-
-    if (DANFEClassOwner is TACBrNFeDANFCEClass) then
-      FieldByName('QrCodeLateral').AsString := IfThen( TACBrNFeDANFCEClass(FDANFEClassOwner ).ImprimeQRCodeLateral, 'S', 'N');
 
     if (FDANFEClassOwner is TACBrNFeDANFCEClass) then
-      FieldByName('ImprimeDescAcrescItem').AsInteger    := IfThen( TACBrNFeDANFCEFR(FDANFEClassOwner).ImprimeDescAcrescItem, 1 , 0 );
+    begin
+      FieldByName('ImprimeEm1Linha').AsString        := IfThen( TACBrNFeDANFCEClass(FDANFEClassOwner).ImprimeEmUmaLinha, 'S', 'N');
+      FieldByName('ImprimeEmDuasLinhas').AsString    := IfThen( TACBrNFeDANFCEClass(FDANFEClassOwner).ImprimeEmDuasLinhas, 'S', 'N');
+      FieldByName('QrCodeLateral').AsString          := IfThen( TACBrNFeDANFCEClass(FDANFEClassOwner).ImprimeQRCodeLateral, 'S', 'N');
+      FieldByName('ImprimeDescAcrescItem').AsInteger := IfThen( TACBrNFeDANFCEClass(FDANFEClassOwner).ImprimeDescAcrescItem, 1 , 0 );
+    end;
 
     // Carregamento da imagem
     if NaoEstaVazio(DANFEClassOwner.Logo) then
@@ -1993,8 +2006,6 @@ function TACBrNFeFRClass.PrepareReport(ANFE: TNFe): Boolean;
 var
   I: Integer;
   wProjectStream: TStringStream;
-  Page: TfrxReportPage;
-  MultiplicadorMargem: Integer;
 begin
   Result := False;
 
@@ -2029,7 +2040,9 @@ begin
   frxReport.PreviewOptions.ShowCaptions := FExibeCaptionButton;
   frxReport.PreviewOptions.ZoomMode     := FZoomModePadrao;
   frxReport.OnPreview := frxReportPreview;
-  frxReport.FileName := DANFEClassOwner.NomeDocumento;
+
+  if NaoEstaVazio(DANFEClassOwner.NomeDocumento) then
+    frxReport.FileName := DANFEClassOwner.NomeDocumento;
 
   // Define a impressora
   if NaoEstaVazio(DANFEClassOwner.Impressora) then
@@ -2064,31 +2077,12 @@ begin
 
   if Assigned(NFe) then
   begin
-
-    // Informar margem para NFe em cm, NFCe em mm
-    if NFe.Ide.modelo = 55 then
-	  MultiplicadorMargem := 10
-	else
-	  MultiplicadorMargem := 1;
-
-    for i := 0 to (frxReport.PreviewPages.Count - 1) do
-    begin
-      Page := frxReport.PreviewPages.Page[i];
-      if (DANFEClassOwner.MargemSuperior > 0) then
-        Page.TopMargin    := DANFEClassOwner.MargemSuperior * MultiplicadorMargem;
-      if (DANFEClassOwner.MargemInferior > 0) then
-        Page.BottomMargin := DANFEClassOwner.MargemInferior * MultiplicadorMargem;
-      if (DANFEClassOwner.MargemEsquerda > 0) then
-        Page.LeftMargin   := DANFEClassOwner.MargemEsquerda * MultiplicadorMargem;
-      if (DANFEClassOwner.MargemDireita > 0) then
-        Page.RightMargin  := DANFEClassOwner.MargemDireita * MultiplicadorMargem;
-      frxReport.PreviewPages.ModifyPage(i, Page);
-    end;
+    AjustaMargensReports;
   end;
 
 end;
 
-function TACBrNFeFRClass.PrepareReportEvento: Boolean;
+function TACBrNFeFRClass.PrepareReportEvento(ANFE: TNFe = nil): Boolean;
 var
  wProjectStream: TStringStream;
 begin
@@ -2119,7 +2113,9 @@ begin
   frxReport.PreviewOptions.ShowCaptions := ExibeCaptionButton;
   frxReport.PreviewOptions.ZoomMode     := ZoomModePadrao;
   frxReport.OnPreview := frxReportPreview;
-  frxReport.FileName := DANFEClassOwner.NomeDocumento;
+
+  if NaoEstaVazio(DANFEClassOwner.NomeDocumento) then
+    frxReport.FileName := DANFEClassOwner.NomeDocumento;
 
   // Define a impressora
   if NaoEstaVazio(DANFEClassOwner.Impressora) then
@@ -2136,10 +2132,19 @@ begin
     else
       raise EACBrNFeDANFEFR.Create('Evento não foi assinalado.');
 
-    if (TACBrNFe(DANFEClassOwner.ACBrNFe).NotasFiscais.Count > 0) then
+    NFe := nil;
+
+    if Assigned(ANFE) then
+      NFe := ANFE
+    else
+    begin
+      if (TACBrNFe(DANFEClassOwner.ACBrNFe).NotasFiscais.Count > 0) then
+        NFe := TACBrNFe(DANFEClassOwner.ACBrNFe).NotasFiscais.Items[0].NFe;
+    end;
+
+    if Assigned(NFe) then
     begin
       frxReport.Variables['PossuiNFe'] := QuotedStr('S');
-      NFe := TACBrNFe(DANFEClassOwner.ACBrNFe).NotasFiscais.Items[0].NFe;
       CarregaDadosNFe;
     end;
 
@@ -2147,6 +2152,8 @@ begin
   end
   else
     raise EACBrNFeDANFEFR.Create('Propriedade ACBrNFe não assinalada.');
+
+  AjustaMargensReports;
 
 end;
 
@@ -2181,7 +2188,9 @@ begin
   frxReport.PreviewOptions.ShowCaptions := ExibeCaptionButton;
   frxReport.PreviewOptions.ZoomMode     := ZoomModePadrao;
   frxReport.OnPreview := frxReportPreview;
-  frxReport.FileName := DANFEClassOwner.NomeDocumento;
+
+  if NaoEstaVazio(DANFEClassOwner.NomeDocumento) then
+    frxReport.FileName := DANFEClassOwner.NomeDocumento;
 
   // Define a impressora
   if NaoEstaVazio(DANFEClassOwner.Impressora) then
@@ -2202,6 +2211,8 @@ begin
   end
   else
     raise EACBrNFeDANFEFR.Create('Propriedade ACBrNFe não assinalada.');
+
+  AjustaMargensReports;
 
 end;
 
@@ -2251,11 +2262,8 @@ begin
               else
                 qrcode := NFe.infNFeSupl.qrCode;
 
-              if Assigned(Sender) and (Sender.Name = 'ImgQrCode1') then
-                PintarQRCode(qrcode, TfrxPictureView(Sender).Picture, qrUTF8NoBOM);
-
-              if Assigned(Sender) and (Sender.Name = 'ImgQrCode2') then
-                PintarQRCode(qrcode, TfrxPictureView(Sender).Picture, qrUTF8NoBOM);
+              if Assigned(Sender) and (LeftStr(Sender.Name, 9) = 'ImgQrCode') then
+                PintarQRCode(qrcode, TfrxPictureView(Sender).Picture.Bitmap, qrUTF8NoBOM);
 
               CpDescrProtocolo := frxReport.FindObject('Memo25');
               if Assigned(CpDescrProtocolo) then
@@ -2355,6 +2363,7 @@ begin
     frxPDFExport.Keywords      := TITULO_PDF;
     frxPDFExport.EmbeddedFonts := IncorporarFontesPdf;
     frxPDFExport.Background    := IncorporarBackgroundPdf;
+    frxPDFExport.PrintOptimized := OtimizaImpressaoPdf;
 
     fsShowDialog := frxPDFExport.ShowDialog;
     try
@@ -2403,7 +2412,7 @@ var
   NomeArq: String;
   fsShowDialog: Boolean;
 begin
-  if PrepareReportEvento then
+  if PrepareReportEvento(ANFE) then
   begin
     frxPDFExport.Author        := DANFEClassOwner.Sistema;
     frxPDFExport.Creator       := DANFEClassOwner.Sistema;
@@ -2413,6 +2422,7 @@ begin
     frxPDFExport.Keywords      := TITULO_PDF;
     frxPDFExport.EmbeddedFonts := IncorporarFontesPdf;
     frxPDFExport.Background    := IncorporarBackgroundPdf;
+    frxPDFExport.PrintOptimized := OtimizaImpressaoPdf;
 
     fsShowDialog := frxPDFExport.ShowDialog;
     try
@@ -2461,6 +2471,7 @@ begin
     frxPDFExport.Keywords      := TITULO_PDF;
     frxPDFExport.EmbeddedFonts := IncorporarFontesPdf;
     frxPDFExport.Background    := IncorporarBackgroundPdf;
+    frxPDFExport.PrintOptimized := OtimizaImpressaoPdf;
 
     fsShowDialog := frxPDFExport.ShowDialog;
     try
@@ -2479,6 +2490,26 @@ begin
   else
     frxPDFExport.FileName := '';
 
+end;
+
+procedure TACBrNFeFRClass.AjustaMargensReports;
+var
+  Page: TfrxReportPage;
+  I: Integer;
+begin
+  for I := 0 to (frxReport.PreviewPages.Count - 1) do
+  begin
+    Page := frxReport.PreviewPages.Page[I];
+    if (DANFEClassOwner.MargemSuperior > 0) then
+      Page.TopMargin := DANFEClassOwner.MargemSuperior;
+    if (DANFEClassOwner.MargemInferior > 0) then
+      Page.BottomMargin := DANFEClassOwner.MargemInferior;
+    if (DANFEClassOwner.MargemEsquerda > 0) then
+      Page.LeftMargin := DANFEClassOwner.MargemEsquerda;
+    if (DANFEClassOwner.MargemDireita > 0) then
+      Page.RightMargin := DANFEClassOwner.MargemDireita;
+    frxReport.PreviewPages.ModifyPage(I, Page);
+  end;
 end;
 
 end.

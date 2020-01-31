@@ -48,7 +48,7 @@ unit ACBrCTeDACTEFR;
 interface
 
 uses
-  SysUtils, Classes, ACBrCTeDACTEClass,
+  SysUtils, Classes, ACBrCTeDACTEClass, ACBrBase,
   pcteCTe, pcnConversao, frxClass, DBClient, frxDBSet, frxBarcode, frxExportPDF,
   pcteEnvEventoCTe, pcteInutCTe, pcteRetInutCTe, ACBrCTe, ACBrUtil, StrUtils,
   DB, MaskUtils;
@@ -56,7 +56,7 @@ uses
 type
   EACBrCTeDACTEFR = class(Exception);
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrCTeDACTEFR = class(TACBrCTeDACTEClass)
   private
@@ -104,6 +104,7 @@ type
     procedure CarregaPercurso;
     procedure LimpaDados;
     function ManterCep(iCep: Integer): String;
+    procedure AjustaMargensReports;
   protected
     procedure CarregaDados;
     procedure CarregaDadosEventos;
@@ -183,8 +184,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure ImprimirDACTE(ACTE: TCTe = nil); override;
-    procedure ImprimirDACTEPDF(ACTE: TCTe = nil); override;
+    procedure ImprimirDACTe(ACTE: TCTe = nil); override;
+    procedure ImprimirDACTePDF(ACTE: TCTe = nil); override;
     procedure ImprimirEVENTO(ACTE: TCTe = nil); override;
     procedure ImprimirEVENTOPDF(ACTE: TCTe = nil); override;
     procedure ImprimirINUTILIZACAO(ACTE: TCTe = nil); override;
@@ -1178,8 +1179,8 @@ procedure TACBrCTeDACTEFR.frxReportBeforePrint(Sender: TfrxReportComponent);
 var
   ChildEvento, Child: TfrxChild;
   DetailData: TfrxDetailData;
-  Memo      : TfrxMemoView;
-  Shape     : TfrxShapeView;
+//  Memo      : TfrxMemoView;
+//  Shape     : TfrxShapeView;
   qrCode    : string;
 begin
   ChildEvento := frxReport.FindObject('ChildProcEvento') as TfrxChild;
@@ -1218,7 +1219,7 @@ begin
   begin
     qrCode := FCTe.infCTeSupl.qrCodCTe;
     if Assigned(Sender) and (Trim(qrCode) <> '') and (Sender.Name = 'ImgQrCode') then
-      PintarQRCode(qrCode, TfrxPictureView(Sender).Picture, qrUTF8NoBOM);
+      PintarQRCode(qrCode, TfrxPictureView(Sender).Picture.Bitmap, qrUTF8NoBOM);
   end;
 end;
 
@@ -1261,7 +1262,7 @@ begin
   end;
 end;
 
-procedure TACBrCTeDACTEFR.ImprimirDACTE(ACTE: TCTe);
+procedure TACBrCTeDACTEFR.ImprimirDACTe(ACTE: TCTe);
 begin
   if PrepareReport(ACTE) then
   begin
@@ -1272,7 +1273,7 @@ begin
   end;
 end;
 
-procedure TACBrCTeDACTEFR.ImprimirDACTEPDF(ACTE: TCTe);
+procedure TACBrCTeDACTEFR.ImprimirDACTePDF(ACTE: TCTe);
 const
   TITULO_PDF = 'Conhecimento de Transporte Eletrônico';
 var
@@ -1388,6 +1389,26 @@ begin
   end;
 end;
 
+procedure TACBrCTeDACTEFR.AjustaMargensReports;
+var
+  Page: TfrxReportPage;
+  I: Integer;
+begin
+  for I := 0 to (frxReport.PreviewPages.Count - 1) do
+  begin
+    Page := frxReport.PreviewPages.Page[I];
+    if (MargemSuperior > 0) then
+      Page.TopMargin := MargemSuperior;
+    if (MargemInferior > 0) then
+      Page.BottomMargin := MargemInferior;
+    if (MargemEsquerda > 0) then
+      Page.LeftMargin := MargemEsquerda;
+    if (MargemDireita > 0) then
+      Page.RightMargin := MargemDireita;
+    frxReport.PreviewPages.ModifyPage(I, Page);
+  end;
+end;
+
 procedure TACBrCTeDACTEFR.LimpaDados;
 begin
   cdsIdentificacao.EmptyDataSet;
@@ -1479,6 +1500,9 @@ begin
     else
       raise EACBrCTeDACTEFR.Create('Propriedade ACBrCTe não assinalada.');
   end;
+
+  AjustaMargensReports;
+
 end;
 
 function TACBrCTeDACTEFR.PrepareReportEvento: Boolean;
@@ -1532,6 +1556,9 @@ begin
   end
   else
     raise EACBrCTeDACTEFR.Create('Propriedade ACBrCTe não assinalada.');
+
+  AjustaMargensReports;
+
 end;
 
 function TACBrCTeDACTEFR.PrepareReportInutilizacao: Boolean;
@@ -1570,6 +1597,8 @@ begin
   end
   else
     raise EACBrCTeDACTEFR.Create('Propriedade ACBrCTe não assinalada.');
+
+  AjustaMargensReports;
 
 end;
 
@@ -2116,8 +2145,16 @@ begin
       end;
       Post;
     end;
-    cdsDadosNotasFiscais.RecordCount;
   end;
+
+  if cdsDadosNotasFiscais.IsEmpty
+    and (CTE.ide.tpServ in [tsIntermediario, tsMultimodal]) then
+  begin
+    // inserir registro vazio caso CTe não possua documentos (redespacho intermediario ou vinculado a multimodal)
+    cdsDadosNotasFiscais.Append;
+    cdsDadosNotasFiscais.Post;
+  end;
+
 end;
 
 procedure TACBrCTeDACTEFR.CarregaDestinatario;
@@ -2892,9 +2929,9 @@ begin
     if (FCTe.ide.tpAmb = taHomologacao) then
     begin
       if FCTe.Ide.modelo = 67 then
-        FieldByName('Mensagem0').AsString := 'CT-e OS sem Valor Fiscal - HOMOLOGAÇÃO'
+        FieldByName('Mensagem0').AsString := 'CT-e OS sem Valor Fiscal' + sLineBreak + 'HOMOLOGAÇÃO'
       else
-        FieldByName('Mensagem0').AsString := 'CT-e sem Valor Fiscal - HOMOLOGAÇÃO';
+        FieldByName('Mensagem0').AsString := 'CT-e sem Valor Fiscal' + sLineBreak + 'HOMOLOGAÇÃO';
     end
     else
     begin
@@ -2903,9 +2940,9 @@ begin
         if ((EstaVazio(Protocolo)) and (EstaVazio(FCTe.procCTe.nProt))) then
         begin
           if FCTe.Ide.modelo = 67 then
-            FieldByName('Mensagem0').AsString := 'CT-e OS sem Autorização de Uso da SEFAZ'
+            FieldByName('Mensagem0').AsString := 'CT-e OS sem Autorização' + sLineBreak + 'de Uso da SEFAZ'
           else
-            FieldByName('Mensagem0').AsString := 'CT-e sem Autorização de Uso da SEFAZ';
+            FieldByName('Mensagem0').AsString := 'CT-e sem Autorização' + sLineBreak + 'de Uso da SEFAZ';
         end
         else
           if (not((EstaVazio(Protocolo)) and

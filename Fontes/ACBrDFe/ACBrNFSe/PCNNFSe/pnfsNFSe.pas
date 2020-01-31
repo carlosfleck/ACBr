@@ -48,6 +48,7 @@ type
  TCondicaoPagamento                 = class;
  TemailCollectionItem               = class;
  TDespesaCollectionItem             = class;
+ TEndereco                          = class;
 
  TNFSe                              = class;
 
@@ -140,12 +141,12 @@ type
  TValoresNfse = class(TObject)
  private
    FBaseCalculo: Currency;
-   FAliquota: Currency;
+   FAliquota: Double;
    FValorIss: Currency;
    FValorLiquidoNfse: Currency;
  public
    property BaseCalculo: Currency read FBaseCalculo write FBaseCalculo;
-   property Aliquota: Currency read FAliquota write FAliquota;
+   property Aliquota: Double read FAliquota write FAliquota;
    property ValorIss: Currency read FValorIss write FValorIss;
    property ValorLiquidoNfse: Currency read FValorLiquidoNfse write FValorLiquidoNfse;
  end;
@@ -163,8 +164,8 @@ type
     FValorIss: Currency;
     FOutrasRetencoes: Currency;
     FBaseCalculo: Currency;
-    FAliquota: Currency;
-    FAliquotaSN: Currency; // mauroasl : Aliquota usada pelo Provedor conam
+    FAliquota: Double;
+    FAliquotaSN: Currency; // Aliquota usada pelo Provedor conam
     FAliquotaPis: Currency;
     FAliquotaCofins: Currency;
     FAliquotaInss: Currency;
@@ -193,8 +194,8 @@ type
     property ValorIss: Currency read FValorIss write FValorIss;
     property OutrasRetencoes: Currency read FOutrasRetencoes write FOutrasRetencoes;
     property BaseCalculo: Currency read FBaseCalculo write FBaseCalculo;
-    property Aliquota: Currency read FAliquota write FAliquota;
-    // mauroasl : Aliquota usada pelo Provedor conam
+    property Aliquota: Double read FAliquota write FAliquota;
+    // Aliquota usada pelo Provedor conam
     property AliquotaSN: Currency read FAliquotaSN write FAliquotaSN;
 
     // Aliquotas usadas pelo Provedor IssDsf
@@ -240,7 +241,7 @@ type
     FQuantidade : Currency; 
     FValorUnitario : Currency;
     FValorTotal : Currency;
-    FAliquota: Currency;
+    FAliquota: Double;
     FValorIss: Currency;
     FBaseCalculo: Currency;
     FValorDeducoes: Currency;
@@ -278,6 +279,7 @@ type
     FpRetCOFINS: currency;
     FvRed: currency;
     FTipoUnidade: TUnidade;
+    FItemListaServico: String;
 
   public
     constructor Create;
@@ -291,7 +293,7 @@ type
     property ValorServicos: Currency read FValorServicos write FValorServicos;
     property ValorDeducoes: Currency read FValorDeducoes write FValorDeducoes;
     property ValorIss: Currency read FValorIss write FValorIss;
-    property Aliquota: Currency read FAliquota write FAliquota;
+    property Aliquota: Double read FAliquota write FAliquota;
     property BaseCalculo: Currency read FBaseCalculo write FBaseCalculo;
     property DescontoCondicionado: Currency read FDescontoCondicionado write FDescontoCondicionado;
     property DescontoIncondicionado: Currency read FDescontoIncondicionado write FDescontoIncondicionado;
@@ -324,6 +326,7 @@ type
     property vBCPISPASEP: currency read FvBCPISPASEP write FvBCPISPASEP;
     property pRetPISPASEP: currency read FpRetPISPASEP write FpRetPISPASEP;
     property TipoUnidade: TUnidade read FTipoUnidade write FTipoUnidade;
+    property ItemListaServico: String read FItemListaServico write FItemListaServico;
   end;
 
  TDeducaoCollection = class(TObjectList)
@@ -362,6 +365,7 @@ type
     FItemListaServico: String;
     FCodigoCnae: String;
     FCodigoTributacaoMunicipio: String;
+    FxCodigoTributacaoMunicipio: String;
     FDiscriminacao: String;
     FCodigoMunicipio: String;
     FCodigoPais: Integer;
@@ -384,6 +388,7 @@ type
     FFonteCargaTributaria: String;
 
     procedure SetItemServico(Value: TItemServicoCollection);
+    procedure SetDeducao(const Value: TDeducaoCollection);
   public
     constructor Create;
     destructor Destroy; override;
@@ -392,6 +397,7 @@ type
     property ItemListaServico: String read FItemListaServico write FItemListaServico;
     property CodigoCnae: String read FCodigoCnae write FCodigoCnae;
     property CodigoTributacaoMunicipio: String read FCodigoTributacaoMunicipio write FCodigoTributacaoMunicipio;
+    property xCodigoTributacaoMunicipio: String read FxCodigoTributacaoMunicipio write FxCodigoTributacaoMunicipio;
     property Discriminacao: String read FDiscriminacao write FDiscriminacao;
     property CodigoMunicipio: String read FCodigoMunicipio write FCodigoMunicipio;
     property CodigoPais: Integer read FCodigoPais write FCodigoPais;
@@ -403,7 +409,7 @@ type
     property ResponsavelRetencao: TnfseResponsavelRetencao read FResponsavelRetencao write FResponsavelRetencao;
     property Descricao: String read FDescricao write FDescricao;
     // Provedor IssDsf
-    property Deducao: TDeducaoCollection read FDeducao write FDeducao;
+    property Deducao: TDeducaoCollection read FDeducao write SetDeducao;
     property Operacao: TOperacao read FOperacao write FOperacao;
     property Tributacao: TTributacao read FTributacao write FTributacao;
     // Provedor Governa
@@ -427,7 +433,15 @@ type
     FCNPJ_Prefeitura: String;
     FValorReceitaBruta: Currency;
     FDataInicioAtividade: TDateTime;
+    FRazaoSocial: String;
+    FFantasia: String;
+    FEndereco: TEndereco;
+    FTelefone: String;
+    FEmail: String;
   public
+    constructor Create;
+    destructor Destroy; override;
+
     property Cnpj: String read FCnpj write FCnpj;
     property InscricaoMunicipal: String read FInscricaoMunicipal write FInscricaoMunicipal;
     // As propriedades abaixo são Utilizadas pelo provedor ISSDigital
@@ -442,6 +456,12 @@ type
     property CNPJ_Prefeitura: String read FCNPJ_Prefeitura write FCNPJ_Prefeitura;
     property ValorReceitaBruta: Currency read FValorReceitaBruta write FValorReceitaBruta;
     property DataInicioAtividade: TDateTime read FDataInicioAtividade write FDataInicioAtividade;
+    //usado por Elotech
+    property RazaoSocial: String read FRazaoSocial write FRazaoSocial;
+    property Fantasia: String read FFantasia write FFantasia;
+    property Endereco: TEndereco read FEndereco write FEndereco;
+    property Telefone: String read FTelefone write FTelefone;
+    property Email: String read FEmail write FEmail;
   end;
 
  TEndereco = class(TObject)
@@ -521,12 +541,13 @@ type
 
  TDadosTomador = class(TObject)
   private
-    FIdentificacaoTomador: TIDentificacaoTomador;
+    FIdentificacaoTomador: TIdentificacaoTomador;
     FRazaoSocial: String;
     FEndereco: TEndereco;
     FContato: TContato;
     FAtualizaTomador: TnfseSimNao;
     FTomadorExterior: TnfseSimNao;
+    FNifTomador: String;
   public
     constructor Create;
     destructor Destroy; override;
@@ -537,6 +558,7 @@ type
     property Contato: TContato read FContato write FContato;
     property AtualizaTomador: TnfseSimNao read FAtualizaTomador write FAtualizaTomador;
     property TomadorExterior: TnfseSimNao read FTomadorExterior write FTomadorExterior;
+    property NifTomador: String read FNifTomador write FNifTomador;
   end;
 
  TIdentificacaoIntermediarioServico = class(TObject)
@@ -795,6 +817,9 @@ type
 
     procedure Setemail(const Value: TemailCollection);
     procedure SetInformacoesComplementares(const Value: String);
+    procedure SetDespesa(const Value: TDespesaCollection);
+    procedure SetAssinaComChaveParams(
+      const Value: TAssinaComChaveParamsCollection);
 
   public
     constructor Create;
@@ -855,7 +880,7 @@ type
     property Cancelada: TnfseSimNao read FCancelada write FCancelada;
     property Canhoto: TnfseCanhoto read FCanhoto Write FCanhoto;
     property Transportadora: TDadosTransportadora read FTransportadora write FTransportadora;
-    property Despesa: TDespesaCollection read FDespesa write FDespesa;
+    property Despesa: TDespesaCollection read FDespesa write SetDespesa;
     // propriedade para provedor Governa
     property TipoRecolhimento: String read FTipoRecolhimento write FTipoRecolhimento;
 
@@ -863,7 +888,7 @@ type
 
     property TipoTributacaoRPS: TnfseTTributacaoRPS read FTipoTributacaoRPS write FTipoTributacaoRPS;
 
-    property AssinaComChaveParams: TAssinaComChaveParamsCollection read FAssinaComChaveParams write FAssinaComChaveParams;
+    property AssinaComChaveParams: TAssinaComChaveParamsCollection read FAssinaComChaveParams write SetAssinaComChaveParams;
 
     // Provedor SP
     property Assinatura: String read FAssinatura write FAssinatura;
@@ -930,9 +955,9 @@ type
   end;
 
 const
-  CMUN_EXTERIOR: Integer = 9999999;
-  XMUN_EXTERIOR: String = 'EXTERIOR';
-  UF_EXTERIOR: String = 'EX';
+  CMUN_EXTERIOR = 9999999;
+  XMUN_EXTERIOR = 'EXTERIOR';
+  UF_EXTERIOR = 'EX';
 
 implementation
 
@@ -940,182 +965,184 @@ implementation
 
 constructor TDadosServico.Create;
 begin
- inherited Create;
+  inherited Create;
 
- FValores := TValores.Create;
+  FValores := TValores.Create;
 
- with FValores do
+  with FValores do
   begin
-   FValorServicos          := 0;
-   FValorDeducoes          := 0;
-   FValorPis               := 0;
-   FValorCofins            := 0;
-   FValorInss              := 0;
-   FValorIr                := 0;
-   FValorCsll              := 0;
-   FIssRetido              := stNormal;
-   FValorIss               := 0;
-   FValorIssRetido         := 0;
-   FOutrasRetencoes        := 0;
-   FBaseCalculo            := 0;
-   FAliquota               := 0;
-   FValorLiquidoNfse       := 0;
-   FDescontoIncondicionado := 0;
-   FDescontoCondicionado   := 0;
-   FValorDespesasNaoTributaveis := 0;
+    FValorServicos          := 0;
+    FValorDeducoes          := 0;
+    FValorPis               := 0;
+    FValorCofins            := 0;
+    FValorInss              := 0;
+    FValorIr                := 0;
+    FValorCsll              := 0;
+    FIssRetido              := stNormal;
+    FValorIss               := 0;
+    FValorIssRetido         := 0;
+    FOutrasRetencoes        := 0;
+    FBaseCalculo            := 0;
+    FAliquota               := 0;
+    FValorLiquidoNfse       := 0;
+    FDescontoIncondicionado := 0;
+    FDescontoCondicionado   := 0;
+    FValorDespesasNaoTributaveis := 0;
   end;
 
- FItemServico := TItemServicoCollection.Create;
- FDeducao     := TDeducaoCollection.Create;
- FDescricao   := '';
- 
+  FItemServico := TItemServicoCollection.Create;
+  FDeducao     := TDeducaoCollection.Create;
+  FDescricao   := '';
 end;
 
 destructor TDadosServico.Destroy;
 begin
- FValores.Free;
- FItemServico.Free;
- FDeducao.Free;
- 
- inherited destroy;
+  FValores.Free;
+  FItemServico.Free;
+  FDeducao.Free;
+
+  inherited Destroy;
+end;
+
+procedure TDadosServico.SetDeducao(const Value: TDeducaoCollection);
+begin
+  FDeducao := Value;
 end;
 
 procedure TDadosServico.SetItemServico(Value: TItemServicoCollection);
 begin
- FItemServico.Assign(Value);
+  FItemServico.Assign(Value);
 end;
 
 { TDadosPrestador }
 
 constructor TDadosPrestador.Create;
 begin
- inherited Create;
+  inherited Create;
 
- FIdentificacaoPrestador := TIdentificacaoPrestador.Create;
- FEndereco               := TEndereco.Create;
- FContato                := TContato.Create;
+  FIdentificacaoPrestador := TIdentificacaoPrestador.Create;
+  FEndereco               := TEndereco.Create;
+  FContato                := TContato.Create;
 
- with FIdentificacaoPrestador do
+  with FIdentificacaoPrestador do
   begin
-   Cnpj               := '';
-   InscricaoMunicipal := '';
-   InscricaoEstadual  := '';
+    Cnpj               := '';
+    InscricaoMunicipal := '';
+    InscricaoEstadual  := '';
   end;
 end;
 
 destructor TDadosPrestador.Destroy;
 begin
- FIdentificacaoPrestador.Free;
- FEndereco.Free;
- FContato.Free;
+  FIdentificacaoPrestador.Free;
+  FEndereco.Free;
+  FContato.Free;
 
- inherited destroy;
+  inherited Destroy;
 end;
 
 { TDadosTomador }
 
 constructor TDadosTomador.Create;
 begin
- inherited Create;
+  inherited Create;
 
- FIdentificacaoTomador := TIdentificacaoTomador.Create;
- FEndereco             := TEndereco.Create;
- FContato              := TContato.Create;
+  FIdentificacaoTomador := TIdentificacaoTomador.Create;
+  FEndereco             := TEndereco.Create;
+  FContato              := TContato.Create;
 end;
 
 destructor TDadosTomador.Destroy;
 begin
- FIdentificacaoTomador.Free;
- FEndereco.Free;
- FContato.Free;
+  FIdentificacaoTomador.Free;
+  FEndereco.Free;
+  FContato.Free;
 
- inherited destroy;
+  inherited Destroy;
 end;
 
 { TNFSe }
 
 constructor TNFSe.Create;
 begin
- inherited create;
- // RPS e NFSe
- FNomeArq                      := '';
- FInfID                        := TInfID.Create;
- FIdentificacaoRps             := TIdentificacaoRps.Create;
- FIdentificacaoRps.FTipo       := trRPS;
- FDataEmissao                  := 0;
- FNaturezaOperacao             := no1;
- FRegimeEspecialTributacao     := retNenhum;
- FOptanteSimplesNacional       := snNao;
- FIncentivadorCultural         := snNao;
- FStatus                       := srNormal;
- FRpsSubstituido               := TIdentificacaoRps.Create;
- FRpsSubstituido.FTipo         := trRPS;
- FServico                      := TDadosServico.Create;
- FPrestador                    := TIdentificacaoPrestador.Create;
- FPrestador.Cnpj               := '';
- FPrestador.InscricaoMunicipal := '';
- FTomador                      := TDadosTomador.Create;
- FIntermediarioServico         := TIdentificacaoIntermediarioServico.Create;
- FConstrucaoCivil              := TDadosConstrucaoCivil.Create;
- FCondicaoPagamento            := TCondicaoPagamento.Create;
- // NFSe
- FNumero                       := '';
- FCodigoVerificacao            := '';
- FCompetencia                  := '';
- FNfseSubstituida              := '';
- FOutrasInformacoes            := '';
- FInformacoesComplementares    := '';
- FValorCredito                 := 0;
- FPrestadorServico             := TDadosPrestador.Create;
- FOrgaoGerador                 := TIdentificacaoOrgaoGerador.Create;
- FValoresNfse                  := TValoresNfse.Create;
- // RPS e NFSe
- FNfseCancelamento             := TConfirmacaoCancelamento.Create;
- FNfseCancelamento.DataHora    := 0;
- FNfseSubstituidora            := '';
+  inherited create;
+  // RPS e NFSe
+  FNomeArq                      := '';
+  FInfID                        := TInfID.Create;
+  FIdentificacaoRps             := TIdentificacaoRps.Create;
+  FIdentificacaoRps.FTipo       := trRPS;
+  FDataEmissao                  := 0;
+  FNaturezaOperacao             := no1;
+  FRegimeEspecialTributacao     := retNenhum;
+  FOptanteSimplesNacional       := snNao;
+  FIncentivadorCultural         := snNao;
+  FStatus                       := srNormal;
+  FRpsSubstituido               := TIdentificacaoRps.Create;
+  FRpsSubstituido.FTipo         := trRPS;
+  FServico                      := TDadosServico.Create;
+  FPrestador                    := TIdentificacaoPrestador.Create;
+  FPrestador.Cnpj               := '';
+  FPrestador.InscricaoMunicipal := '';
+  FTomador                      := TDadosTomador.Create;
+  FIntermediarioServico         := TIdentificacaoIntermediarioServico.Create;
+  FConstrucaoCivil              := TDadosConstrucaoCivil.Create;
+  FCondicaoPagamento            := TCondicaoPagamento.Create;
+  // NFSe
+  FNumero                       := '';
+  FCodigoVerificacao            := '';
+  FCompetencia                  := '';
+  FNfseSubstituida              := '';
+  FOutrasInformacoes            := '';
+  FInformacoesComplementares    := '';
+  FValorCredito                 := 0;
+  FPrestadorServico             := TDadosPrestador.Create;
+  FOrgaoGerador                 := TIdentificacaoOrgaoGerador.Create;
+  FValoresNfse                  := TValoresNfse.Create;
+  // RPS e NFSe
+  FNfseCancelamento             := TConfirmacaoCancelamento.Create;
+  FNfseCancelamento.DataHora    := 0;
+  FNfseSubstituidora            := '';
 
-// Provedor Infisc Versão XML 1.1
- FTipoEmissao                  := teNormalNFSe;
- FEmpreitadaGlobal             := EgOutros;
- FModeloNFSe                   := '55';
- FCancelada                    := snNao;
- FCanhoto                      := tcNenhum;
- FTransportadora               := TDadosTransportadora.Create;
+  // Provedor Infisc Versão XML 1.1
+  FTipoEmissao                  := teNormalNFSe;
+  FEmpreitadaGlobal             := EgOutros;
+  FModeloNFSe                   := '55';
+  FCancelada                    := snNao;
+  FCanhoto                      := tcNenhum;
+  FTransportadora               := TDadosTransportadora.Create;
 
- FLogradouroLocalPrestacaoServico := llpTomador;
+  FLogradouroLocalPrestacaoServico := llpTomador;
 
- Femail                        := TemailCollection.Create;
- FDespesa                      := TDespesaCollection.Create;
+  Femail                        := TemailCollection.Create;
+  FDespesa                      := TDespesaCollection.Create;
 
- FAssinaComChaveParams         := TAssinaComChaveParamsCollection.Create;
+  FAssinaComChaveParams         := TAssinaComChaveParamsCollection.Create;
 end;
 
 destructor TNFSe.Destroy;
 begin
- // RPS e NFSe
- FInfID.Free;
- FIdentificacaoRps.Free;
- FRpsSubstituido.Free;
- FServico.Free;
- FPrestador.Free;
- FTomador.Free;
- FIntermediarioServico.Free;
- FConstrucaoCivil.Free;
- FCondicaoPagamento.Free;
- // NFSe
- FPrestadorServico.Free;
- FOrgaoGerador.Free;
- FValoresNfse.Free;
- // RPS e NFSe
- FNfseCancelamento.Free;
- Femail.Free;
- FDespesa.Free;
+  // RPS e NFSe
+  FInfID.Free;
+  FIdentificacaoRps.Free;
+  FRpsSubstituido.Free;
+  FServico.Free;
+  FPrestador.Free;
+  FTomador.Free;
+  FIntermediarioServico.Free;
+  FConstrucaoCivil.Free;
+  FCondicaoPagamento.Free;
+  // NFSe
+  FPrestadorServico.Free;
+  FOrgaoGerador.Free;
+  FValoresNfse.Free;
+  // RPS e NFSe
+  FNfseCancelamento.Free;
+  Femail.Free;
+  FDespesa.Free;
+  FAssinaComChaveParams.Free;
+  FTransportadora.Free;
 
- FAssinaComChaveParams.Free;
-
- FTransportadora.Free;
-
- inherited Destroy;
+  inherited Destroy;
 end;
 
 procedure TNFSe.SetInformacoesComplementares(const Value: String);
@@ -1128,23 +1155,35 @@ begin
   Femail := Value;
 end;
 
+procedure TNFSe.SetDespesa(const Value: TDespesaCollection);
+begin
+  FDespesa := Value;
+end;
+
+procedure TNFSe.SetAssinaComChaveParams(
+  const Value: TAssinaComChaveParamsCollection);
+begin
+  FAssinaComChaveParams := Value;
+end;
+
 { TLoteRps }
 
 constructor TLoteRps.Create;
 begin
- inherited create;
- FInfID              := TInfID.Create;
- FNumeroLote         := '';
- FCnpj               := '';
- FInscricaoMunicipal := '';
- FQuantidadeRps      := '';
+  inherited Create;
+
+  FInfID              := TInfID.Create;
+  FNumeroLote         := '';
+  FCnpj               := '';
+  FInscricaoMunicipal := '';
+  FQuantidadeRps      := '';
 end;
 
 destructor TLoteRps.Destroy;
 begin
- FInfID.Free;
+  FInfID.Free;
 
- inherited Destroy;
+  inherited Destroy;
 end;
 
 { TPedidoCancelamento }
@@ -1152,6 +1191,7 @@ end;
 constructor TPedidoCancelamento.Create;
 begin
   inherited Create;
+
   FInfID              := TInfID.Create;
   FIdentificacaoNfse  := TIdentificacaoNfse.Create;
   FCodigoCancelamento := '';
@@ -1161,7 +1201,8 @@ destructor TPedidoCancelamento.Destroy;
 begin
   FInfID.Free;
   FIdentificacaoNfse.Free;
-  inherited;
+
+  inherited Destroy;
 end;
 
 { TConfirmacaoCancelamento }
@@ -1169,15 +1210,17 @@ end;
 constructor TConfirmacaoCancelamento.Create;
 begin
   inherited Create;
-  FInfID     := TInfID.Create;
-  FPedido    := TPedidoCancelamento.Create;
+
+  FInfID  := TInfID.Create;
+  FPedido := TPedidoCancelamento.Create;
 end;
 
 destructor TConfirmacaoCancelamento.Destroy;
 begin
   FInfID.Free;
   FPedido.Free;
-  inherited;
+
+  inherited Destroy;
 end;
 
 { TSubstituicaoNfse }
@@ -1185,6 +1228,7 @@ end;
 constructor TSubstituicaoNfse.Create;
 begin
   inherited Create;
+
   FInfID             := TInfID.Create;
   FNfseSubstituidora := '';
 end;
@@ -1192,7 +1236,8 @@ end;
 destructor TSubstituicaoNfse.Destroy;
 begin
   FInfID.Free;
-  inherited;
+
+  inherited Destroy;
 end;
 
 { TItemServicoCollection }
@@ -1247,6 +1292,7 @@ end;
 constructor TItemServicoCollectionItem.Create;
 begin
   inherited Create;
+
   // Provedor Infisc Versão XML 1.1
   FCodigo  := '';
   FCodServ := '';
@@ -1280,13 +1326,15 @@ end;
 constructor TCondicaoPagamento.Create;
 begin
   inherited Create;
+
   FParcelas := TParcelasCollection.Create;
 end;
 
 destructor TCondicaoPagamento.Destroy;
 begin
   FParcelas.Free;
-  inherited;
+
+  inherited Destroy;
 end;
 
 procedure TCondicaoPagamento.SetParcelas(const Value: TParcelasCollection);
@@ -1364,6 +1412,22 @@ function TAssinaComChaveParamsCollection.New: TAssinaComChaveParamsCollectionIte
 begin
   Result := TAssinaComChaveParamsCollectionItem.Create;
   Self.Add(Result);
+end;
+
+{ TIdentificacaoPrestador }
+
+constructor TIdentificacaoPrestador.Create;
+begin
+  inherited Create;
+
+  FEndereco := TEndereco.Create;
+end;
+
+destructor TIdentificacaoPrestador.Destroy;
+begin
+  FEndereco.Free;
+
+  inherited Destroy;
 end;
 
 end.

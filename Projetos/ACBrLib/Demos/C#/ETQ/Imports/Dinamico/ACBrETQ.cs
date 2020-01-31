@@ -92,10 +92,8 @@ namespace ACBrLib.ETQ
         #region Constructors
 
         public ACBrETQ(string eArqConfig = "", string eChaveCrypt = "") :
-            base(Environment.Is64BitProcess ? "ACBrETQ32.dll" : "ACBrETQ64.dll")
+            base(Environment.Is64BitProcess ? "ACBrETQ64.dll" : "ACBrETQ32.dll")
         {
-            InitializeMethods();
-
             var inicializar = GetMethod<Delegates.ETQ_Inicializar>();
             var ret = ExecuteMethod(() => inicializar(ToUTF8(eArqConfig), ToUTF8(eChaveCrypt)));
 
@@ -103,6 +101,42 @@ namespace ACBrLib.ETQ
         }
 
         #endregion Constructors
+
+        #region Properties
+
+        public string Nome
+        {
+            get
+            {
+                var bufferLen = BUFFER_LEN;
+                var buffer = new StringBuilder(bufferLen);
+
+                var method = GetMethod<Delegates.ETQ_Nome>();
+                var ret = ExecuteMethod(() => method(buffer, ref bufferLen));
+
+                CheckResult(ret);
+
+                return ProcessResult(buffer, bufferLen);
+            }
+        }
+
+        public string Versao
+        {
+            get
+            {
+                var bufferLen = BUFFER_LEN;
+                var buffer = new StringBuilder(bufferLen);
+
+                var method = GetMethod<Delegates.ETQ_Versao>();
+                var ret = ExecuteMethod(() => method(buffer, ref bufferLen));
+
+                CheckResult(ret);
+
+                return ProcessResult(buffer, bufferLen);
+            }
+        }
+
+        #endregion Properties
 
         #region Methods
 
@@ -133,19 +167,8 @@ namespace ACBrLib.ETQ
             var ret = ExecuteMethod(() => method(ToUTF8(eSessao.ToString()), ToUTF8(eChave), pValue, ref bufferLen));
             CheckResult(ret);
 
-            var value = FromUTF8(pValue);
-
-            if (typeof(T).IsEnum)
-            {
-                return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value));
-            }
-
-            if (typeof(T) == typeof(bool))
-            {
-                return (T)(object)Convert.ToBoolean(Convert.ToInt32(value));
-            }
-
-            return (T)Convert.ChangeType(value, typeof(T));
+            var value = ProcessResult(pValue, bufferLen);
+            return ConvertValue<T>(value);
         }
 
         public void ConfigGravarValor(ACBrSessao eSessao, string eChave, object value)
@@ -153,12 +176,7 @@ namespace ACBrLib.ETQ
             if (value == null) return;
 
             var method = GetMethod<Delegates.ETQ_ConfigGravarValor>();
-            var type = value.GetType();
-
-            var propValue = value.ToString();
-            if (type.IsEnum) propValue = ((int)value).ToString();
-            if (type == typeof(bool)) propValue = Convert.ToInt32(value).ToString();
-            if (type == typeof(bool?)) propValue = Convert.ToInt32(value).ToString();
+            var propValue = ConvertValue(value);
 
             var ret = ExecuteMethod(() => method(ToUTF8(eSessao.ToString()), ToUTF8(eChave), ToUTF8(propValue)));
             CheckResult(ret);
@@ -279,7 +297,7 @@ namespace ACBrLib.ETQ
             CheckResult(codRet);
         }
 
-        private void InitializeMethods()
+        protected override void InitializeMethods()
         {
             AddMethod<Delegates.ETQ_Inicializar>("ETQ_Inicializar");
             AddMethod<Delegates.ETQ_Finalizar>("ETQ_Finalizar");
@@ -298,62 +316,28 @@ namespace ACBrLib.ETQ
             AddMethod<Delegates.ETQ_Imprimir>("ETQ_Imprimir");
             AddMethod<Delegates.ETQ_ImprimirTexto>("ETQ_ImprimirTexto");
             AddMethod<Delegates.ETQ_ImprimirTextoStr>("ETQ_ImprimirTextoStr");
-            AddMethod<Delegates.ETQ_ImprimirTextoStr>("ETQ_ImprimirTextoStr");
             AddMethod<Delegates.ETQ_ImprimirBarras>("ETQ_ImprimirBarras");
             AddMethod<Delegates.ETQ_ImprimirLinha>("ETQ_ImprimirLinha");
             AddMethod<Delegates.ETQ_ImprimirCaixa>("ETQ_ImprimirCaixa");
             AddMethod<Delegates.ETQ_ImprimirImagem>("ETQ_ImprimirImagem");
         }
 
-        private static string ToUTF8(string value)
+        protected override string GetUltimoRetorno(int iniBufferLen = 0)
         {
-            return string.IsNullOrEmpty(value) ? value : Encoding.Default.GetString(Encoding.UTF8.GetBytes(value));
-        }
-
-        private static string FromUTF8(StringBuilder value)
-        {
-            if (value == null) return null;
-            return value.Length == 0 ? string.Empty : Encoding.UTF8.GetString(Encoding.Default.GetBytes(value.ToString()));
-        }
-
-        private void CheckResult(int ret)
-        {
-            if (ret >= 0) return;
-
-            var bufferLen = BUFFER_LEN;
+            var bufferLen = iniBufferLen < 1 ? BUFFER_LEN : iniBufferLen;
             var buffer = new StringBuilder(bufferLen);
             var ultimoRetorno = GetMethod<Delegates.ETQ_UltimoRetorno>();
 
-            ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
-            if (bufferLen > BUFFER_LEN)
+            if (iniBufferLen < 1)
             {
-                buffer.Capacity = bufferLen;
                 ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
+                if (bufferLen <= BUFFER_LEN) return FromUTF8(buffer);
+
+                buffer.Capacity = bufferLen;
             }
 
-            switch (ret)
-            {
-                case -10:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -6:
-                    throw new DirectoryNotFoundException(FromUTF8(buffer));
-
-                case -5:
-                    throw new FileNotFoundException(FromUTF8(buffer));
-
-                case -4:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -3:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -2:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -1:
-                    throw new ApplicationException(FromUTF8(buffer));
-            }
+            ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
+            return FromUTF8(buffer);
         }
 
         #endregion Private Methods

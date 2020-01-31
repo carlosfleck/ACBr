@@ -30,6 +30,9 @@ namespace ACBrLibPosPrinter
             public delegate int POS_UltimoRetorno(StringBuilder buffer, ref int bufferSize);
 
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate int POS_ImportarConfig(string eArqConfig);
+
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
             public delegate int POS_ConfigLer(string eArqConfig);
 
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -87,7 +90,10 @@ namespace ACBrLibPosPrinter
             public delegate int POS_LerStatusImpressora(int tentativas, ref int status);
 
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-            public delegate int POS_RetornarTags(StringBuilder buffer, ref int bufferSize, bool incluiAjuda);
+            public delegate int POS_RetornarTags(bool incluiAjuda, StringBuilder buffer, ref int bufferSize);
+
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+            public delegate int POS_AcharPortas(StringBuilder buffer, ref int bufferSize);
         }
 
         #endregion InnerTypes
@@ -100,10 +106,8 @@ namespace ACBrLibPosPrinter
 
         #region Constructors
 
-        public ACBrPosPrinter(string eArqConfig = "", string eChaveCrypt = "") : base(Environment.Is64BitProcess ? "ACBrPosPrinter64.dll" : "ACBrPosPrinter32.dll")
+        public ACBrPosPrinter(string eArqConfig = "", string eChaveCrypt = "") : base("ACBrPosPrinter64.dll", "ACBrPosPrinter32.dll")
         {
-            InitializeMethods();
-
             var inicializar = GetMethod<Delegates.POS_Inicializar>();
             var ret = ExecuteMethod(() => inicializar(ToUTF8(eArqConfig), ToUTF8(eChaveCrypt)));
 
@@ -112,7 +116,43 @@ namespace ACBrLibPosPrinter
 
         #endregion Constructors
 
-        #region Configurações
+        #region Properties
+
+        public string Nome
+        {
+            get
+            {
+                var bufferLen = BUFFER_LEN;
+                var buffer = new StringBuilder(bufferLen);
+
+                var method = GetMethod<Delegates.POS_Nome>();
+                var ret = ExecuteMethod(() => method(buffer, ref bufferLen));
+
+                CheckResult(ret);
+
+                return ProcessResult(buffer, bufferLen);
+            }
+        }
+
+        public string Versao
+        {
+            get
+            {
+                var bufferLen = BUFFER_LEN;
+                var buffer = new StringBuilder(bufferLen);
+
+                var method = GetMethod<Delegates.POS_Versao>();
+                var ret = ExecuteMethod(() => method(buffer, ref bufferLen));
+
+                CheckResult(ret);
+
+                return ProcessResult(buffer, bufferLen);
+            }
+        }
+
+        #endregion Properties
+
+        #region Metodos
 
         #region Ini
 
@@ -120,6 +160,14 @@ namespace ACBrLibPosPrinter
         {
             var gravarIni = GetMethod<Delegates.POS_ConfigGravar>();
             var ret = ExecuteMethod(() => gravarIni(ToUTF8(eArqConfig)));
+
+            CheckResult(ret);
+        }
+
+        public void ImportarConfig(string eArqConfig)
+        {
+            var lerIni = GetMethod<Delegates.POS_ImportarConfig>();
+            var ret = ExecuteMethod(() => lerIni(ToUTF8(eArqConfig)));
 
             CheckResult(ret);
         }
@@ -141,19 +189,8 @@ namespace ACBrLibPosPrinter
             var ret = ExecuteMethod(() => method(ToUTF8(eSessao.ToString()), ToUTF8(eChave), pValue, ref bufferLen));
             CheckResult(ret);
 
-            var value = FromUTF8(pValue);
-
-            if (typeof(T).IsEnum)
-            {
-                return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value));
-            }
-
-            if (typeof(T) == typeof(bool))
-            {
-                return (T)(object)Convert.ToBoolean(Convert.ToInt32(value));
-            }
-
-            return (T)Convert.ChangeType(value, typeof(T));
+            var value = ProcessResult(pValue, bufferLen);
+            return ConvertValue<T>(value);
         }
 
         public void ConfigGravarValor(ACBrSessao eSessao, string eChave, object value)
@@ -161,11 +198,7 @@ namespace ACBrLibPosPrinter
             if (value == null) return;
 
             var method = GetMethod<Delegates.POS_ConfigGravarValor>();
-            var type = value.GetType();
-
-            var propValue = value.ToString();
-            if (type.IsEnum) propValue = ((int)value).ToString();
-            if (type == typeof(bool)) propValue = Convert.ToInt32(value).ToString();
+            var propValue = ConvertValue(value);
 
             var ret = ExecuteMethod(() => method(ToUTF8(eSessao.ToString()), ToUTF8(eChave), ToUTF8(propValue)));
             CheckResult(ret);
@@ -273,7 +306,20 @@ namespace ACBrLibPosPrinter
             var buffer = new StringBuilder(bufferLen);
 
             var method = GetMethod<Delegates.POS_RetornarTags>();
-            var ret = ExecuteMethod(() => method(buffer, ref bufferLen, incluiAjuda));
+            var ret = ExecuteMethod(() => method(incluiAjuda, buffer, ref bufferLen));
+
+            CheckResult(ret);
+
+            return ProcessResult(buffer, bufferLen).Split('|');
+        }
+
+        public string[] AcharPortas()
+        {
+            var bufferLen = BUFFER_LEN;
+            var buffer = new StringBuilder(bufferLen);
+
+            var method = GetMethod<Delegates.POS_AcharPortas>();
+            var ret = ExecuteMethod(() => method(buffer, ref bufferLen));
 
             CheckResult(ret);
 
@@ -340,13 +386,14 @@ namespace ACBrLibPosPrinter
             CheckResult(codRet);
         }
 
-        private void InitializeMethods()
+        protected override void InitializeMethods()
         {
             AddMethod<Delegates.POS_Inicializar>("POS_Inicializar");
             AddMethod<Delegates.POS_Finalizar>("POS_Finalizar");
             AddMethod<Delegates.POS_Nome>("POS_Nome");
             AddMethod<Delegates.POS_Versao>("POS_Versao");
             AddMethod<Delegates.POS_UltimoRetorno>("POS_UltimoRetorno");
+            AddMethod<Delegates.POS_ImportarConfig>("POS_ImportarConfig");
             AddMethod<Delegates.POS_ConfigLer>("POS_ConfigLer");
             AddMethod<Delegates.POS_ConfigGravar>("POS_ConfigGravar");
             AddMethod<Delegates.POS_ConfigLerValor>("POS_ConfigLerValor");
@@ -367,74 +414,29 @@ namespace ACBrLibPosPrinter
             AddMethod<Delegates.POS_LerInfoImpressora>("POS_LerInfoImpressora");
             AddMethod<Delegates.POS_LerStatusImpressora>("POS_LerStatusImpressora");
             AddMethod<Delegates.POS_RetornarTags>("POS_RetornarTags");
+            AddMethod<Delegates.POS_AcharPortas>("POS_AcharPortas");
         }
 
-        private static string ToUTF8(string value)
+        protected override string GetUltimoRetorno(int iniBufferLen = 0)
         {
-            return string.IsNullOrEmpty(value) ? value : Encoding.Default.GetString(Encoding.UTF8.GetBytes(value));
-        }
-
-        private static string FromUTF8(StringBuilder value)
-        {
-            if (value == null) return null;
-            return value.Length == 0 ? string.Empty : Encoding.UTF8.GetString(Encoding.Default.GetBytes(value.ToString()));
-        }
-
-        private void CheckResult(int ret)
-        {
-            if (ret >= 0) return;
-
-            var bufferLen = BUFFER_LEN;
+            var bufferLen = iniBufferLen < 1 ? BUFFER_LEN : iniBufferLen;
             var buffer = new StringBuilder(bufferLen);
             var ultimoRetorno = GetMethod<Delegates.POS_UltimoRetorno>();
 
+            if (iniBufferLen < 1)
+            {
+                ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
+                if (bufferLen <= BUFFER_LEN) return FromUTF8(buffer);
+
+                buffer.Capacity = bufferLen;
+            }
+
             ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
-
-            if (bufferLen > BUFFER_LEN)
-            {
-                buffer.Capacity = bufferLen;
-                ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
-            }
-
-            switch (ret)
-            {
-                case -10:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -6:
-                    throw new DirectoryNotFoundException(FromUTF8(buffer));
-
-                case -5:
-                    throw new FileNotFoundException(FromUTF8(buffer));
-
-                case -4:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -3:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -2:
-                    throw new ApplicationException(FromUTF8(buffer));
-
-                case -1:
-                    throw new ApplicationException(FromUTF8(buffer));
-            }
-        }
-
-        private string ProcessResult(StringBuilder buffer, int bufferLen)
-        {
-            if (bufferLen > BUFFER_LEN)
-            {
-                buffer.Capacity = bufferLen;
-                var ultimoRetorno = GetMethod<Delegates.POS_UltimoRetorno>();
-                ExecuteMethod(() => ultimoRetorno(buffer, ref bufferLen));
-            }
-
             return FromUTF8(buffer);
         }
 
         #endregion Private Methods
 
-        #endregion Configurações
+        #endregion Metodos
     }
 }

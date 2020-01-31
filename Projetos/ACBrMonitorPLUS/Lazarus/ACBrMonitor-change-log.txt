@@ -43,6 +43,168 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+29/01/2020
+[+] DoACBrUnit
+Adicionado método ACBr.CopyFile()
+contribuição: Fabio Souza
+https://www.projetoacbr.com.br/forum/topic/55876-sugest%C3%A3o-de-melhoria-fun%C3%A7%C3%A3o-acbrcopyfile/
+
+29/01/2020
+[*] DoACBrNFeUnit
+Validação no retorno do campo "Arquivo" no método ConsultarNFe.
+
+14/01/2020
+[*] DoACBrNFe, ACBrMonitorConfig
+Ajuste no método SetLogotipo, atualizado segundo parametro permitindo gravar Path do logo NFCe
+
+[*] DoACBrNFe
+Ajuste no método AssinarNFe, retornar o path correto da gravação do XML no caso de passar o conteúdo do XML como parâmetro
+
+10/01/2020
+[*] DoACBrNFe
+Melhoria no metodo GerarNFeIni.
+
+09/01/2020
+[+] DoACBrUnit, DoACBrNFe, DoACBrCTe, DoACBrMDFe
+Adicionado novo método "ObterCertificados", retorna os dados de todos os certificados instalados na máquina.
+
+09/01/2020
+[+] ACBrMonitor1
+Adicionado botão para Cancelamento por Substituição da NFCe
+
+06/01/2020
+[+] DoACBrECFUnit, ACBrMonitorConfig
+Adicionado os métodos novos de Processamento, Consultas, Cancelamento, Download ref. BlocoX
+
+02/01/2020
+[*] DoACBrBPeUnit e DoACBrMDFeUnit
+Alterado a implementação dos métodos: GerarBPeIni e GerarMDFeIni visando se utilizar
+do método GerarIni implementado nos códigos dos componentes.
+
+18/12/2019
+[*] DoACBrBPeUnit
+Incluido o parametro Protocolo no retorno do Envio e corrigido a impressão do DABPE
+após o envio somente quando o mesmo for autorizado.
+
+10/12/2019
+[*] DoACBrBPeUnit, DoACBrCTeUnit, DoACBrESocialUnit, DoACBrGNReUnit, DoACBrMDFeUnit, DoACBrSATUnit,
+DoACBrCEPUnit, DoACBrIBGEUnit, DoACBrSEDEXUnit
+Adicionado parametrização para o Tipo de Resposta dos métodos WebService (INI, XML, JSON)
+
+10/12/2019
+[*] ACBrMonitor1, ACBrMonitorConfig, ACBrMonitorConsts, CmdUnit
+Adicionado propriedade para configurar o Tipo de Resposta dos métodos WebService (INI, XML, JSON)
+
+02/12/2019
+[*] ACBrMonitor1, ACBrMonitorConfig, ACBrMonitorConsts
+Adicionado propriedade Para apresentar coluna Desconto e Acrescimo na impressão da DANFe
+
+02/12/2019
+[*] DoACBrMDFe
+Adicionado parametrização para emissão do DAMDFe com mensagem de "MDFeEncerrado"
+
+14/11/2019
+[*] ACBrMonitor1, ACBrMonitorConfig, ACBrMonitorConsts
+Adicionado propriedade "Texto Personalizado Canhoto NFe", configuravel em DFe/Impressao/NFe
+
+08/11/2019
+[*] DoACBrMDFe
+Compatibilização das funções de Respostas do componente MDFe, baseado no Refactory realizado nas classes da ACBrLib.
+
+04/11/2019
+[-] DoACBrNFe
+Ajuste na chamada do metodo NFe.ReciboNFe, estava chamando método de forma errada.
+
+[-] DoACBrNFe
+Ajuste no método NFe.ImprimirEvento, definindo impressora padrão do ACBrMonitor caso não seja passado como parâmetro.
+
+[*] ACBrMonitor1, ACBrMonitorConfig, ACBrMonitorConsts
+Adicionado as propriedades ExpandirDadosAdicionaisAuto e ImprimeContinuacaoDadosAdicionaisPrimeiraPagina para impressão
+do DANFE
+
+31/10/2019
+[*] ACBrMonitor1, ACBrMonitorConfig, ACBrMonitorConsts
+Adicionado campos para configuração de casas de decimais na emissão do Extrato SAT
+
+[*] DoSATUnit, DoBoletoUnit
+Ajustes na validação de retorno de envio de e-mail
+
+[*] ACBrMonitor1
+Ajustes na validação dos Arquivos .ini de ServicosDFe, utiliza arquivo da pasta de instalação se não encontrar o arquivo nas configuraçoes.
+
+18/10/2019
+[*] ACBrMonitor1, ACBrMonitorConfig
+Ajustes nos valores defaults nas margens dos DFes para milímetros
+
+15/10/2019
+[*] ACBrMonitor1, ACBrMonitorConsts
+Validação das configurações SSL ao recarregar o dados .ini, define valores padrão no caso de existir tipos desabilitados.
+
+15/10/2019
+[*] DoACBrMDFeUnit
+Melhorias na rotina de validação da chave MDFe no método EncerrarMDFe estava causando AV na versao x64
+
+14/10/2019
+[*] ACBrMonitor1, ACBrMonitorConfig
+Remoção da propriedade GerarInfCTeSupl, devido ser removido do componente
+
+14/10/2019
+[*] DoACBrNFeUnit, DoACBrCTeUnit
+Validação no método de Impressão via parâmetro, verificando documento em homologação para impressão da Mensagem padrão
+de documento em Homologação no Destinatário.
+
+04/10/2019
+[*] DoSATUnit, ACBrMonitor1, ACBrMonitorConfig, ACBrMonitorConsts
+Adicionado propriedade "Validar Numero Sessao Resposta" nas configurações do SAT
+
+04/10/2019
+[*] DoSATUnit
+Validação para quando não obtem nenhuma resposta do SAT
+
+04/10/2019
+[*] DoACBrNFe
+Ajustes no método para CancelarNFe, limpa o componente ACBrNFe antes de executar o método
+
+04/10/2019
+[*] DoACBrNFe
+Alteraçoes na rotina de impressão para quando existir parametro de gerar PDF com impressão ESCPOS
+
+02/10/2019
+[+] ACBrMonitor1, UtilUnit
+Adicionado um alerta quando usuário está utilizando arquivos de Servicos.ini dos DFes desatualizados.
+
+02/10/2019
+[+] ACBrMonitor1, MonitorConfig, ACBrMonitorConsts
+Adicionado opção de Impressão de Logo Lateral para NFCe
+
+02/10/2019
+[*] DoACBrMDFe
+Ajuste na função de geração arquivo .ini
+
+23/09/2019
+[*] DoACBrCTe
+Adicionado funcionalidades para envio Síncrono do CT-e
+
+23/09/2019
+[*] DoACBrMDFe, DoACBrCTe, DoACBrNFe
+Ajustes e padronização dos métodos de Retorno de Path (GetPath / GetPathCanc / GetPathCCe / GetPathEvento)
+
+20/09/2019
+[*] DoACBrMDFe
+Padronização do retorno no método de Envio, retornando o Path do XML autorizado
+
+20/09/2019
+[*] DoACBrMDFe, DoACBrCTe
+Padronização do retorno no método de Consulta com path do XML atualizado quando existir
+
+20/09/2019
+[*] DoACBrMDFe
+Adicionado parametros de "Preview", "Cópias", "PDF" nos métodos que contém recursos de Impressão
+
+20/09/2019
+[*] ACBrMonitor1, DoEmailUnit, DoACBrNFeUnit
+Ajustes no retorno de envio de email, utilizando processamento paralelo
+
 30/08/2019
 [*] DoACBrCTe / DoACBrMDFe
 Ajustes no retorno de envio de documentos, padronizado conforme NFe.

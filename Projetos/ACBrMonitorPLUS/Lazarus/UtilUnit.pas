@@ -1,34 +1,36 @@
-{******************************************************************************}
-{ Projeto: ACBr Monitor                                                        }
-{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para }
-{ criar uma interface de comunicação com equipamentos de automacao comercial.  }
-{                                                                              }
-{ Direitos Autorais Reservados (c) 2010 Daniel Simões de Almeida               }
-{                                                                              }
-{ Colaboradores nesse arquivo:                                                 }
-{                                                                              }
-{  Você pode obter a última versão desse arquivo na página do Projeto ACBr     }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-{                                                                              }
-{  Este programa é software livre; você pode redistribuí-lo e/ou modificá-lo   }
-{ sob os termos da Licença Pública Geral GNU, conforme publicada pela Free     }
-{ Software Foundation; tanto a versão 2 da Licença como (a seu critério)       }
-{ qualquer versão mais nova.                                                   }
-{                                                                              }
-{  Este programa é distribuído na expectativa de ser útil, mas SEM NENHUMA     }
-{ GARANTIA; nem mesmo a garantia implícita de COMERCIALIZAÇÃO OU DE ADEQUAÇÃO A}
-{ QUALQUER PROPÓSITO EM PARTICULAR. Consulte a Licença Pública Geral GNU para  }
-{ obter mais detalhes. (Arquivo LICENCA.TXT ou LICENSE.TXT)                    }
-{                                                                              }
-{  Você deve ter recebido uma cópia da Licença Pública Geral GNU junto com este}
-{ programa; se não, escreva para a Free Software Foundation, Inc., 59 Temple   }
-{ Place, Suite 330, Boston, MA 02111-1307, USA. Você também pode obter uma     }
-{ copia da licença em:  http://www.opensource.org/licenses/gpl-license.php     }
-{                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{       Rua Coronel Aureliano de Camargo, 973 - Tatuí - SP - 18270-170         }
-{                                                                              }
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: ACBrMonitor                                                         }
+{  Executavel multiplataforma que faz uso do conjunto de componentes ACBr para  }
+{ criar uma interface de comunicação com equipamentos de automacao comercial.   }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2010 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo: Juliana Rodrigues Prado Tamizou                  }
+{                              Jean Patrick F. dos Santos (envio de e-mails)    }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 unit UtilUnit;
 
 {$mode objfpc}{$H+}        
@@ -42,6 +44,7 @@ function Converte(cmd: String): String;
 Procedure GravaINICrypt(INI : TIniFile; Section, Ident, AString, Pass : String );
 Function LeINICrypt(INI : TIniFile; Section, Ident, Pass : String) : String ;
 function VersaoACBr(): String;
+Function VerificaArquivoDesatualizado(APath: String):Boolean;
 
 implementation
 
@@ -114,5 +117,22 @@ begin
      SStream.Free ;
   end ;
 end ;
+
+Function VerificaArquivoDesatualizado(APath: String):Boolean;
+var
+  PathLocal: String;
+  NomeArquivo: String;
+  date: String;
+begin
+  result:= False;
+  if FileExists(APath) then
+  begin
+    NomeArquivo:= ExtractFileName(APath);
+    PathLocal:= PathWithDelim( ExtractFilePath( ParamStr(0) ) ) + NomeArquivo;
+    if FileExists(PathLocal) and ( APath <> PathLocal ) then
+      result:= (FileDateToDateTime( FileAge( APath ) )) < (FileDateToDateTime( FileAge( PathLocal ) ));
+  end;
+
+end;
 
 end.

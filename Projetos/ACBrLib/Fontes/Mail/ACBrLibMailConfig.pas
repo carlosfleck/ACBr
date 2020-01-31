@@ -38,18 +38,16 @@ unit ACBrLibMailConfig;
 interface
 
 uses
-  Classes, SysUtils, IniFiles, SynaChar,
-  ACBrLibConfig, ACBrMail;
+  Classes, SysUtils, IniFiles,
+  SynaChar, ACBrLibConfig, ACBrMail;
 
 type
 
   { TLibMailConfig }
   TLibMailConfig = class(TLibConfig)
   protected
-    function AtualizarArquivoConfiguracao: Boolean; override;
-
-    procedure ClasseParaINI; override;
     procedure ClasseParaComponentes; override;
+    procedure ImportarIni(FIni: TCustomIniFile); override;
 
     procedure Travar; override;
     procedure Destravar; override;
@@ -62,7 +60,7 @@ type
 implementation
 
 uses
-  ACBrLibMailClass, ACBrLibMailConsts, ACBrLibConsts, ACBrLibComum, ACBrUtil;
+  ACBrLibMailClass, ACBrLibComum, ACBrUtil;
 
 { TLibMailConfig }
 
@@ -76,26 +74,15 @@ begin
   inherited Destroy;
 end;
 
-function TLibMailConfig.AtualizarArquivoConfiguracao: Boolean;
-var
-  Versao: String;
-begin
-  Versao := Ini.ReadString(CSessaoVersao, CLibMailNome, '0');
-  Result := (CompareVersions(CLibMailVersao, Versao) > 0) or
-            (inherited AtualizarArquivoConfiguracao);
-end;
-
-procedure TLibMailConfig.ClasseParaINI;
-begin
-  inherited ClasseParaINI;
-
-  Ini.WriteString(CSessaoVersao, CLibMailNome, CLibMailVersao);
-end;
-
 procedure TLibMailConfig.ClasseParaComponentes;
 begin
   if Assigned(Owner) then
     TACBrLibMail(Owner).MailDM.AplicarConfiguracoes;
+end;
+
+procedure TLibMailConfig.ImportarIni(FIni: TCustomIniFile);
+begin
+  //Faz nada pois é importadado na classe base
 end;
 
 procedure TLibMailConfig.Travar;

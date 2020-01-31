@@ -155,7 +155,7 @@ type
     function  Add: Conhecimento;
     function Insert(Index: Integer): Conhecimento;
 
-    property Items[Index: Integer]: Conhecimento read GetItem write SetItem;
+    property Items[Index: Integer]: Conhecimento read GetItem write SetItem; default;
 
     function GetNamePath: String; override;
     // Incluido o Parametro AGerarCTe que determina se após carregar os dados do CTe
@@ -277,22 +277,12 @@ begin
       Leitor.Free;
     end;
 
-    // Gera o QR-Code para adicionar no XML após ter a
-    // assinatura, e antes de ser salvo.
-
-    if ((Configuracoes.Geral.GerarInfCTeSupl = fgtSomenteProducao) and
-       (Configuracoes.WebServices.Ambiente = taProducao)) or
-       ((Configuracoes.Geral.GerarInfCTeSupl = fgtSomenteHomologacao) and
-       (Configuracoes.WebServices.Ambiente = taHomologacao)) or
-       (Configuracoes.Geral.GerarInfCTeSupl = fgtSempre) then
+    with TACBrCTe(TConhecimentos(Collection).ACBrCTe) do
     begin
-      with TACBrCTe(TConhecimentos(Collection).ACBrCTe) do
-      begin
-        CTe.infCTeSupl.qrCodCTe := GetURLQRCode(CTe.Ide.cUF, CTe.Ide.tpAmb,
-                  CTe.ide.tpEmis, CTe.infCTe.ID, CTe.infCTe.Versao);
+      CTe.infCTeSupl.qrCodCTe := GetURLQRCode(CTe.Ide.cUF, CTe.Ide.tpAmb,
+                CTe.ide.tpEmis, CTe.infCTe.ID, CTe.infCTe.Versao);
 
-        GerarXML;
-      end;
+      GerarXML;
     end;
 
     if Configuracoes.Arquivos.Salvar and
@@ -1029,7 +1019,7 @@ begin
     else
       Data := Now;
 
-    Result := PathWithDelim(Configuracoes.Arquivos.GetPathCTe(Data, FCTe.Emit.CNPJ));
+    Result := PathWithDelim(Configuracoes.Arquivos.GetPathCTe(Data, FCTe.Emit.CNPJ, FCTe.emit.IE));
   end;
 end;
 

@@ -534,16 +534,18 @@ begin
     GerarIdeEvento2(self.IdeEvento);
     GerarIdeEmpregador(self.IdeEmpregador);
 
-    GerarTrabalhador(self.Trabalhador, 'trabalhador', 3, Self.FinfoTSVInicio.codCateg);
+    GerarTrabalhador(self.Trabalhador, Self.infoTSVInicio.cadIni,
+      'trabalhador', 3, Self.FinfoTSVInicio.codCateg);
     GerarInfoTSVInicio(self.infoTSVInicio);
 
     Gerador.wGrupo('/evtTSVInicio');
 
     GerarRodape;
 
-    XML := Assinar(Gerador.ArquivoFormatoXML, 'evtTSVInicio');
+    FXML := Gerador.ArquivoFormatoXML;
+//    XML := Assinar(Gerador.ArquivoFormatoXML, 'evtTSVInicio');
 
-    Validar(schevtTSVInicio);
+//    Validar(schevtTSVInicio);
   except on e:exception do
     raise Exception.Create('ID: ' + Self.Id + sLineBreak + ' ' + e.Message);
   end;
@@ -834,8 +836,9 @@ begin
     end;
 
     GerarXML;
+    XML := FXML;
   finally
-     INIRec.Free;
+    INIRec.Free;
   end;
 end;
 

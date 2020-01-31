@@ -3,7 +3,8 @@
 {  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
 { mentos de Automação Comercial utilizados no Brasil                           }
 {                                                                              }
-{ Direitos Autorais Reservados (c) 2009   Isaque Pinheiro                      }
+{ Direitos Autorais Reservados (c) 2009   Daniel Simoes de Almeida             }
+{                                         Isaque Pinheiro                      }
 {                                                                              }
 { Colaboradores nesse arquivo:                                                 }
 {                                                                              }
@@ -26,9 +27,8 @@
 { Você também pode obter uma copia da licença em:                              }
 { http://www.opensource.org/licenses/lgpl-license.php                          }
 {                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
 
 {******************************************************************************
@@ -37,6 +37,38 @@
 |* 29/03/2012: Isaque Pinheiro / Régys Borges da Silveira
 |*  - Criação e distribuição da Primeira Versao
 *******************************************************************************}
+
+{
+  Hierarquia de dependência dos Packages
+  • ACBrComum → Synapse
+• ACBrDiversos → ACBrComum
+• PCNComum → ACBrDiversos
+• ACBrOpenSSL → ACBrComum
+• ACBrSerial → ACBrDiversos, ACBrOpenSSL
+• ACBrTXTComum → ACBrDiversos,
+• ACBrConvenio115 → ACBrTXTComum, ACBrOpenSSL
+• ACBrLFD → ACBrTXTComum
+• ACBrPAF → ACBrTXTComum, ACBrOpenSSL
+• ACBrSEF2 → ACBrTXTComum, PCNComum
+• ACBrSintegra → ACBrTXTComum
+• ACBrSPED → ACBrTXTComum
+• ACBrTCP → ACBrDiversos
+• ACBrTEFD → ACBrComum
+• ACBr_Boleto → ACBrTCP
+• ACBr_BoletoFC_Fortes → ACBr_Boleto, fortes324laz
+• ACBr_BoletoFC_LazReport → ACBr_Boleto, lazreportpdfexport
+• ACBrDFeComum → ACBrOpenSSL, ACBrTCP, PCNComum
+• ACBrNFe → ACBrDFeComum
+• ACBrCTe → ACBrDFeComum
+• ACBrGNRe → ACBrDFeComum
+• ACBrMDFe → ACBrDFeComum
+• ACBrNFSe → ACBrDFeComum
+• ACBr_SAT → PCNComum
+• ACBr_SAT_ECFVirtual → ACBr_SAT, ACBrSerial
+• ACBr_SAT_Extrato_ESCPOS → ACBr_SAT, ACBrDFeComum, ACBrSerial
+• ACBr_SAT_Extrato_Fortes → ACBr_SAT, ACBrDFeComum, fortes324laz
+}
+
 unit uFrameLista;
 
 interface
@@ -45,11 +77,9 @@ uses
   Generics.Collections, Generics.Defaults,
 
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, StdCtrls, ComCtrls;
+  Dialogs, Buttons, ExtCtrls, StdCtrls, ComCtrls, ACBrPacotes;
 
 type
-  TPacotes = TList<TCheckBox>;
-
   TframePacotes = class(TFrame)
     pnlBotoesMarcar: TPanel;
     btnPacotesDesmarcarTodos: TSpeedButton;
@@ -136,6 +166,9 @@ type
     ACBr_BPeDabpeESCPOS_dpk: TCheckBox;
     Label27: TLabel;
     ACBr_CIOT_dpk: TCheckBox;
+    ACBr_LCDPR_dpk: TCheckBox;
+    ACBr_ONE_dpk: TCheckBox;
+    ACBr_EDI_dpk: TCheckBox;
     procedure btnPacotesMarcarTodosClick(Sender: TObject);
     procedure btnPacotesDesmarcarTodosClick(Sender: TObject);
     procedure VerificarCheckboxes(Sender: TObject);
@@ -237,15 +270,16 @@ end;
 // rotina de verificação de dependência e marcação dos pacotes base
 procedure TframePacotes.VerificarCheckboxes(Sender: TObject);
 begin
-  // pacotes base não podem ser desmarcados
-  // instalação mínima do ACBr
-  ACBr_synapse_dpk.Checked := True;
-  ACBr_Comum_dpk.Checked := True;
-  ACBr_Diversos_dpk.Checked := True;
-
+  //If necessário para evitar stackoverflow
   if not FUtilizarBotoesMarcar then
   begin
     FUtilizarBotoesMarcar := True;
+
+    // pacotes base não podem ser desmarcados
+    // instalação mínima do ACBr
+    ACBr_synapse_dpk.Checked := True;
+    ACBr_Comum_dpk.Checked := True;
+    ACBr_Diversos_dpk.Checked := True;
 
     /// caso algum evento abaixo dispare novamente
     try
@@ -366,34 +400,3 @@ begin
 end;
 
 end.
-
-{
-  Hierarquia de dependência dos Packages
-  • ACBrComum → Synapse
-• ACBrDiversos → ACBrComum
-• PCNComum → ACBrDiversos
-• ACBrOpenSSL → ACBrComum
-• ACBrSerial → ACBrDiversos, ACBrOpenSSL
-• ACBrTXTComum → ACBrDiversos,
-• ACBrConvenio115 → ACBrTXTComum, ACBrOpenSSL
-• ACBrLFD → ACBrTXTComum
-• ACBrPAF → ACBrTXTComum, ACBrOpenSSL
-• ACBrSEF2 → ACBrTXTComum, PCNComum
-• ACBrSintegra → ACBrTXTComum
-• ACBrSPED → ACBrTXTComum
-• ACBrTCP → ACBrDiversos
-• ACBrTEFD → ACBrComum
-• ACBr_Boleto → ACBrTCP
-• ACBr_BoletoFC_Fortes → ACBr_Boleto, fortes324laz
-• ACBr_BoletoFC_LazReport → ACBr_Boleto, lazreportpdfexport
-• ACBrDFeComum → ACBrOpenSSL, ACBrTCP, PCNComum
-• ACBrNFe → ACBrDFeComum
-• ACBrCTe → ACBrDFeComum
-• ACBrGNRe → ACBrDFeComum
-• ACBrMDFe → ACBrDFeComum
-• ACBrNFSe → ACBrDFeComum
-• ACBr_SAT → PCNComum
-• ACBr_SAT_ECFVirtual → ACBr_SAT, ACBrSerial
-• ACBr_SAT_Extrato_ESCPOS → ACBr_SAT, ACBrDFeComum, ACBrSerial
-• ACBr_SAT_Extrato_Fortes → ACBr_SAT, ACBrDFeComum, fortes324laz
-}

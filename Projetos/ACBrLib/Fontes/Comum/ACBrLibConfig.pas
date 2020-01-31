@@ -1,35 +1,35 @@
-{******************************************************************************}
-{ Projeto: Componentes ACBr                                                    }
-{  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
-{ mentos de Automação Comercial utilizados no Brasil                           }
-
-{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida               }
-
-{ Colaboradores nesse arquivo: Rafael Teno Dias                                }
-
-{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
-{ Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
-
-{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
-{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
-{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
-{ qualquer versão posterior.                                                   }
-
-{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM   }
-{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU      }
-{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor}
-{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)              }
-
-{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto}
-{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
-{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
-{ Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
-
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{        Rua Cel.Aureliano de Camargo, 973 - Tatuí - SP - 18270-170            }
-
-{******************************************************************************}
+{*******************************************************************************}
+{ Projeto: Componentes ACBr                                                     }
+{  Biblioteca multiplataforma de componentes Delphi para interação com equipa-  }
+{ mentos de Automação Comercial utilizados no Brasil                            }
+{                                                                               }
+{ Direitos Autorais Reservados (c) 2018 Daniel Simoes de Almeida                }
+{                                                                               }
+{ Colaboradores nesse arquivo: Rafael Teno Dias                                 }
+{                                                                               }
+{  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr     }
+{ Componentes localizado em      http://www.sourceforge.net/projects/acbr       }
+{                                                                               }
+{  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la  }
+{ sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela   }
+{ Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério)  }
+{ qualquer versão posterior.                                                    }
+{                                                                               }
+{  Esta biblioteca é distribuída na expectativa de que seja útil, porém, SEM    }
+{ NENHUMA GARANTIA; nem mesmo a garantia implícita de COMERCIABILIDADE OU       }
+{ ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA. Consulte a Licença Pública Geral Menor }
+{ do GNU para mais detalhes. (Arquivo LICENÇA.TXT ou LICENSE.TXT)               }
+{                                                                               }
+{  Você deve ter recebido uma cópia da Licença Pública Geral Menor do GNU junto }
+{ com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,   }
+{ no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.           }
+{ Você também pode obter uma copia da licença em:                               }
+{ http://www.opensource.org/licenses/gpl-license.php                            }
+{                                                                               }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br }
+{        Rua Cel.Aureliano de Camargo, 963 - Tatuí - SP - 18270-170             }
+{                                                                               }
+{*******************************************************************************}
 
 {$I ACBr.inc}
 
@@ -46,8 +46,8 @@ type
   //               0           1          2           3             4
   TNivelLog = (logNenhum, logSimples, logNormal, logCompleto, logParanoico);
 
-  //                         0          1
-  TTipoRelatorioBobina = (tpFortes, tpEscPos);
+  //                 0       1
+  TTipoFuncao = (tfGravar, tfLer);
 
   { TLogConfig }
 
@@ -285,6 +285,7 @@ type
     FSoftwareHouse: TEmpresaConfig;
     FEmissor: TEmpresaConfig;
     FTipoResposta: TACBrLibRespostaTipo;
+    FCodificaoResposta: TACBrLibCodificacao;
 
     procedure SetNomeArquivo(AValue: String);
     procedure VerificarNomeEPath(Gravando: Boolean);
@@ -296,7 +297,8 @@ type
 
     procedure INIParaClasse; virtual;
     procedure ClasseParaINI; virtual;
-    procedure ClasseParaComponentes; virtual;
+    procedure ClasseParaComponentes; virtual; abstract;
+    procedure ImportarIni(FIni: TCustomIniFile); virtual; abstract;
 
     procedure Travar; virtual;
     procedure Destravar; virtual;
@@ -310,14 +312,18 @@ type
     procedure Ler; virtual;
     procedure Gravar; virtual;
 
+    procedure Importar(AConfig: String);
     procedure GravarValor(ASessao, AChave, AValor: String);
     function LerValor(ASessao, AChave: String): String;
+
     function PrecisaCriptografar(ASessao, AChave: String): Boolean; virtual;
+    function AjustarValor(Tipo: TTipoFuncao; ASessao, AChave, AValor: Ansistring): Ansistring; virtual;
 
     property NomeArquivo: String read FNomeArquivo write SetNomeArquivo;
     property ChaveCrypt: String read FChaveCrypt;
 
     property TipoResposta: TACBrLibRespostaTipo read FTipoResposta;
+    property CodResposta: TACBrLibCodificacao read FCodificaoResposta;
     property Log: TLogConfig read FLog;
     property ProxyInfo: TProxyConfig read FProxyInfo;
     property Email: TEmailConfig read FEmail;
@@ -332,8 +338,9 @@ type
 implementation
 
 uses
+  TypInfo, strutils,
   ACBrLibConsts, ACBrLibComum,
-  ACBrUtil;
+  ACBrMonitorConsts, ACBrUtil;
 
 { TSistemaConfig }
 
@@ -710,6 +717,7 @@ begin
     FChaveCrypt := AChaveCrypt;
 
   FTipoResposta := resINI;
+  FCodificaoResposta := codUTF8;
   FLog := TLogConfig.Create;
   FSistema := TSistemaConfig.Create;
   FEmail := TEmailConfig.Create(FChaveCrypt);
@@ -792,8 +800,14 @@ function TLibConfig.AtualizarArquivoConfiguracao: Boolean;
 var
   Versao: String;
 begin
-  Versao := Ini.ReadString(CSessaoVersao, CLibNome, '0');
-  Result := (CompareVersions(CLibVersao, Versao) > 0);
+  Versao := FIni.ReadString(CSessaoVersao, CACBrLib, '0');
+  Result := (CompareVersions(CACBrLibVersaoConfig, Versao) > 0);
+
+  if (not Result) then
+  begin
+    Versao := FIni.ReadString(CSessaoVersao, TACBrLib(FOwner).Nome, '0');
+    Result := (CompareVersions(TACBrLib(FOwner).Versao, Versao) > 0);
+  end;
 end;
 
 procedure TLibConfig.AplicarConfiguracoes;
@@ -843,6 +857,7 @@ procedure TLibConfig.INIParaClasse;
 begin
 
   FTipoResposta := TACBrLibRespostaTipo(FIni.ReadInteger(CSessaoPrincipal, CChaveTipoResposta, Integer(FTipoResposta)));
+  FCodificaoResposta := TACBrLibCodificacao(FIni.ReadInteger(CSessaoPrincipal, CChaveCodificacaoResposta, Integer(FCodificaoResposta)));
   FLog.LerIni(FIni);
   FSistema.LerIni(FIni);
   FEmail.LerIni(FIni);
@@ -860,6 +875,10 @@ begin
     VerificarNomeEPath(True);
 
     ClasseParaINI;
+
+    if FIni.FileName <> FNomeArquivo then
+      FIni.Rename(FNomeArquivo, False);
+
     FIni.UpdateFile;
   finally
     TACBrLib(FOwner).GravarLog(ClassName + '.Gravar - Feito', logParanoico);
@@ -870,7 +889,9 @@ end;
 procedure TLibConfig.ClasseParaINI;
 begin
   FIni.WriteInteger(CSessaoPrincipal, CChaveTipoResposta, Integer(FTipoResposta));
-  FIni.WriteString(CSessaoVersao, CLibNome, CLibVersao);
+  FIni.WriteInteger(CSessaoPrincipal, CChaveCodificacaoResposta, Integer(FCodificaoResposta));
+  FIni.WriteString(CSessaoVersao, CACBrLib, CACBrLibVersaoConfig);
+  FIni.WriteString(CSessaoVersao, TACBrLib(FOwner).Nome, TACBrLib(FOwner).Versao);
 
   FLog.GravarIni(FIni);
   FSistema.GravarIni(FIni);
@@ -879,11 +900,6 @@ begin
   FProxyInfo.GravarIni(FIni);
   FSoftwareHouse.GravarIni(FIni);
   FEmissor.GravarIni(FIni);
-end;
-
-procedure TLibConfig.ClasseParaComponentes;
-begin
-  {}
 end;
 
 procedure TLibConfig.Travar;
@@ -896,10 +912,83 @@ begin
   {}
 end;
 
+procedure TLibConfig.Importar(AConfig: String);
+Var
+  FMIni: TIniFile;
+  AuxStr: String;
+begin
+  FMIni := TIniFile.Create(AConfig);
+
+  try
+    //Proxy
+    ProxyInfo.FPorta := FMIni.ReadInteger(CSecProxy, CKeyProxyPorta, ProxyInfo.Porta);
+    ProxyInfo.FServidor := FMIni.ReadString(CSecProxy, CKeyProxyHost, ProxyInfo.Servidor);
+    ProxyInfo.FUsuario := FMIni.ReadString(CSecProxy, CKeyProxyUser, ProxyInfo.Usuario);
+
+    AuxStr := '';
+    AuxStr := FMIni.ReadString(CSecProxy, CKeyProxyPass, '');
+    if(AuxStr <> '') then
+      ProxyInfo.FSenha := StringToB64Crypt(B64CryptToString(AuxStr), FChaveCrypt);
+
+    // Email
+    Email.FNome := FMIni.ReadString(CSecEmail, CKeyEmailNomeExibicao, Email.Nome);
+    Email.FServidor := FMIni.ReadString(CSecEmail, CKeyEmailEndereco, Email.Servidor);
+    Email.FPorta := FMIni.ReadInteger(CSecEmail, CKeyEmailPorta, Email.Porta);
+    Email.FUsuario := FMIni.ReadString(CSecEmail, CKeyEmailUsuario, Email.Usuario);
+
+    AuxStr := '';
+    AuxStr := FMIni.ReadString(CSecEmail, CKeyEmailSenha, '');
+    if(AuxStr <> '') then
+      Email.FSenha := StringToB64Crypt(B64CryptToString(AuxStr), FChaveCrypt);
+
+    Email.FSSL := FMIni.ReadBool(CSecEmail, CKeyEmailExigeSSL, Email.SSL);
+    Email.FTLS := FMIni.ReadBool(CSecEmail, CKeyEmailExigeTLS, Email.TLS);
+    Email.FSegundoPlano := FMIni.ReadBool(CSecEmail, CKeyEmailSegundoPlano, Email.SegundoPlano);
+    Email.FConfirmacao := FMIni.ReadBool(CSecEmail, CKeyEmailConfirmacao, Email.Confirmacao);
+    Email.FIsHTML := FMIni.ReadBool(CSecEmail, CKeyEmailHTML, Email.IsHTML);
+    Email.FCodificacao := TMimeChar(FMIni.ReadInteger(CSecEmail, CKeyEmailConfirmacao, Integer(Email.Codificacao)));
+
+    //PosPrinter
+    PosPrinter.Modelo := FMIni.ReadInteger(CSecPosPrinter, CKeyPosPrinterModelo, PosPrinter.Modelo);
+    PosPrinter.Porta := FMIni.ReadString(CSecPosPrinter, CKeyPosPrinterPorta, PosPrinter.Porta);
+    PosPrinter.ColunasFonteNormal := FMIni.ReadInteger(CSecPosPrinter, CKeyPosPrinterColunas, PosPrinter.ColunasFonteNormal);
+    PosPrinter.EspacoEntreLinhas := FMIni.ReadInteger(CSecPosPrinter, CKeyPosPrinterEspacoEntreLinhas, PosPrinter.EspacoEntreLinhas);
+    PosPrinter.LinhasBuffer := FMIni.ReadInteger(CSecPosPrinter, CKeyPosPrinterLinhasBuffer, PosPrinter.LinhasBuffer);
+    PosPrinter.LinhasEntreCupons := FMIni.ReadInteger(CSecPosPrinter, CKeyPosPrinterLinhasPular, PosPrinter.LinhasEntreCupons);
+    PosPrinter.PaginaDeCodigo := FMIni.ReadInteger(CSecPosPrinter, CKeyPosPrinterPaginaDeCodigo, PosPrinter.PaginaDeCodigo);
+    PosPrinter.ControlePorta := FMIni.ReadBool(CSecPosPrinter, CKeyPosPrinterControlePorta, PosPrinter.ControlePorta);
+    PosPrinter.CortaPapel := FMIni.ReadBool(CSecPosPrinter, CKeyPosPrinterCortarPapel, PosPrinter.CortaPapel);
+    PosPrinter.TraduzirTags := FMIni.ReadBool(CSecPosPrinter, CKeyPosPrinterTraduzirTags, PosPrinter.TraduzirTags);
+    PosPrinter.IgnorarTags := FMIni.ReadBool(CSecPosPrinter, CKeyPosPrinterIgnorarTags, PosPrinter.IgnorarTags);
+    PosPrinter.ArqLog := FMIni.ReadString(CSecPosPrinter, CKeyPosPrinterArqLog, PosPrinter.ArqLog);
+
+    PosPrinter.BcLarguraLinha := FMIni.ReadInteger(CSecBarras, CKeyBarrasLargura, PosPrinter.BcLarguraLinha);
+    PosPrinter.BcAltura := FMIni.ReadInteger(CSecBarras, CKeyBarrasAltura, PosPrinter.BcAltura);
+
+    PosPrinter.QrTipo := FMIni.ReadInteger(CSecQRCode, CKeyQRCodeTipo, PosPrinter.QrTipo);
+    PosPrinter.QrLarguraModulo := FMIni.ReadInteger(CSecQRCode, CKeyQRCodeLarguraModulo, PosPrinter.QrLarguraModulo);
+    PosPrinter.QrErrorLevel := FMIni.ReadInteger(CSecQRCode, CKeyQRCodeErrorLevel, PosPrinter.QrErrorLevel);
+
+    PosPrinter.LgIgnorarLogo := not FMIni.ReadBool(CSecLogo, CKeyLogoImprimir, not PosPrinter.LgIgnorarLogo);
+    PosPrinter.LgKeyCode1 := FMIni.ReadInteger(CSecLogo, CKeyLogoKC1, PosPrinter.LgKeyCode1);
+    PosPrinter.LgKeyCode2 := FMIni.ReadInteger(CSecLogo, CKeyLogoKC2, PosPrinter.LgKeyCode2);
+    PosPrinter.LgFatorX := FMIni.ReadInteger(CSecLogo, CKeyLogoFatorX, PosPrinter.LgFatorX);
+    PosPrinter.LgFatorY := FMIni.ReadInteger(CSecLogo, CKeyLogoFatorY, PosPrinter.LgFatorY);
+
+    PosPrinter.GvTempoON := FMIni.ReadInteger(CSecGaveta, CKeyGavetaTempoON, PosPrinter.GvTempoON);
+    PosPrinter.GvTempoOFF := FMIni.ReadInteger(CSecGaveta, CKeyGavetaTempoOFF, PosPrinter.GvTempoOFF);
+    PosPrinter.GvSinalInvertido := FMIni.ReadBool(CSecGaveta, CKeyGavSinalInvertido, PosPrinter.GvSinalInvertido);
+
+    ImportarIni(FMIni);
+  finally
+    FreeAndNil(FMIni);
+  end;
+end;
+
 procedure TLibConfig.GravarValor(ASessao, AChave, AValor: String);
 begin
   VerificarSessaoEChave(ASessao, AChave);
-  FIni.WriteString(ASessao, AChave, AValor);
+  FIni.WriteString(ASessao, AChave, AjustarValor(tfGravar, ASessao, AChave, AValor));
   AplicarConfiguracoes;
 end;
 
@@ -907,6 +996,7 @@ function TLibConfig.LerValor(ASessao, AChave: String): String;
 begin
   VerificarSessaoEChave(ASessao, AChave);
   Result := FIni.ReadString(ASessao, AChave, '');
+  Result := AjustarValor(tfLer, ASessao, AChave, Result)
 end;
 
 function TLibConfig.PrecisaCriptografar(ASessao, AChave: String): Boolean;
@@ -914,10 +1004,28 @@ begin
 
   TACBrLib(FOwner).GravarLog(ClassName + '.PrecisaCriptografar(' + ASessao + ',' + AChave + ')', logParanoico);
 
-  Result := (AChave = CChaveSenha) and ((ASessao = CSessaoProxy) or (ASessao = CSessaoEmail) or
-                                        (ASessao = CSessaoDFe));
+  Result := ((AChave = CChaveSenha) or (AChave = CChaveDadosPFX)) and
+            ((ASessao = CSessaoProxy) or (ASessao = CSessaoEmail) or (ASessao = CSessaoDFe));
 
   TACBrLib(FOwner).GravarLog(ClassName + '.PrecisaCriptografar - Feito Result: ' + BoolToStr(Result, True), logParanoico);
+end;
+
+function TLibConfig.AjustarValor(Tipo: TTipoFuncao; ASessao, AChave, AValor: Ansistring): Ansistring;
+begin
+  TACBrLib(FOwner).GravarLog(ClassName + '.AjustarValor(' + GetEnumName(TypeInfo(TTipoFuncao), Integer(Tipo)) + ','
+                                                          + ASessao + ',' + AChave + ',' +
+                                                          IfThen(PrecisaCriptografar(ASessao, AChave),
+                                                          StringOfChar('*', Length(AValor)), AValor) +')', logParanoico);
+  Result := AValor;
+  if PrecisaCriptografar(ASessao, AChave) then
+  begin
+    case Tipo of
+      tfGravar: Result := StringToB64Crypt(Result, ChaveCrypt);
+      tfLer: Result := B64CryptToString(Result, ChaveCrypt);
+    end;
+  end;
+
+  TACBrLib(FOwner).GravarLog(ClassName + '.AjustarValor - Feito', logParanoico);
 end;
 
 end.

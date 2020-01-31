@@ -10,9 +10,6 @@
 {  Você pode obter a última versão desse arquivo na pagina do  Projeto ACBr    }
 { Componentes localizado em      http://www.sourceforge.net/projects/acbr      }
 {                                                                              }
-{  Algumas funçoes dessa Unit foram extraidas de outras Bibliotecas, veja no   }
-{ cabeçalho das Funçoes no código abaixo a origem das informaçoes, e autores...}
-{                                                                              }
 {  Esta biblioteca é software livre; você pode redistribuí-la e/ou modificá-la }
 { sob os termos da Licença Pública Geral Menor do GNU conforme publicada pela  }
 { Free Software Foundation; tanto a versão 2.1 da Licença, ou (a seu critério) }
@@ -27,10 +24,14 @@
 { com esta biblioteca; se não, escreva para a Free Software Foundation, Inc.,  }
 { no endereço 59 Temple Street, Suite 330, Boston, MA 02111-1307 USA.          }
 { Você também pode obter uma copia da licença em:                              }
-{ http://www.opensource.org/licenses/gpl-license.php                           }
+{ http://www.opensource.org/licenses/lgpl-license.php                          }
 {                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
+{******************************************************************************}
+{                                                                              }
+{  Algumas funçoes dessa Unit foram extraidas de outras Bibliotecas, veja no   }
+{ cabeçalho das Funçoes no código abaixo a origem das informaçoes, e autores...}
 {                                                                              }
 {******************************************************************************}
 
@@ -48,7 +49,7 @@ interface
 
 Uses
   SysUtils, Math, Classes,
-  ACBrConsts, IniFiles,
+  ACBrBase, ACBrConsts, IniFiles,
   {$IfDef COMPILER6_UP} StrUtils, DateUtils {$Else} ACBrD5, FileCtrl {$EndIf}
   {$IfDef FPC}
     ,dynlibs, LazUTF8, LConvEncoding, LCLType
@@ -66,7 +67,14 @@ Uses
       ,Libc
       {$EndIf}
     {$Else}
-      ,unix, BaseUnix {$IfNDef NOGUI}, Forms{$EndIf}
+      ,unix, BaseUnix
+    {$EndIf}
+    {$IfNDef NOGUI}
+      {$IfDef FMX}
+        ,FMX.Forms
+      {$Else}
+        ,Forms
+      {$EndIf}
     {$EndIf}
   {$EndIf} ;
 
@@ -91,15 +99,7 @@ type
   TFindFileSortDirection = (fsdNone, fsdAscending, fsdDescending);
 
   TSplitResult = array of string;
-  {$IfNDef FPC}
-   TLibHandle = THandle;
 
-   // Compatibilidade para compilar nas versões anteriores ao Delphi XE2
-   {$IfNDef DELPHIXE2_UP}
-    NativeUInt = Cardinal;
-   {$EndIf}
-  {$EndIf}
-   
 function ParseText( const Texto : AnsiString; const Decode : Boolean = True;
    const IsUTF8: Boolean = True) : String;
 
@@ -119,7 +119,7 @@ function SeparaDados(const AString: String; const Chave: String; const MantemCha
 function SeparaDadosArray(const AArray: Array of String; const AString: String; const MantemChave: Boolean = False;
   const PermitePrefixo: Boolean = True) : String;
 function RetornarConteudoEntre(const Frase, Inicio, Fim: String; IncluiInicioFim: Boolean = False): string;
-procedure EncontrarInicioFinalTag(const aText, ATag: ansistring;
+procedure EncontrarInicioFinalTag(const aText, ATag: String;
   var PosIni, PosFim: integer;const PosOffset: integer = 0);
 
 procedure QuebrarLinha(const Alinha: string; const ALista: TStringList;
@@ -177,8 +177,8 @@ Function AsciiToHex(const ABinaryString: AnsiString): String;
 function TryHexToAscii(const HextStr: String; out Value: AnsiString): Boolean;
 function HexToAsciiDef(const HexStr: String; const Default: AnsiString): AnsiString;
 
-function BinaryStringToString(const AString: AnsiString): AnsiString;
-function StringToBinaryString(const AString: AnsiString): AnsiString;
+function BinaryStringToString(const AString: AnsiString): String;
+function StringToBinaryString(const AString: String): AnsiString;
 
 function PadRight(const AString : String; const nLen : Integer;
    const Caracter : Char = ' ') : String;
@@ -225,7 +225,7 @@ function IfEmptyThen( const AValue, DefaultValue: String; DoTrim: Boolean = True
 function PosAt(const SubStr, S: AnsiString; Ocorrencia : Cardinal = 1): Integer;
 function RPos(const aSubStr, aString : AnsiString; const aStartPos: Integer): Integer; overload;
 function RPos(const aSubStr, aString : AnsiString): Integer; overload;
-function PosLast(const SubStr, S: AnsiString): Integer;
+function PosLast(const SubStr, S: String): Integer;
 function CountStr(const AString, SubStr : String ) : Integer ;
 Function Poem_Zeros(const Texto : String; const Tamanho : Integer) : String; overload;
 function Poem_Zeros(const NumInteiro : Int64 ; Tamanho : Integer) : String ; overload;
@@ -381,7 +381,10 @@ function IsWorkingDay(ADate: TDateTime): Boolean;
 function WorkingDaysBetween(StartDate,EndDate: TDateTime): Integer;
 function IncWorkingDay(ADate: TDateTime; WorkingDays: Integer): TDatetime;
 
-procedure LerIniArquivoOuString(const IniArquivoOuString: AnsiString; AMemIni: TMemIniFile);
+procedure LerIniArquivoOuString(const IniArquivoOuString: String; AMemIni: TMemIniFile);
+function StringIsINI(const AString: String): Boolean;
+function StringIsAFile(const AString: String): Boolean;
+function StringIsXML(const AString: String): Boolean;
 
 {$IfDef FPC}
 var ACBrANSIEncoding: String;
@@ -397,13 +400,17 @@ var BlockInputLoaded: Boolean;
 
 procedure LoadInpOut;
 procedure LoadBlockInput;
+
+function GetLastErrorAsHexaStr(WinErro: DWORD = 0): String;
+function GetFileVersion(AFile: String): String;
+
 {$ENDIF}
 
 implementation
 
 Uses
   synautil,
-  ACBrCompress;
+  ACBrCompress, StrUtilsEx;
 
 var
   Randomized : Boolean ;
@@ -570,7 +577,7 @@ begin
    {$EndIf}
 
    if Result = '' then 
-     Result := AUTF8String;
+     Result := String(AUTF8String);
   {$EndIf}
 end;
 
@@ -1560,7 +1567,7 @@ end;
 {-----------------------------------------------------------------------------
   Acha a Ultima "Ocorrencia" de "SubStr" em "S"
  ---------------------------------------------------------------------------- }
-function PosLast(const SubStr, S: AnsiString ): Integer;
+function PosLast(const SubStr, S: String ): Integer;
 Var P : Integer ;
 begin
   Result := 0 ;
@@ -1568,7 +1575,7 @@ begin
   while P <> 0 do
   begin
      Result := P ;
-     P := PosEx( String(SubStr), String(S), P+1) ;
+     P := PosEx( SubStr, S, P+1) ;
   end ;
 end ;
 
@@ -2416,7 +2423,7 @@ begin
   if Result = '' then
   begin
     if PadLinhas then
-      Result := Space(Colunas) + #10
+      Result := AnsiString(Space(Colunas)) + #10
     else
       Result := #10;
   end;
@@ -2579,7 +2586,7 @@ end;
  ASCII 127), de <AString> por sua representação em HEXA. (\xNN)
  Use StringToBinaryString para Converter para o valor original.
  ---------------------------------------------------------------------------- }
-function BinaryStringToString(const AString: AnsiString): AnsiString;
+function BinaryStringToString(const AString: AnsiString): String;
 var
    ASC : Integer;
    I, N : Integer;
@@ -2590,9 +2597,9 @@ begin
   begin
      ASC := Ord(AString[I]) ;
      if (ASC < 32) or (ASC > 127) then
-        Result := Result + AnsiString('\x'+Trim(IntToHex(ASC,2)))
+        Result := Result + '\x'+Trim(IntToHex(ASC,2))
      else
-        Result := Result + AString[I] ;
+        Result := Result + Char(AString[I]) ;
   end ;
 end ;
 
@@ -2601,13 +2608,13 @@ end ;
  é o valor em Hexa)).
  Retornana o Estado original, AString de BinaryStringToString.
  ---------------------------------------------------------------------------- }
-function StringToBinaryString(const AString: AnsiString): AnsiString;
+function StringToBinaryString(const AString: String): AnsiString;
 var
    P, I : LongInt;
    Hex : String;
    CharHex : AnsiString;
 begin
-  Result := AString ;
+  Result := AnsiString(AString);
 
   P := pos('\x',String(Result)) ;
   while P > 0 do
@@ -2622,7 +2629,7 @@ begin
           CharHex := ' ' ;
        end ;
 
-       Result := ReplaceString(Result, '\x'+Hex, String(CharHex) );
+       Result := ReplaceString(Result, AnsiString('\x'+Hex), CharHex );
        I := 1;
      end
      else
@@ -2819,6 +2826,7 @@ var
   RetFind, I: Integer;
   LastFile, AFileName, APath: String;
   SL: TStringList;
+  AFileDateTime: TDateTime;
 begin
  AStringList.Clear;
 
@@ -2838,7 +2846,15 @@ begin
       begin
         AFileName := APath + LastFile;
         if (SortType = fstDateTime) then
-          AFileName := DTtoS(FileDateToDateTime(SearchRec.Time)) + '|' + AFileName;
+        begin
+          {$IfDef FMX}
+            AFileDateTime := SearchRec.TimeStamp;
+          {$Else}
+            AFileDateTime := FileDateToDateTime(SearchRec.Time);
+          {$EndIf}
+
+          AFileName := DTtoS(AFileDateTime) + '|' + AFileName;
+        end;
 
         AStringList.Add( AFileName ) ;
       end;
@@ -3114,195 +3130,150 @@ end ;
 procedure RunCommand(const Command: String; const Params: String;
    Wait : Boolean; WindowState : Word);
 var
-  {$ifdef MSWINDOWS}
-   SUInfo: TStartupInfo;
-   ProcInfo: TProcessInformation;
-   Executed : Boolean ;
-   PCharStr : PChar ;
-  {$endif}
-  ConnectCommand : PChar;
-  {$ifdef LINUX}
-   FullCommand : AnsiString;
-  {$endif}
+  {$IfDef MSWINDOWS}
+    SUInfo: Windows.{$IfDef UNICODE}TSTARTUPINFOW{$Else}TSTARTUPINFO{$EndIf};
+    ProcInfo: TProcessInformation;
+    Executed: BOOL;
+  {$EndIf}
+  FullCommand: String;
 begin
-  {$ifdef LINUX}
-     FullCommand := Trim(Command + ' ' + Params) ;
-     if not Wait then
-        FullCommand := FullCommand + ' &' ;  { & = Rodar em BackGround }
+  FullCommand := Trim(Command) + ' ' + Trim(Params);
+  {$IfNDef MSWINDOWS}
+    if not Wait then
+      FullCommand := FullCommand + ' &' ;  { & = Rodar em BackGround }
 
-     {$IFNDEF FPC}
-       ConnectCommand := PChar(FullCommand);
-       {$IFDEF POSIX}_system{$ELSE}Libc.system{$ENDIF}(ConnectCommand);
-     {$ELSE}
-       fpSystem(FullCommand)
-     {$ENDIF}
-  {$endif}
-  {$ifdef MSWINDOWS}
-     PCharStr := PChar(Trim(Params)) ;
-     if Length(PCharStr) = 0 then
-        PCharStr := nil ;
-
-     if not Wait then
-        ShellExecute(0,'open',PChar(Trim(Command)),PCharStr, nil, WindowState )
-//        winexec(ConnectCommand, WindowState)
-     else
+    {$IfNDef FPC}
+      {$IfDef POSIX}
+        _system(PAnsiChar(AnsiString(FullCommand)));
+      {$Else}
+        Libc.system(PChar(FullCommand));
+      {$EndIf}
+    {$Else}
+      fpSystem(FullCommand)
+    {$EndIf}
+  {$Else}
+    if not Wait then
+    begin
+      {$IfDef UNICODE}
+        ShellExecute(0, LPCWSTR('open'), LPCWSTR(WideString(Trim(Command))), LPCWSTR(WideString(Trim(Params))), nil, WindowState )
+      {$Else}
+        ShellExecute(0, LPCSTR('open'), LPCSTR(Trim(Command)), LPCSTR(Trim(Params)), nil, WindowState )
+      {$EndIf}
+    end
+    else
+    begin
+      FillChar(SUInfo, SizeOf(SUInfo), #0);
+      with SUInfo do
       begin
-        ConnectCommand := PChar(Trim(Command) + ' ' + Trim(Params));
-        PCharStr := PChar(ExtractFilePath(Command)) ;
-        if Length(PCharStr) = 0 then
-           PCharStr := nil ;
-        FillChar(SUInfo, SizeOf(SUInfo), #0);
-        with SUInfo do
-        begin
-           cb          := SizeOf(SUInfo);
-           dwFlags     := STARTF_USESHOWWINDOW;
-           wShowWindow := WindowState;
-        end;
-
-        Executed := CreateProcess(nil, ConnectCommand, nil, nil, false,
-                    CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS, nil,
-                    PCharStr, SUInfo, ProcInfo);
-
-        try
-           { Aguarda até ser finalizado }
-           if Executed then
-              WaitForSingleObject(ProcInfo.hProcess, INFINITE);
-        finally
-           { Libera os Handles }
-           CloseHandle(ProcInfo.hProcess);
-           CloseHandle(ProcInfo.hThread);
-        end;
+        cb := SizeOf(SUInfo);
+        dwFlags := STARTF_USESHOWWINDOW;
+        wShowWindow := WindowState;
       end;
-  {$endif}
+
+      {$IfDef UNICODE}
+        Executed := CreateProcessW( nil,
+                                    PWideChar(WideString(FullCommand)),
+                                    nil, nil, false,
+                                    CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS,
+                                    nil, Nil, SUInfo, ProcInfo);
+
+      {$Else}
+        Executed := CreateProcess( nil,
+                                    PChar(FullCommand),
+                                    nil, nil, false,
+                                    CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS,
+                                    nil, Nil, SUInfo, ProcInfo);
+      {$EndIf}
+
+      try
+        { Aguarda até ser finalizado }
+        if Executed then
+          WaitForSingleObject(ProcInfo.hProcess, INFINITE);
+      finally
+        { Libera os Handles }
+        CloseHandle(ProcInfo.hProcess);
+        CloseHandle(ProcInfo.hThread);
+      end;
+    end;
+  {$EndIf}
 end;
 
 procedure OpenURL( const URL : String ) ;
-{$IFDEF LINUX}
-  Var BrowserName : String ;
-{$ENDIF}
+{$IfNDef MSWINDOWS}
+Var
+  BrowserName : String ;
+{$EndIf}
 begin
- {$IFDEF USE_LCLIntf}
+ {$IfDef USE_LCLIntf}
    LCLIntf.OpenURL( URL ) ;
- {$ELSE}
-   {$IFDEF MSWINDOWS}
+ {$Else}
+   {$IfDef MSWINDOWS}
      RunCommand(URL);
-   {$ENDIF}
-   {$IFDEF LINUX}
+   {$Else}
      BrowserName := GetEnvironmentVariable('BROWSER') ;
      if BrowserName = '' then
         BrowserName := 'konqueror' ;
 
      RunCommand(BrowserName, URL);
-   {$ENDIF}
- {$ENDIF}
+   {$EndIf}
+ {$EndIf}
 end ;
 
- function FlushToDisk(const sFile: string): boolean;
-{$IFDEF MSWINDOWS}
+ function FlushToDisk(const sFile: string): Boolean;
+{$IfDef MSWINDOWS}
  { Fonte: http://stackoverflow.com/questions/1635947/how-to-make-sure-that-a-file-was-permanently-saved-on-usb-when-user-doesnt-use }
  var
    hDrive: THandle;
-   S:      string;
-   OSFlushed: boolean;
-   bResult: boolean;
+   AFileName: String;
  begin
-   bResult := False;
-   S := '\\.\' + ExtractFileDrive( sFile )[1] + ':';
+   AFileName := '\\.\' + ExtractFileDrive( sFile )[1] + ':';
 
    //NOTE: this may only work for the SYSTEM user
-   hDrive    := CreateFile(PChar(S), GENERIC_READ or
-     GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil,
-     OPEN_EXISTING, 0, 0);
-   OSFlushed := FlushFileBuffers(hDrive);
-
+   hDrive := Windows.CreateFileW( PWideChar(WideString(AFileName)),
+                          GENERIC_READ or GENERIC_WRITE,
+                          FILE_SHARE_READ or FILE_SHARE_WRITE,
+                          nil, OPEN_EXISTING, 0, 0);
+   Result := FlushFileBuffers(hDrive);
    CloseHandle(hDrive);
-
-   if OSFlushed then
-   begin
-     bResult := True;
-   end;
-
-   Result := bResult;
  end;
-{$ELSE}
+{$Else}
  var
    hDrive: THandle;
  begin
-   hDrive := fpOpen(sFile, O_Creat or O_RDWR {$IFDEF LINUX}or O_SYNC{$ENDIF});
-   Result := {$IFDEF POSIX}fsync{$ELSE}fpfsync{$ENDIF}(hDrive) = 0;
-   {$IFDEF POSIX}__close{$ELSE}fpClose{$ENDIF}(hDrive);
+   {$IfDef FPC}
+     hDrive := fpOpen(sFile, O_Creat or O_RDWR {$IfDef LINUX}or O_SYNC{$EndIf});
+     Result := fpfsync(hDrive) = 0;
+     fpClose(hDrive);
+   {$Else}
+     hDrive := open(PAnsiChar(AnsiString(sFile)), O_Creat or O_RDWR or O_SYNC);
+     Result := fsync(hDrive) = 0;
+     __close(hDrive);
+   {$EndIf}
  end ;
-{$ENDIF}
+{$EndIf}
 
- function FlushFileToDisk(const sFile: string): boolean;
- {$IFDEF MSWINDOWS}
- { Discussão em: http://www.djsystem.com.br/acbr/forum/viewtopic.php?f=5&t=5811 }
+ function FlushFileToDisk(const sFile: string): Boolean;
+ {$IfDef MSWINDOWS}
  var
    hFile: THandle;
-   //bResult: boolean;
-   //lastErr: Cardinal;
-   filename: WideString;
+   AFileName: String;
  begin
-   //Result := False;
+   AFileName := '\\.\' + sFile; //Para usar a versão Wide da função CreateFile e aceitar o caminho completo do arquivo
 
-   filename := '\\.\' + sFile; //Para usar a versão Wide da função CreateFile e aceitar o caminho completo do arquivo
-
-   hFile := Windows.CreateFileW( PWideChar(filename),
+   hFile := Windows.CreateFileW( PWideChar(WideString(AFileName)),
                GENERIC_READ or GENERIC_WRITE,
-               FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING,
-               FILE_ATTRIBUTE_NORMAL  or FILE_FLAG_WRITE_THROUGH or FILE_FLAG_NO_BUFFERING, 0);
-
-//   GetLasError Verifica se houve algum erro na execução de CreateFile
-//   lastErr := GetLastError();
-//
-//   if (lastErr <> ERROR_SUCCESS) then
-//   begin
-//     Beep( 750, 100);
-////     try
-//       RaiseLastOSError(lastErr);
-////     except
-////       on Ex : EOSError do
-////       begin
-////          MessageDlg('Caught an OS error with code: ' +
-////             IntToStr(Ex.ErrorCode), mtError, [mbOK], 0);
-////          SetLastError(ERROR_SUCCESS);
-////       end
-////     end;
-//   end;
+               FILE_SHARE_READ or FILE_SHARE_WRITE,
+               nil, OPEN_EXISTING,
+               FILE_ATTRIBUTE_NORMAL or FILE_FLAG_WRITE_THROUGH or FILE_FLAG_NO_BUFFERING, 0);
 
     Result := FlushFileBuffers(hFile);
-
-//   GetLasError Verifica se houve algum erro na execução de FlushFileBuffers
-//    lastErr := GetLastError();
-//
-//    if (lastErr <> ERROR_SUCCESS) then
-//    begin
-//   if (lastErr <> ERROR_SUCCESS) then
-//   begin
-//     Beep( 750, 100);
-////     try
-//       RaiseLastOSError(lastErr);
-////     except
-////       on Ex : EOSError do
-////       begin
-////          MessageDlg('Caught an OS error with code: ' +
-////             IntToStr(Ex.ErrorCode), mtError, [mbOK], 0);
-////          SetLastError(ERROR_SUCCESS);
-////       end
-////     end;
-//   end;
-
     CloseHandle(hFile);
  end;
-{$ELSE}
- var
-   hDrive: THandle;
+{$Else}
  begin
-   hDrive := fpOpen(sFile, O_Creat or O_RDWR {$IFDEF LINUX}or O_SYNC{$ENDIF});
-   Result := {$IFDEF POSIX}fsync{$ELSE}fpfsync{$ENDIF}(hDrive) = 0;
-   {$IFDEF POSIX}__close{$ELSE}fpClose{$ENDIF}(hDrive);
+   Result := FlushToDisk(sFile);
  end ;
-{$ENDIF}
+{$EndIf}
 
 {-----------------------------------------------------------------------------
  - Tenta desligar a Maquina.
@@ -3457,14 +3428,19 @@ end;
 {$Else}
 function ForceForeground(AppHandle: {$IfDef FPC}LCLType.HWND{$Else}THandle{$EndIf}): boolean;
 begin
-  Application.Restore;
-  Application.BringToFront;
-  Application.RestoreStayOnTop(True);
-  Application.ProcessMessages;
-  if Assigned( Screen.ActiveForm ) then
-    Result := (Screen.ActiveForm.Handle = AppHandle)
-  else
-    Result := False;
+  {$IfDef FMX}
+    Application.MainForm.BringToFront;
+    Result := True;
+  {$Else}
+    Application.Restore;
+    Application.BringToFront;
+    Application.RestoreStayOnTop(True);
+    Application.ProcessMessages;
+    if Assigned( Screen.ActiveForm ) then
+      Result := (Screen.ActiveForm.Handle = AppHandle)
+    else
+      Result := False;
+  {$EndIf}
 end;
 {$EndIf}
 {$EndIf}
@@ -4076,7 +4052,7 @@ end;
 {------------------------------------------------------------------------------
    Retorna a posição inicial e final da Tag do XML
  ------------------------------------------------------------------------------}
-procedure EncontrarInicioFinalTag(const aText, ATag: ansistring;
+procedure EncontrarInicioFinalTag(const aText, ATag: String;
   var PosIni, PosFim: integer; const PosOffset: integer = 0);
 begin
   PosFim := 0;
@@ -4105,7 +4081,7 @@ var
   function InternalStringReplace(const S, OldPatern, NewPattern: String ): String;
   begin
     if pos(OldPatern, S) > 0 then
-      Result := ReplaceString(AnsiString(S), AnsiString(OldPatern), AnsiString(ACBrStr(NewPattern)))
+      Result := FastStringReplace(S, OldPatern, ACBrStr(NewPattern), [rfReplaceAll])
     else
       Result := S;
   end;
@@ -4269,7 +4245,7 @@ begin
   DeclaracaoXML := ObtemDeclaracaoXML(AXML);
 
   if DeclaracaoXML <> '' then
-    Result := StringReplace(AXML, DeclaracaoXML, '', [])
+    Result := FastStringReplace(AXML, DeclaracaoXML, '', [])
   else
     Result := AXML;
 end;
@@ -4298,22 +4274,59 @@ end;
    Valida se é um arquivo válido para carregar em um MenIniFile, caso contrário
    adiciona a String convertendo representações em Hexa.
  ------------------------------------------------------------------------------}
-procedure LerIniArquivoOuString(const IniArquivoOuString: AnsiString;
+procedure LerIniArquivoOuString(const IniArquivoOuString: String;
   AMemIni: TMemIniFile);
 var
   SL: TStringList;
 begin
   SL := TStringList.Create;
   try
-    if (pos(LF, IniArquivoOuString) = 0) and FilesExists(IniArquivoOuString) then
-      SL.LoadFromFile(IniArquivoOuString)
+    if StringIsINI(IniArquivoOuString) then
+      SL.Text := String(StringToBinaryString( IniArquivoOuString ))
     else
-      SL.Text := StringToBinaryString( IniArquivoOuString );
+    begin
+      if not StringIsAFile(IniArquivoOuString) then
+        raise Exception.Create(ACBrStr('String INI informada não é válida.'))
+      else
+      begin
+        if FileExists(IniArquivoOuString) then
+          SL.LoadFromFile(IniArquivoOuString)
+        else
+          raise Exception.CreateFmt(ACBrStr('Arquivo: %s não encontrado.'), [IniArquivoOuString] );
+      end;
+    end;
 
     AMemIni.SetStrings(SL);
   finally
     SL.Free;
   end;
+end;
+
+{------------------------------------------------------------------------------
+   Valida se é um arquivo contém caracteres existentes em um ini
+ ------------------------------------------------------------------------------}
+function StringIsINI(const AString: String): Boolean;
+begin
+  Result :=(pos('[', AString) > 0) and (pos(']', AString) > 0) and (pos('=', AString) > 0);
+end;
+
+{------------------------------------------------------------------------------
+   Valida as características básicas de um File válido
+ ------------------------------------------------------------------------------}
+function StringIsAFile(const AString: String): Boolean;
+begin
+  Result := (AString <> '') and
+            (not StringIsXML(AString)) and
+            (not StringIsINI(AString)) and
+            (Length(AString) < 255) ;
+end;
+
+{------------------------------------------------------------------------------
+   Valida se é um arquivo contém caracteres existentes em um xml
+ ------------------------------------------------------------------------------}
+function StringIsXML(const AString: String): Boolean;
+begin
+   Result :=(pos('<', AString) > 0) and (pos('>', AString) > 0);
 end;
 
 procedure QuebrarLinha(const Alinha: string; const ALista: TStringList;
@@ -4420,6 +4433,49 @@ begin
 
   BlockInputLoaded := True;
 end;
+
+function GetLastErrorAsHexaStr(WinErro: DWORD): String;
+begin
+  if WinErro = 0 then
+    WinErro := GetLastError;
+
+  Result := IntToHex(WinErro, 8);
+end;
+
+function GetFileVersion(AFile: String): String;
+var
+  Major, Minor, Release, Build: Integer;
+  Zero, VersionInfoSize: DWORD;
+  PVersionData: Pointer;
+  lplBuffer: PVSFixedFileInfo;
+  puLen: Cardinal;
+begin
+  // http://www.planetadelphi.com.br/dica/688/pega-informacoes-de-versao-de-qualquer-exe-ou-dll
+  Result := '';
+  Zero := 0;
+  VersionInfoSize := GetFileVersionInfoSize(PChar(AFile), Zero);
+  if VersionInfoSize = 0 then
+     exit;
+  PVersionData := AllocMem(VersionInfoSize);
+  try
+    if GetFileVersionInfo(PChar(AFile), 0, VersionInfoSize, PVersionData) then
+    begin
+      lplBuffer := nil;
+      puLen := 0;
+      if VerQueryValue(PVersionData, '', pointer(lplBuffer), puLen) then
+      begin
+        Major   := HIWORD(lplBuffer^.dwFileVersionMS);
+        Minor   := LOWORD(lplBuffer^.dwFileVersionMS);
+        Release := HIWORD(lplBuffer^.dwFileVersionLS);
+        Build   := LOWORD(lplBuffer^.dwFileVersionLS);
+        Result  := IntToStr(Major)+'.'+IntToStr(Minor)+'.'+IntToStr(Release)+'.'+IntToStr(Build);
+      end;
+    end;
+  finally
+    FreeMem(PVersionData);
+  end;
+end;
+
 {$ENDIF}
 
 initialization

@@ -42,13 +42,15 @@ interface
 
 uses
   SysUtils, Classes,
-  ACBrDFeReport,
-  pmdfeMDFe, pcnConversao;
+  ACBrBase, ACBrDFeReport, pmdfeMDFe, pcnConversao;
 
 type
+  TDadosExtrasMDFe = (deValorTotal, deRelacaoDFe);
+  TConjuntoDadosExtrasMDFe = Set of TDadosExtrasMDFe;
+
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
-  {$ENDIF RTL230_UP}	
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
+  {$ENDIF RTL230_UP}
   TACBrMDFeDAMDFeClass = class(TACBrDFeReport)
    private
     procedure SetACBrMDFe(const Value: TComponent);
@@ -63,6 +65,7 @@ type
     FProtocoloMDFe: String;
     FMDFeCancelada: Boolean;
     FMDFeEncerrado: Boolean;
+    FImprimeDadosExtras: TConjuntoDadosExtrasMDFe;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetSeparadorPathPDF(const aInitialPath: String): String; override;
@@ -70,10 +73,10 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure ImprimirDAMDFe(MDFe: TMDFe = nil); virtual;
-    procedure ImprimirDAMDFePDF(MDFe: TMDFe = nil); virtual;
-    procedure ImprimirEVENTO(MDFe: TMDFe = nil); virtual;
-    procedure ImprimirEVENTOPDF(MDFe: TMDFe = nil); virtual;
+    procedure ImprimirDAMDFe(AMDFe: TMDFe = nil); virtual;
+    procedure ImprimirDAMDFePDF(AMDFe: TMDFe = nil); virtual;
+    procedure ImprimirEVENTO(AMDFe: TMDFe = nil); virtual;
+    procedure ImprimirEVENTOPDF(AMDFe: TMDFe = nil); virtual;
   published
     property ACBrMDFe: TComponent           read FACBrMDFe               write SetACBrMDFe;
     property ImprimeHoraSaida: Boolean      read FImprimirHoraSaida      write FImprimirHoraSaida;
@@ -83,6 +86,8 @@ type
     property Protocolo: String              read FProtocoloMDFe          write FProtocoloMDFe;
     property Cancelada: Boolean             read FMDFeCancelada          write FMDFeCancelada;
     property Encerrado: Boolean             read FMDFeEncerrado          write FMDFeEncerrado;
+
+    property ImprimeDadosExtras: TConjuntoDadosExtrasMDFe read FImprimeDadosExtras write FImprimeDadosExtras;
   end;
 
 implementation
@@ -94,12 +99,13 @@ constructor TACBrMDFeDAMDFeClass.Create(AOwner: TComponent);
 begin
   inherited create(AOwner);
 
-  FACBrMDFe   := nil;
-  FImprimirHoraSaida      := False;
+  FACBrMDFe := nil;
+  FImprimirHoraSaida := False;
   FImprimirHoraSaida_Hora := '';
   FProtocoloMDFe := '';
-  FMDFeCancelada  := False;
-  FMDFeEncerrado  := False;
+  FMDFeCancelada := False;
+  FMDFeEncerrado := False;
+  FImprimeDadosExtras := [deValorTotal, deRelacaoDFe];
 end;
 
 destructor TACBrMDFeDAMDFeClass.Destroy;
@@ -150,22 +156,22 @@ begin
   raise Exception.Create(NomeProcedure);
 end;
 
-procedure TACBrMDFeDAMDFeClass.ImprimirDAMDFe(MDFe: TMDFe = nil);
+procedure TACBrMDFeDAMDFeClass.ImprimirDAMDFe(AMDFe: TMDFe = nil);
 begin
   ErroAbstract('ImprimirDAMDFe');
 end;
 
-procedure TACBrMDFeDAMDFeClass.ImprimirDAMDFePDF(MDFe: TMDFe = nil);
+procedure TACBrMDFeDAMDFeClass.ImprimirDAMDFePDF(AMDFe: TMDFe = nil);
 begin
   ErroAbstract('ImprimirDAMDFePDF');
 end;
 
-procedure TACBrMDFeDAMDFeClass.ImprimirEVENTO(MDFe: TMDFe);
+procedure TACBrMDFeDAMDFeClass.ImprimirEVENTO(AMDFe: TMDFe);
 begin
   ErroAbstract('ImprimirEVENTO');
 end;
 
-procedure TACBrMDFeDAMDFeClass.ImprimirEVENTOPDF(MDFe: TMDFe);
+procedure TACBrMDFeDAMDFeClass.ImprimirEVENTOPDF(AMDFe: TMDFe);
 begin
   ErroAbstract('ImprimirEVENTOPDF');
 end;
@@ -189,10 +195,12 @@ begin
          dhEmissao := Now;
 
        DescricaoModelo := 'MDFe';
+
        Result := TACBrMDFe(FACBrMDFe).Configuracoes.Arquivos.GetPath(
                          Result,
                          DescricaoModelo,
                          AMDFe.Emit.CNPJCPF,
+                         AMDFe.emit.IE,
                          dhEmissao,
                          DescricaoModelo);
      end;

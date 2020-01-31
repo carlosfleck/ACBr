@@ -52,6 +52,9 @@ uses Classes, Graphics, Contnrs, IniFiles,
      {$IFDEF FPC}
        LResources,
      {$ENDIF}
+     {$IfNDef MSWINDOWS}
+       ACBrConsts,
+     {$ENDIF}
      SysUtils, typinfo,
      ACBrBase, ACBrMail, ACBrValidador;
 
@@ -63,7 +66,7 @@ const
   CConta = 'CONTA';
   CTitulo = 'TITULO';
 
-  cACBrTipoOcorrenciaDecricao: array[0..293] of String = (
+  cACBrTipoOcorrenciaDecricao: array[0..296] of String = (
     'Remessa Registrar',
     'Remessa Baixar',
     'Remessa Debitar Em Conta',
@@ -135,6 +138,10 @@ const
     'Remessa Alterar Valor Mínimo', 
     'Remessa Alterar Valor Máximo',
     'Remessa Excluir Negativacao Serasa e Baixar',
+    'Remessa Pedido de negativação',
+    'Remessa Excluir negativação e baixar',
+    'Remessa Excluir negativação e manter em carteira',	
+	
     'Retorno Abatimento Cancelado',
     'Retorno Abatimento Concedido',
     'Retorno Acerto Controle Participante',
@@ -391,7 +398,12 @@ type
     cobUnicredES,
     cobBancoCresolSCRS,
     cobCitiBank,
-    cobBancoABCBrasil
+    cobBancoABCBrasil,
+    cobDaycoval,
+    cobUniprimeNortePR,
+    cobBancoPine,
+    cobBancoPineBradesco,
+    cobUnicredSC
     );
 
   TACBrTitulo = class;
@@ -490,6 +502,10 @@ type
     toRemessaAlterarValorMinimo,
     toRemessaAlterarValorMaximo,
     toRemessaExcluirNegativacaoSerasaBaixar,
+    toRemessaPedidoNegativacao,
+    toRemessaExcluirNegativacaoBaixar,
+    toRemessaExcluirNegativacaoManterEmCarteira,
+	
     {Ocorrências para arquivo retorno}
     toRetornoAbatimentoCancelado,
     toRetornoAbatimentoConcedido,
@@ -820,7 +836,7 @@ type
 
   { TACBrBanco }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrBanco = class(TComponent)
   private
@@ -912,7 +928,8 @@ type
   end;
 
   TACBrResponEmissao = (tbCliEmite,tbBancoEmite,tbBancoReemite,tbBancoNaoReemite, tbBancoPreEmite);
-  TACBrCaracTitulo = (tcSimples,tcVinculada,tcCaucionada,tcDescontada,tcVendor);
+  TACBrCaracTitulo = (tcSimples, tcVinculada, tcCaucionada, tcDescontada, tcVendor, tcDireta,  
+                      tcSimplesRapComReg, tcCaucionadaRapComReg, tcDiretaEspecial);
   TACBrPessoa = (pFisica,pJuridica,pOutras);
   TACBrPessoaCedente = pFisica..pJuridica;
 
@@ -948,7 +965,7 @@ type
 
   { TACBrCedente }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
   TACBrCedente = class(TComponent)
   private
@@ -1105,6 +1122,35 @@ type
     property Fone        : String  read fFone        write fFone;
   end;
 
+  { TACBrDadosNFe }
+
+  TACBrDadosNFe = class
+  private
+    fChaveNFe: String;
+    fEmissaoNFe: TDateTime;
+    fNumNFe: String;
+    fValorNFe: Currency;
+  public
+
+   property NumNFe     : String read fNumNFe write fNumNFe;
+   property ValorNFe   : Currency read fValorNFe write fValorNFe;
+   property EmissaoNFe : TDateTime read fEmissaoNFe write fEmissaoNFe;
+   property ChaveNFe   : String read fChaveNFe write fChaveNFe;
+  end;
+
+  { TListadeNFes }
+  TACBrListadeNFes = class(TObjectList)
+  protected
+    procedure SetObject (Index: Integer; Item: TACBrDadosNFe);
+    function  GetObject (Index: Integer): TACBrDadosNFe;
+    procedure Insert (Index: Integer; Obj: TACBrDadosNFe);
+  public
+    function Add (Obj: TACBrDadosNFe): Integer;
+    property Objects [Index: Integer]: TACBrDadosNFe
+      read GetObject write SetObject; default;
+  end;
+
+
   { TACBrTitulo }
 
   TACBrTitulo = class
@@ -1132,6 +1178,7 @@ type
     fAceite            : TACBrAceiteTitulo;
     fDataProcessamento : TDateTime;
     fNossoNumero       : String;
+    fNossoNumeroCorrespondente: String;
     fUsoBanco          : String;
     fCarteira          : String;
     fEspecieMod        : String;
@@ -1189,6 +1236,8 @@ type
     fValorPago            : Currency;
     fCaracTitulo          :TACBrCaracTitulo;
 
+    fListaDadosNFe        : TACBrListadeNFes;
+
     procedure SetCarteira(const AValue: String);
     procedure SetCodigoMora(const AValue: String);
     procedure SetDiasDeProtesto(AValue: Integer);
@@ -1219,6 +1268,7 @@ type
      property Aceite            : TACBrAceiteTitulo   read fAceite           write fAceite      default atNao;
      property DataProcessamento : TDateTime   read fDataProcessamento write fDataProcessamento;
      property NossoNumero       : String      read fNossoNumero       write SetNossoNumero;
+     property NossoNumeroCorrespondente : String  read fNossoNumeroCorrespondente write fNossoNumeroCorrespondente;
      property UsoBanco          : String      read fUsoBanco          write fUsoBanco;
      property Carteira          : String      read fCarteira          write SetCarteira;
      property CarteiraEnvio     : TACBrCarteiraEnvio read fCarteiraEnvio write fCarteiraEnvio default tceCedente;
@@ -1290,6 +1340,11 @@ type
      property CodigoGeracao: String read fCodigoGeracao write SetCodigoGeracao;
      property Liquidacao: TACBrTituloLiquidacao read fLiquidacao write fLiquidacao;
      property CaracTitulo: TACBrCaracTitulo read fCaracTitulo  write fCaracTitulo default tcSimples;
+
+     property ListaDadosNFe : TACBrListadeNFes read fListaDadosNFe;
+
+     function CriarNFeNaLista: TACBrDadosNFe;
+
    end;
 
   { TListadeBoletos }
@@ -1304,7 +1359,7 @@ type
       read GetObject write SetObject; default;
   end;
 
-  TACBrBolLayOut = (lPadrao, lCarne, lFatura, lPadraoEntrega, lReciboTopo, lPadraoEntrega2, lFaturaDetal) ;
+  TACBrBolLayOut = (lPadrao, lCarne, lFatura, lPadraoEntrega, lReciboTopo, lPadraoEntrega2, lFaturaDetal, lTermica80mm);
 
   {TACBrTipoOcorrenciaRemessa}
   TACBrOcorrenciaRemessa = Record
@@ -1316,8 +1371,9 @@ type
 
   { TACBrBoleto }
   {$IFDEF RTL230_UP}
-  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
   {$ENDIF RTL230_UP}
+
  TACBrBoleto = class( TACBrComponent )
   private
     fBanco: TACBrBanco;
@@ -1345,7 +1401,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    property ListadeBoletos : TListadeBoletos read fListadeBoletos write fListadeBoletos ;
+    property ListadeBoletos : TListadeBoletos read fListadeBoletos;
 
     function CriarTituloNaLista: TACBrTitulo;
 
@@ -1365,7 +1421,7 @@ type
     procedure ChecarDadosObrigatorios;
 
     function GetOcorrenciasRemessa() : TACBrOcorrenciasRemessa;
-    function GetTipoCobranca(NumeroBanco: Integer): TACBrTipoCobranca;
+    function GetTipoCobranca(NumeroBanco: Integer; Carteira: String = ''): TACBrTipoCobranca;
     function LerArqIni(const AIniBoletos: String): Boolean;
     procedure GravarArqIni(DirIniRetorno: string; const NomeArquivo: String);
 
@@ -1393,9 +1449,9 @@ type
  TACBrBoletoFCFiltro = (fiNenhum, fiPDF, fiHTML, fiJPG) ;
 
  TACBrBoletoFCOnObterLogo = procedure( const PictureLogo : TPicture; const NumeroBanco: Integer ) of object ;
- {$IFDEF RTL230_UP}
- [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
- {$ENDIF RTL230_UP}
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(piacbrAllPlatforms)]
+  {$ENDIF RTL230_UP}
  TACBrBoletoFCClass = class(TACBrComponent)
   private
     fDirLogo        : String;
@@ -1411,6 +1467,8 @@ type
     fOnObterLogo : TACBrBoletoFCOnObterLogo ;
     fSoftwareHouse  : String;
     FPdfSenha: string;
+    FAlterarEscalaPadrao: Boolean;
+    FNovaEscala: Integer;
     function ComponentStateDesigning: Boolean;
     function GetArquivoLogo: String;
     function GetDirLogo: String;
@@ -1450,6 +1508,9 @@ type
     property DirLogo         : String          read GetDirLogo        write SetDirLogo;
     property NomeArquivo     : String          read GetNomeArquivo    write SetNomeArquivo ;
     property PdfSenha        : string          read FPdfSenha         write SetPdfSenha;
+    property AlterarEscalaPadrao: Boolean      read FAlterarEscalaPadrao write FAlterarEscalaPadrao default False;
+    property NovaEscala      : Integer         read FNovaEscala       write FNovaEscala        default 96;
+
   end;
 
 
@@ -1464,7 +1525,31 @@ Uses Forms, Math, dateutils, strutils,
      ACBrBancoNordeste , ACBrBancoBRB, ACBrBancoBic, ACBrBancoBradescoSICOOB,
      ACBrBancoSafra, ACBrBancoSafraBradesco, ACBrBancoCecred, ACBrBancoBrasilSicoob,
      ACBrUniprime, ACBrBancoUnicredRS, ACBrBancoBanese, ACBrBancoCredisis, ACBrBancoUnicredES,
-     ACBrBancoCresol, ACBrBancoCitiBank, ACBrBancoABCBrasil;
+     ACBrBancoCresol, ACBrBancoCitiBank, ACBrBancoABCBrasil, ACBrBancoDaycoval, ACBrUniprimeNortePR,
+     ACBrBancoPine, ACBrBancoPineBradesco, ACBrBancoUnicredSC;
+
+{ TListadeNFes }
+
+function TACBrListadeNFes.GetObject(Index: Integer): TACBrDadosNFe;
+begin
+   Result := inherited GetItem(Index) as TACBrDadosNFe ;
+end;
+
+procedure TACBrListadeNFes.SetObject(Index: Integer; Item: TACBrDadosNFe);
+begin
+   inherited SetItem (Index, Item) ;
+end;
+
+procedure TACBrListadeNFes.Insert(Index: Integer; Obj: TACBrDadosNFe);
+begin
+   inherited Insert(Index, Obj);
+end;
+
+function TACBrListadeNFes.Add(Obj: TACBrDadosNFe): Integer;
+begin
+   Result := inherited Add(Obj) ;
+end;
+
 
 {$IFNDEF FPC}
    {$R ACBrBoleto.dcr}
@@ -1832,6 +1917,14 @@ begin
     PictureLogo.LoadFromFile( ArquivoLogoEmp );
 end;
 
+function TACBrTitulo.CriarNFeNaLista: TACBrDadosNFe;
+var
+  I: Integer;
+begin
+   I      := fListaDadosNFe.Add(TACBrDadosNFe.Create);
+   Result := fListaDadosNFe[I];
+end;
+
 constructor TACBrTitulo.Create(ACBrBoleto:TACBrBoleto);
 begin
    inherited Create;
@@ -1845,6 +1938,7 @@ begin
    fAceite            := atNao;
    fDataProcessamento := now;
    fNossoNumero       := '';
+   fNossoNumeroCorrespondente:= '';
    fUsoBanco          := '';
    fCarteira          := '';
    fEspecieMod        := '';
@@ -1902,6 +1996,8 @@ begin
      fCarteiraEnvio := tceCedente
    else
      fCarteiraEnvio := tceBanco;
+
+   fListaDadosNFe := TACBrListadeNFes.Create(true);
 end;
 
 destructor TACBrTitulo.Destroy;
@@ -1915,6 +2011,8 @@ begin
    fOcorrenciaOriginal.Free;
    fMotivoRejeicaoComando.Free;
    fDescricaoMotivoRejeicaoComando.Free;
+
+   fListaDadosNFe.Free;
 
    inherited;
 end;
@@ -2123,7 +2221,7 @@ begin
   if Assigned(Anexos) then
   begin
     for i := 0 to Anexos.Count - 1 do
-      FMAIL.AddAttachment(Anexos[i]);
+      FMAIL.AddAttachment(Anexos[i],ExtractFileName(Anexos[i]));
   end;
 
   FMAIL.Send;
@@ -2440,7 +2538,11 @@ begin
      cobBancoCresolSCRS     : fBancoClass := TACBrBancoCresol.create(Self);         {133 + 237}
      cobCitiBank            : fBancoClass := TACBrBancoCitiBank.Create(Self);       {745}
      cobBancoABCBrasil      : fBancoClass := TACBrBancoABCBrasil.Create(Self);      {246}
-
+     cobDaycoval            : fBancoClass := TACBrBancoDaycoval.Create(Self);       {745}
+     cobUniprimeNortePR     : fBancoClass := TACBrUniprimeNortePR.Create(Self);     {084}
+     cobBancoPine           : fBancoClass := TACBrBancoPine.create(Self);
+     cobBancoPineBradesco   : fBancoClass := TACBrBancoPineBradesco.create(Self);   {643 + 237}
+     cobUnicredSC           : fBancoClass := TACBrBancoUnicredSC.Create(Self);      {136 + 237}
    else
      fBancoClass := TACBrBancoClass.create(Self);
    end;
@@ -2918,6 +3020,10 @@ begin
 
    SLRemessa := TStringList.Create;
    try
+      {$IfNDef MSWINDOWS}
+      SLRemessa.LineBreak := CRLF;
+      {$EndIf}
+
       if LayoutRemessa = c400 then
       begin
          Banco.GerarRegistroHeader400( NumeroRemessa, SLRemessa );
@@ -3055,7 +3161,7 @@ begin
   end;
 end;
 
-function TACBrBoleto.GetTipoCobranca(NumeroBanco: Integer): TACBrTipoCobranca;
+function TACBrBoleto.GetTipoCobranca(NumeroBanco: Integer; Carteira: String = ''): TACBrTipoCobranca;
 begin
   case NumeroBanco of
     001: Result := cobBancoDoBrasil;
@@ -3081,6 +3187,14 @@ begin
     047: Result := cobBanese;
     745: Result := cobCitiBank;
     246: Result := cobBancoABCBrasil;
+    707: Result := cobDaycoval;
+    084: Result := cobUniprimeNortePR;
+    643: begin
+          if StrToInt(Carteira) = 9 then
+             Result := cobBancoPineBradesco
+           else
+             Result := cobBancoPine;
+         end;
   else
     raise Exception.Create('Erro ao configurar o tipo de cobrança.'+
       sLineBreak+'Número do Banco inválido: '+IntToStr(NumeroBanco));
@@ -3131,7 +3245,7 @@ begin
         Convenio      := IniBoletos.ReadString(CCedente,'CONVENIO',Convenio);
         CaracTitulo  := TACBrCaracTitulo(IniBoletos.ReadInteger(CCedente,'CaracTitulo',Integer(CaracTitulo) ));
         TipoCarteira := TACBrTipoCarteira(IniBoletos.ReadInteger(CCedente,'TipoCarteira', Integer(TipoCarteira) ));
-        TipoDocumento:= TACBrTipoDocumento(IniBoletos.ReadInteger(CCedente,'TipoDocumento',Integer(TipoDocumento) ));
+        TipoDocumento:= TACBrTipoDocumento(IniBoletos.ReadInteger(CCedente,'TipoDocumento', Integer(TipoDocumento) ));
 
         wLayoutBoleto:= IniBoletos.ReadInteger(CCedente,'LAYOUTBOL', Integer(Self.ACBrBoletoFC.LayOut) );
         Self.ACBrBoletoFC.LayOut  := TACBrBolLayOut(wLayoutBoleto);
@@ -3240,6 +3354,7 @@ begin
             TipoImpressao := TACBrTipoImpressao(IniBoletos.ReadInteger(Sessao,'TipoImpressao',1));
             TipoDesconto := TACBrTipoDesconto(IniBoletos.ReadInteger(Sessao,'TipoDesconto',0));
             TipoDesconto2 := TACBrTipoDesconto(IniBoletos.ReadInteger(Sessao,'TipoDesconto2',0));
+            CarteiraEnvio:= TACBrCarteiraEnvio(IniBoletos.ReadInteger(Sessao,'CarteiraEnvio', 0));
             MultaValorFixo := IniBoletos.ReadBool(Sessao,'MultaValorFixo',False);
 
             wLocalPagto := IniBoletos.ReadString(Sessao,'LocalPagamento','');
@@ -3291,6 +3406,9 @@ begin
             PercentualMulta     := IniBoletos.ReadFloat(Sessao,'PercentualMulta',PercentualMulta);
             CodigoMora          := IniBoletos.ReadString(Sessao,'CodigoMora','1');
             CodigoGeracao       := IniBoletos.ReadString(Sessao,'CodigoGeracao','2');
+            Competencia         := IniBoletos.ReadString(Sessao,'Competencia', Competencia);
+            ArquivoLogoEmp      := IniBoletos.ReadString(Sessao,'ArquivoLogoEmp', ArquivoLogoEmp);
+            Verso               := IniBoletos.ReadBool(Sessao,'Verso', False);
             Sacado.SacadoAvalista.NomeAvalista  := IniBoletos.ReadString(Sessao,'Sacado.SacadoAvalista.NomeAvalista','');
             Sacado.SacadoAvalista.CNPJCPF       := IniBoletos.ReadString(Sessao,'Sacado.SacadoAvalista.CNPJCPF','');
             Sacado.SacadoAvalista.Logradouro    := IniBoletos.ReadString(Sessao,'Sacado.SacadoAvalista.Logradouro','');
@@ -3397,18 +3515,20 @@ end;
 
 constructor TACBrBoletoFCClass.Create ( AOwner: TComponent ) ;
 begin
-   inherited Create ( AOwner ) ;
+  inherited Create ( AOwner ) ;
 
-   fACBrBoleto       := nil;
-   fLayOut           := lPadrao;
-   fNumCopias        := 1;
-   fMostrarPreview   := True;
-   fMostrarSetup     := True;
-   fMostrarProgresso := True;
-   fFiltro           := fiNenhum;
-   fNomeArquivo      := '' ;
-   fPathNomeArquivo  := '' ;
-   fPrinterName      := '' ;
+  fACBrBoleto          := nil;
+  fLayOut              := lPadrao;
+  fNumCopias           := 1;
+  fMostrarPreview      := True;
+  fMostrarSetup        := True;
+  fMostrarProgresso    := True;
+  fFiltro              := fiNenhum;
+  fNomeArquivo         := '' ;
+  fPathNomeArquivo     := '' ;
+  fPrinterName         := '' ;
+  FAlterarEscalaPadrao := False;
+  FNovaEscala          := 96;
 end;
 
 procedure TACBrBoletoFCClass.Notification ( AComponent: TComponent;

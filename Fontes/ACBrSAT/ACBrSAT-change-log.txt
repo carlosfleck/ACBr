@@ -47,6 +47,51 @@ Símbolo : Significado
 [*]     : Recurso modificado/melhorado
 [-]     : Correção de Bug (assim esperamos)
 
+28/01/2020
+-- ACBrSATExtratoFortesFr --
+[*] Alterado o tipo da fonte do objeto mObsContrib.
+    https://www.projetoacbr.com.br/forum/topic/55894-mudan%C3%A7a-de-fonte-no-componente-tacbrsatextratofortes-campo-mobscontrib/
+   Por: tdp Sistemas
+
+15/01/2020
+-- ACBrSATExtratoReportClass, ACBrSATExtratoFortesFr --
+[+] Adicionada a propriedade FormularioContinuo: Boolean default False
+    Para permitir gerar relatórios com quebras de Páginas, a fim de permitir a
+    impressão correta de Extratos do SAT longos, em algumas Impressoras
+    https://www.projetoacbr.com.br/forum/topic/55422-extrato-forte-itens/
+[*] Ajuste na definição do Título do relatório, mais amigável para
+    a exportação de Arquivos
+    (por: DSA)
+
+06/12/2019
+-- ACBrSATExtratoESCPOS --
+[-] Correção para não imprimir "CONSUMIDOR NAO INFORMADO", com QRCode lateral,
+    quando o CPF e CNPJ existirem
+    https://www.projetoacbr.com.br/forum/topic/55195-sweda-sl-150-não-imprime-cpf-no-sat/
+    (por: DSA)
+
+01/12/2019
+-- ACBrSAT --
+[*] Novas linhas de Log no metodo "EnviarDadosVenda", para medir o tempo de
+    processamento do Envio a recepção do XML de Venda enviado ao SAT
+    (por: DSA)
+
+04/10/2019
+-- ACBrSATExtratoFortesFr --
+[*] Ajuste para atruibuir extensão default para filtros PDF ou HTML
+[-] Correção para definir Nome default como CFe+Chave, para PDF, HTML,
+	caso o "NomeDocumento" seja vazio
+[-] Ajuste para considerar a propriedade "PathPDF", caso o "NomeDocumento"
+	não tenha Path informado
+[*] Ajuste para criar diretório de criação do PDF, caso o mesmo ainda não 
+	exista
+	(por: DSA)
+
+20/09/2019
+-- ACBrSATExtratoESCPOS --
+[-] Correção para impressão de Logo Lateral, em Epson TM-T20 e TM-T20X
+    (por: DSA)
+
 27/05/2019
 -- ACBrSAT --
 [*] Ajuste para envio de e-mail de CFe em modo Attachment

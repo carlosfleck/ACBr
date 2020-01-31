@@ -66,8 +66,8 @@ procedure RawDeflateCompress(inStream, outStream: TStream;
                           level: Tcompressionlevel = cldefault);
 procedure RawDeflateDeCompress(inStream, outStream: TStream);
 
-function crc16(crc: word; S: TStream; len : Cardinal = 0): Word;
-function crc32(thecrc:cardinal; S: TStream; len : Cardinal = 0): Cardinal;
+function crc16(S: TStream; len : Cardinal = 0): Word;
+function crc32(S: TStream; len : Cardinal = 0): Cardinal;
 function adler32(adler : cardinal; S: TStream; len : Cardinal = 0): Cardinal;
 {$IfNDef FPC}
  function SwapEndian(const AValue: LongWord): LongWord;
@@ -92,7 +92,7 @@ begin
   if StreamType = zsGZip then //add GZip Header
   begin
     size := inStream.Size;
-    crc := crc32(0, inStream, size);
+    crc := crc32(inStream, size);
 
     w := $8b1f;  //GZip IDentification
     outStream.WriteBuffer(w,2);
@@ -159,10 +159,10 @@ begin
     adler := adler32(adler, inStream);
   end;
 
-  outStream.Seek(0, soFromEnd);
+  outStream.Seek(0, soEnd);
   RawDeflateCompress(inStream, outStream, level);
 
-  outStream.Seek(0, soFromEnd);
+  outStream.Seek(0, soEnd);
   if (StreamType = zsGZip) then // add checksum and size
   begin
     outStream.WriteBuffer(crc,4); // CRC32 (CRC-32)
@@ -208,7 +208,7 @@ begin
     if (FEXTRA in flags) then // extra field is present
     begin
       inStream.ReadBuffer(len, 2); // extra field length
-      inStream.Seek(len, soFromCurrent);// jump over extra field
+      inStream.Seek(len, soCurrent);// jump over extra field
       // parse subfields
       // |SI1|SI2|  LEN  |... LEN bytes of subfield data ...|
       // SI1 and SI2 provide a subfield ID
@@ -234,13 +234,13 @@ begin
     end;
     if (FHCRC in flags) then // there is a CRC16 for the header immediately following the header
     begin
-      crcH := crc16(0, inStream, inStream.Position); // get crc16 checksum of the header
+      crcH := crc16(inStream, inStream.Position); // get crc16 checksum of the header
       inStream.ReadBuffer(crcHeader, 2); // 2 bytes CRC16 for the header
       if crcH<>crcHeader then
         ;// header checksum mistake
     end;
     headerSize := inStream.Position;
-    inStream.Seek(-8, soFromEnd);
+    inStream.Seek(-8, soEnd);
     inStream.ReadBuffer(crcGZin, 4); // CRC32 (CRC-32)
     inStream.ReadBuffer(sizeGZin, 4); // ISIZE (Input SIZE)
     //inStream.Size := inStream.Size-8; // cut the 4 byte crc32 and 4 byte input size
@@ -249,7 +249,7 @@ begin
   begin
     streamType := zsZLib; // deflate format (with header)
     headerSize := 2;
-    inStream.Seek(-4, soFromEnd); // first byte is start of deflate header
+    inStream.Seek(-4, soEnd); // first byte is start of deflate header
     inStream.ReadBuffer(d, 4);
     adler32in := SwapEndian(d);
     //inStream.Size := inStream.Size-4; // cut the 4 byte adler32 code
@@ -268,7 +268,7 @@ begin
 
   if (streamType = zsGZip) then // can check crc32 and size
   begin
-    crc := crc32(0, outStream, outStream.Size); // get result crc32 checksum
+    crc := crc32(outStream, outStream.Size); // get result crc32 checksum
     result := (crc = crcGZin) and (outStream.Size = sizeGZin); // compare with input checksum and size
   end
   else if (streamType = zsZLib) then // can check adler32 checksum
@@ -343,7 +343,7 @@ begin
   end;
 end;
 
-function crc16(crc: word; S: TStream; len: Cardinal): Word;
+function crc16(S: TStream; len: Cardinal): Word;
 var
   n, oldPos: Int64;
   b: Byte;
@@ -371,7 +371,7 @@ begin
   S.Position := oldPos;
 end;
 
-function crc32(thecrc: cardinal; S: TStream; len: Cardinal): Cardinal;
+function crc32(S: TStream; len: Cardinal): Cardinal;
 var
   n, oldPos: Int64;
   b: Byte;

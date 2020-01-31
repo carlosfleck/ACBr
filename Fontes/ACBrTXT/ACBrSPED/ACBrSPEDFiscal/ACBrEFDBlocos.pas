@@ -3,7 +3,8 @@
 {  Biblioteca multiplataforma de componentes Delphi para interação com equipa- }
 { mentos de Automação Comercial utilizados no Brasil                           }
 {                                                                              }
-{ Direitos Autorais Reservados (c) 2009   Isaque Pinheiro                      }
+{ Direitos Autorais Reservados (c) 2009 Daniel Simoes de Almeida               }
+{                                       Isaque Pinheiro                        }
 {                                                                              }
 { Colaboradores nesse arquivo:                                                 }
 {                                                                              }
@@ -26,9 +27,8 @@
 { Você também pode obter uma copia da licença em:                              }
 { http://www.opensource.org/licenses/lgpl-license.php                          }
 {                                                                              }
-{ Daniel Simões de Almeida  -  daniel@djsystem.com.br  -  www.djsystem.com.br  }
-{              Praça Anita Costa, 34 - Tatuí - SP - 18270-410                  }
-{                                                                              }
+{ Daniel Simões de Almeida - daniel@projetoacbr.com.br - www.projetoacbr.com.br}
+{       Rua Coronel Aureliano de Camargo, 963 - Tatuí - SP - 18270-170         }
 {******************************************************************************}
 
 {******************************************************************************
@@ -82,7 +82,8 @@ type
                              vlVersao109,  // Código 010 - Versão 109 Ato COTEPE 01/07/2016
                              vlVersao110,  // Código 011 - Versão 110 Ato COTEPE 01/01/2017
                              vlVersao111,  // Código 012 - Versão 111 Ato COTEPE 01/01/2018
-                             vlVersao112   // Código 013 - Versão 112 Ato COTEPE 01/01/2019
+                             vlVersao112,  // Código 013 - Versão 112 Ato COTEPE 01/01/2019
+                             vlVersao113   // Código 014 - Versão 113 Ato COTEPE 01/01/2020
                              );
   TACBrVersaoLeiaute = TACBrCodVer;
 
@@ -411,7 +412,8 @@ type
                  miMudancaTributacao,
                  miBaixaCadastral,
                  miRegimePagamento,
-                 miDeterminacaoFiscos
+                 miDeterminacaoFiscos,
+                 miControleMercadoriaSujeitaST
                 );
   TACBrMotivoInventario = TACBrMotInv;
 
@@ -684,6 +686,19 @@ type
                               tioISSSubstituto,        // 1 - ISS Substituto (devido pelas aquisições de serviços do declarante).
                               tioISSUniprofissionais); // 2 - ISS Uniprofissionais
 
+   // Finalidade da emissão do documento eletrônico Registro C500
+   TACBrFinalidadeEmissaoDocumentoEletronico = (fedcNaoDefinida,
+                                                fedcNormal,           // 1 – Normal
+                                                fedcSubstituicao,     // 2 – Substituição
+                                                fedcNormalComAjuste   // 3 – Normal com ajuste
+                                                );
+   // Indicador do Destinatário/Acessante: Registro C500
+   TACBrIndicadorDestinatarioAcessante = (iedaContribuinteICMS,                         // 1 – Contribuinte do ICMS
+                                          iedaContribuinteIsentoInscricaoCadastroICMS,  // 2 – Contribuinte Isento de Inscrição no Cadastro de Contribuintes do ICMS
+                                          iedaNaoContribuinte                           // 9 – Não Contribuinte
+                                         );
+
+
 
   TOpenBlocos = class
   private
@@ -791,6 +806,16 @@ type
   function StrToIndicadorProcesso(const AValue: string): TACBrIndicadorProcesso;
   function IndicadorObrigacaoToStr(AValue: TACBrIndicadorObrigacao): string;
   function StrToIndicadorObrigacao(const AValue: string): TACBrIndicadorObrigacao;
+  function TipoBaseMedicamentoToStr(const AValue: TACBrTipoBaseMedicamento): string;
+  function StrToTipoBaseMedicamento(const AValue: string): TACBrTipoBaseMedicamento;
+  function TipoProdutoToStr(const AValue: TACBrTipoProduto): string;
+  function StrToTipoProduto(const AValue: string): TACBrTipoProduto;
+  function TipoLigacaoToInt(const AValue: TACBrTipoLigacao): Integer;
+  function IntToTipoLigacao(const AValue: Integer): TACBrTipoLigacao;
+  function FinalidadeEmissaoDocEletToStr( AValue: TACBrFinalidadeEmissaoDocumentoEletronico): string;
+  function StrToFinalidadeEmissaoDocElet(const AValue: string): TACBrFinalidadeEmissaoDocumentoEletronico;
+  function IndicadorDestinatarioAcessanteToInt( AValue: TACBrIndicadorDestinatarioAcessante): Integer;
+  function IntToIndicadorDestinatarioAcessante( AValue: Integer): TACBrIndicadorDestinatarioAcessante;
 
 implementation
 
@@ -837,6 +862,9 @@ begin
    if AValue = '013' then
       Result := vlVersao112
    else
+   if AValue = '014' then
+      Result := vlVersao113
+   else
      raise EACBrSPEDFiscalException.CreateFmt('Versão desconhecida. Versao "%s" não é um valor válido.', [AValue]);
 end;
 
@@ -869,6 +897,8 @@ begin
       Result := '012';
     vlVersao112:
       Result := '013';
+    vlVersao113:
+      Result := '014';
   else
     Result := EmptyStr;
   end;
@@ -1001,6 +1031,9 @@ begin
    if AValue = '05' then
       Result := miDeterminacaoFiscos
    else
+   if AValue = '06' then
+      Result := miControleMercadoriaSujeitaST
+   else
      raise EACBrSPEDFiscalException.CreateFmt('O motivo do inventário "%s" não é um valor válido.', [AValue]);
 end;
 
@@ -1020,6 +1053,9 @@ begin
    else
    if AValue = miDeterminacaoFiscos then
       Result := '05'
+   else
+   if AValue = miControleMercadoriaSujeitaST then
+      Result := '06'
    else
      raise Exception.Create('Valor informado inválido para ser convertido em TACBrMotInv');
 end;
@@ -1839,4 +1875,152 @@ begin
   if AValue = '2' then
     Result := tioISSUniprofissionais;
 end;
+
+function TipoBaseMedicamentoToStr(const AValue: TACBrTipoBaseMedicamento): string;
+begin
+  case Avalue of
+    bmCalcTabeladoSugerido: // 0 - Base de cálculo referente ao preço tabelado ou preço máximo sugerido;
+      Result := '0';
+    bmCalMargemAgregado: // 1 - Base cálculo – Margem de valor agregado;
+      Result := '1';
+    bmCalListNegativa: // 2 - Base de cálculo referente à Lista Negativa;
+      Result := '2';
+    bmCalListaPositiva: // 3 - Base de cálculo referente à Lista Positiva;
+      Result := '3';
+    bmCalListNeutra: // 4 - Base de cálculo referente à Lista Neutra
+      Result := '4';
+  end;
+end;
+
+function StrToTipoBaseMedicamento(const AValue: string): TACBrTipoBaseMedicamento;
+begin
+  Result := bmCalcTabeladoSugerido;
+  if AValue = '0' then // 0 - Base de cálculo referente ao preço tabelado ou preço máximo sugerido;
+    Result := bmCalcTabeladoSugerido
+  else
+  if  AValue = '1' then // 1 - Base cálculo – Margem de valor agregado;
+    Result := bmCalMargemAgregado
+  else
+  if AValue = '2' then // 2 - Base de cálculo referente à Lista Negativa;
+    Result := bmCalListNegativa
+  else
+  if AValue = '3' then // 3 - Base de cálculo referente à Lista Positiva;
+    Result := bmCalListaPositiva
+  else
+  if AValue = '4' then // 4 - Base de cálculo referente à Lista Neutra
+    Result := bmCalListNeutra;
+end;
+
+function TipoProdutoToStr(const AValue: TACBrTipoProduto): string;
+begin
+  case Avalue of
+    tpSimilar: // 0 - Similar
+      Result := '0';
+    tpGenerico: // 1 - Genérico
+      Result := '1';
+    tpMarca: // 2 - Ético ou de Marca
+      Result := '2';
+  end;
+end;
+
+function StrToTipoProduto(const AValue: string): TACBrTipoProduto;
+begin
+  Result := tpSimilar;
+  if AValue = '0' then // 0 - Similar
+    Result := tpSimilar
+  else
+  if  AValue = '1' then // 1 - Genérico
+    Result := tpGenerico
+  else
+  if AValue = '2' then // 2 - Ético ou de Marca
+    Result := tpMarca;
+end;
+
+function TipoLigacaoToInt(const AValue: TACBrTipoLigacao): Integer;
+begin
+  case AValue of
+    tlMonofasico: Result := 1;
+    tlBifasico:   Result := 2;
+    tlTrifasico:  Result := 3;
+  else
+    Result := 0; // tlNenhum para casos em que o documento for cancelado
+  end;
+
+end;
+
+function IntToTipoLigacao(const AValue: Integer): TACBrTipoLigacao;
+begin
+  case AValue of
+    1: Result := tlMonofasico;
+    2: Result := tlBifasico;
+    3: Result := tlTrifasico;
+  else
+    Result := tlNenhum; // tlNenhum para casos em que o documento for cancelado
+  end;
+end;
+
+function FinalidadeEmissaoDocEletToStr( AValue: TACBrFinalidadeEmissaoDocumentoEletronico): string;
+begin
+  case AValue of
+    fedcNaoDefinida:     Result := '';
+    fedcNormal:          Result := '1';
+    fedcSubstituicao:    Result := '2';
+    fedcNormalComAjuste: Result := '3';
+  else
+    raise EACBrSPEDFiscalException.Create('TACBrFinalidadeEmissaoDocumentoEletronico com valor inválido.');
+  end;
+end;
+
+function StrToFinalidadeEmissaoDocElet(const AValue: string): TACBrFinalidadeEmissaoDocumentoEletronico;
+begin
+  if AValue = '' then
+  begin
+    Result := fedcNaoDefinida;
+  end
+  else
+  if AValue = '1' then
+  begin
+    Result := fedcNormal;
+  end
+  else
+  if AValue = '2' then
+  begin
+    Result := fedcSubstituicao;
+  end
+  else
+  if AValue = '3' then
+  begin
+    Result := fedcNormalComAjuste;
+  end
+  else
+  begin
+    raise EACBrSPEDFiscalException.CreateFmt('Valor "%s" não é válido para TACBrFinalidadeEmissaoDocumentoEletronico.', [AValue]);
+  end;
+end;
+
+function IndicadorDestinatarioAcessanteToInt( AValue: TACBrIndicadorDestinatarioAcessante): Integer;
+begin
+  case Avalue of
+    iedaContribuinteICMS:                         Result := 1;
+    iedaContribuinteIsentoInscricaoCadastroICMS:  Result := 2;
+    iedaNaoContribuinte:                          Result := 9;
+  else
+    raise EACBrSPEDFiscalException.Create('TACBrIndicadorDestinatarioAcessante com valor inválido.');
+  end;
+end;
+
+function IntToIndicadorDestinatarioAcessante( AValue: Integer): TACBrIndicadorDestinatarioAcessante;
+begin
+  case AValue of
+    1: Result := iedaContribuinteICMS;
+    2: Result := iedaContribuinteIsentoInscricaoCadastroICMS;
+    9: Result := iedaNaoContribuinte;
+  else
+    raise EACBrSPEDFiscalException.CreateFmt('Valor "%s" não é válido para TACBrIndicadorDestinatarioAcessante.', [AValue]);
+  end;
+end;
+
+
+
+
 end.

@@ -37,6 +37,7 @@
 | All Rights Reserved.                                                         |
 |==============================================================================|
 | Contributor(s):                                                              |
+|   Silvio Clecio, Waldir Paim e DSA  (Delphi POSIX support)                   |
 |==============================================================================|
 | History: see HISTORY.HTM from distribution package                           |
 |          (Found at URL: http://www.ararat.cz/synapse/)                       |
@@ -194,10 +195,10 @@ function DecodeXX(const Value: AnsiString): AnsiString;
 function DecodeYEnc(const Value: AnsiString): AnsiString;
 
 {:Returns a new CRC32 value after adding a new byte of data.}
-function UpdateCrc32(Value: Byte; Crc32: Integer): Integer;
+function UpdateCrc32(Value: Byte; Crc32: Cardinal): Cardinal;
 
 {:return CRC32 from a value string.}
-function Crc32(const Value: AnsiString): Integer;
+function Crc32(const Value: AnsiString): Cardinal;
 
 {:Returns a new CRC16 value after adding a new byte of data.}
 function UpdateCrc16(Value: Byte; Crc16: Word): Word;
@@ -389,7 +390,7 @@ type
     HashByte: array[0..19] of byte;
   end;
 
-  TMDTransform = procedure(var Buf: array of LongInt; const Data: array of LongInt);
+  TMDTransform = procedure(var Buf: array of Integer; const Data: array of Integer);
 
 {==============================================================================}
 
@@ -820,7 +821,7 @@ end;
 
 {==============================================================================}
 
-function UpdateCrc32(Value: Byte; Crc32: Integer): Integer;
+function UpdateCrc32(Value: Byte; Crc32: Cardinal): Cardinal;
 begin
   Result := (Crc32 shr 8)
     xor crc32tab[Byte(Value xor (Crc32 and Integer($000000FF)))];
@@ -828,11 +829,11 @@ end;
 
 {==============================================================================}
 
-function Crc32(const Value: AnsiString): Integer;
+function Crc32(const Value: AnsiString): Cardinal;
 var
   n: Integer;
 begin
-  Result := Integer($FFFFFFFF);
+  Result := $FFFFFFFF;
   for n := 1 to Length(Value) do
     Result := UpdateCrc32(Ord(Value[n]), Result);
   Result := not Result;
@@ -875,7 +876,7 @@ begin
   MDContext.State[3] := Integer($10325476);
 end;
 
-procedure MD5Transform(var Buf: array of LongInt; const Data: array of LongInt);
+procedure MD5Transform(var Buf: array of Integer; const Data: array of Integer);
 var
   A, B, C, D: LongInt;
 
@@ -1380,7 +1381,7 @@ end;
 
 {==============================================================================}
 
-procedure MD4Transform(var Buf: array of LongInt; const Data: array of LongInt);
+procedure MD4Transform(var Buf: array of Integer; const Data: array of Integer);
 var
   A, B, C, D: LongInt;
   function LRot32(a, b: longint): longint;

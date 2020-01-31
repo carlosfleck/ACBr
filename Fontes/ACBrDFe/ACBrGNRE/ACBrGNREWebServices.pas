@@ -98,7 +98,7 @@ type
     FcUF: Integer;
 
 //    function GetLote: String;
-    function GetRecibo: String;
+//    function GetRecibo: String;
   protected
     procedure DefinirURL; override;
     procedure DefinirServicoEAction; override;
@@ -137,7 +137,7 @@ type
     FGNRERetorno: TTResultLote_GNRE;
     FcUF: Integer;
 
-    function GetRecibo: String;
+//    function GetRecibo: String;
     function TratarRespostaFinal: Boolean;
   protected
     procedure DefinirURL; override;
@@ -156,6 +156,7 @@ type
 
     function Executar: Boolean; override;
     function SalvarTXT(AResultado: String): Boolean;
+    function SalvarXML(AGuia, ANumero: String): Boolean;
 
     property Ambiente: TpcnTipoAmbiente read FAmbiente write FAmbiente;
     property numeroRecibo: String read FnumeroRecibo write FnumeroRecibo;
@@ -510,12 +511,12 @@ function TGNRERecepcao.GetLote: String;
 begin
   Result := Trim(Numero);
 end;
-}
+
 function TGNRERecepcao.GetRecibo: String;
 begin
   Result := Trim(numero);
 end;
-
+}
 function TGNRERecepcao.TratarResposta: Boolean;
 begin
   FPRetWS := SeparaDados(FPRetornoWS, 'processarResponse');
@@ -679,12 +680,12 @@ function TGNRERetRecepcao.GerarPrefixoArquivo: String;
 begin
   Result := numeroRecibo;
 end;
-
+{
 function TGNRERetRecepcao.GetRecibo: String;
 begin
   Result := Trim(numeroRecibo);
 end;
-
+}
 function TGNRERetRecepcao.TratarResposta: Boolean;
 var
   SL: TStringList;
@@ -721,7 +722,13 @@ begin
     if FGuias.Items[I].Confirmada then
     begin
       Result := True;
-      Self.SalvarTXT(FGNRERetorno.resultado);
+
+      if FGNRERetorno.resGuia.Items[i].Versao = ve100 then
+        Self.SalvarTXT(FGNRERetorno.resultado)
+      else
+        Self.SalvarXML(FGNRERetorno.resGuia.Items[i].XML,
+                       FGNRERetorno.resGuia.Items[i].NumeroControle);
+
       break;
     end;
   end;
@@ -787,6 +794,19 @@ begin
     FreeAndNil(SL);
     FreeAndNil(SLAux);
     Result := GuiasOk > 0;
+  end;
+end;
+
+function TGNRERetRecepcao.SalvarXML(AGuia, ANumero: String): Boolean;
+var
+  NomeArq: string;
+begin
+  if FPConfiguracoesGNRE.Arquivos.Salvar then
+  begin
+    NomeArq := PathWithDelim(FPConfiguracoesGNRE.Arquivos.PathGNRE) +
+               ANumero + '-guia.xml';
+
+    FPDFeOwner.Gravar(NomeArq, AGuia);
   end;
 end;
 

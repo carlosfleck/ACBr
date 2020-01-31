@@ -289,6 +289,15 @@ Begin VB.Form FrmMain
          Width           =   3375
       End
       Begin VB.ComboBox ComModelo 
+         BeginProperty DataFormat 
+            Type            =   0
+            Format          =   "0"
+            HaveTrueFalseNull=   0
+            FirstDayOfWeek  =   0
+            FirstWeekOfYear =   0
+            LCID            =   1046
+            SubFormatType   =   0
+         EndProperty
          Height          =   315
          ItemData        =   "FrmMain.frx":25CA
          Left            =   120
@@ -410,6 +419,7 @@ Begin VB.Form FrmMain
          NumTabs         =   1
          BeginProperty Tab1 {0713F341-850A-101B-AFC0-4210102A8DA7} 
             Caption         =   "Texto a Imprimir"
+            Key             =   ""
             Object.Tag             =   ""
             ImageVarType    =   2
          EndProperty
@@ -554,17 +564,19 @@ End Sub
 
 Private Sub Form_Load()
 
-    ComModelo.AddItem "Texto", ACBrPosPrinterModelo.Texto
-    ComModelo.AddItem "EscPosEpson", ACBrPosPrinterModelo.EscPosEpson
-    ComModelo.AddItem "EscBematech", ACBrPosPrinterModelo.EscBematech
-    ComModelo.AddItem "EscDaruma", ACBrPosPrinterModelo.EscDaruma
-    ComModelo.AddItem "EscVox", ACBrPosPrinterModelo.EscVox
-    ComModelo.AddItem "EscDiebold", ACBrPosPrinterModelo.EscDiebold
-    ComModelo.AddItem "EscEpsonP2", ACBrPosPrinterModelo.EscEpsonP2
-    ComModelo.AddItem "CustomPos", ACBrPosPrinterModelo.CustomPos
-    ComModelo.AddItem "EscPosStar", ACBrPosPrinterModelo.EscPosStar
+    ComModelo.AddItem "ppTexto", ACBrPosPrinterModelo.ppTexto
+    ComModelo.AddItem "ppEscPosEpson", ACBrPosPrinterModelo.ppEscPosEpson
+    ComModelo.AddItem "ppEscBematech", ACBrPosPrinterModelo.ppEscBematech
+    ComModelo.AddItem "ppEscDaruma", ACBrPosPrinterModelo.ppEscDaruma
+    ComModelo.AddItem "ppEscVox", ACBrPosPrinterModelo.ppEscVox
+    ComModelo.AddItem "ppEscDiebold", ACBrPosPrinterModelo.ppEscDiebold
+    ComModelo.AddItem "ppEscEpsonP2", ACBrPosPrinterModelo.ppEscEpsonP2
+    ComModelo.AddItem "ppCustomPos", ACBrPosPrinterModelo.ppCustomPos
+    ComModelo.AddItem "ppEscPosStar", ACBrPosPrinterModelo.ppEscPosStar
+    ComModelo.AddItem "ppEscZJiang", ACBrPosPrinterModelo.ppEscZJiang
+    ComModelo.AddItem "ppEscGPrinter", ACBrPosPrinterModelo.ppEscGPrinter
     
-    ComModelo.ListIndex = ACBrPosPrinterModelo.Texto
+    ComModelo.ListIndex = ACBrPosPrinterModelo.ppTexto
     
     ComPorta.AddItem "COM1"
     ComPorta.AddItem "COM2"
@@ -578,7 +590,7 @@ Private Sub Form_Load()
     ComPorta.AddItem "TCP:192.168.0.31:9100"
     ComPorta.AddItem "RAW:Elgin I9"
     
-    ComCodePage.AddItem "None", PosPaginaCodigo.None
+    ComCodePage.AddItem "None", PosPaginaCodigo.pcNone
     ComCodePage.AddItem "pc437", PosPaginaCodigo.pc437
     ComCodePage.AddItem "pc850", PosPaginaCodigo.pc850
     ComCodePage.AddItem "pc852", PosPaginaCodigo.pc852
@@ -593,20 +605,21 @@ Private Sub Form_Load()
     updBuffer.Value = 0
     updLinhasPular.Value = 0
     
-    Set posPrinter = CreatePosPrinter
     Dim LogPath As String
     
     LogPath = App.Path & "\Docs\"
     
-    If Dir(LogPath) = "" Then
+    If Not DirExists(LogPath) Then
         MkDir LogPath
     End If
     
-    LoadConfig
-    
+    Set posPrinter = CreatePosPrinter
+          
     posPrinter.ConfigGravarValor SESSAO_PRINCIPAL, "LogNivel", "4"
     posPrinter.ConfigGravarValor SESSAO_PRINCIPAL, "LogPath", LogPath
     posPrinter.ConfigGravar
+    
+    LoadConfig
 End Sub
 
 Private Sub Form_Terminate()

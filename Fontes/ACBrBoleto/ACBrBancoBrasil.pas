@@ -300,8 +300,8 @@ end;
 
 function TACBrBancoBrasil.GerarRegistroHeader240(NumeroRemessa : Integer): String;
 var
-  ATipoInscricao,aConta:String;
-  aAgencia,aModalidade :String;
+  ATipoInscricao, aConta, aAgencia, aModalidade, aCSP :String;
+  VersaoArquivo, VersaoLote: Integer;
 begin
 
    with ACBrBanco.ACBrBoleto.Cedente do
@@ -316,6 +316,21 @@ begin
       aAgencia    := PadLeft(OnlyNumber(Agencia), 5, '0');
       aConta      := PadLeft(OnlyNumber(Conta), 12, '0');
       aModalidade := PadLeft(trim(Modalidade), 3, '0');
+
+      VersaoArquivo := LayoutVersaoArquivo;
+
+      if not (VersaoArquivo in [030, 040, 080, 082, 083, 084, 087]) then
+        VersaoArquivo := 030;
+
+      {
+      Se o arquivo foi formatado com a  versão do layout  030,
+      pode ser informado 'CSP' nas posições 223 a 225.
+      }
+
+      if VersaoArquivo = 030 then
+        aCSP := 'CSP'
+      else
+        aCSP := '';
 
       { GERAR REGISTRO-HEADER DO ARQUIVO }
 
@@ -340,17 +355,40 @@ begin
                FormatDateTime('ddmmyyyy', Now)                 + // 144 a 151 - Data do de geração do arquivo
                FormatDateTime('hhmmss', Now)                   + // 152 a 157 - Hora de geração do arquivo
                PadLeft(IntToStr(NumeroRemessa), 6, '0')        + // 158 a 163 - Número seqüencial do arquivo
-               '030'                                           + // 164 a 166 - Número da versão do layout do arquivo
+               PadLeft(IntToStr(VersaoArquivo), 3, '0')        + // 164 a 166 - Número da versão do layout do arquivo
                StringOfChar('0', 5)                            + // 167 a 171 - Densidade de gravação do arquivo (BPI)
                StringOfChar(' ', 20)                           + // 172 a 191 - Uso reservado do banco
                StringOfChar('0', 20)                           + // 192 a 211 - Uso reservado da empresa
                StringOfChar(' ', 11)                           + // 212 a 222 - 11 brancos
-               'CSP'                                           + // 223 a 225 - 'CSP'
+               PadLeft(aCSP, 3, ' ')                           + // 223 a 225 - Informar 'CSP' se a versão for 030, caso contrario informar branco
                StringOfChar('0', 3)                            + // 226 a 228 - Uso exclusivo de Vans
                StringOfChar(' ', 2)                            + // 229 a 230 - Tipo de servico
                StringOfChar(' ', 10);                            // 231 a 240 - titulo em carteira de cobranca
 
           { GERAR REGISTRO HEADER DO LOTE }
+
+      { *** Versao do Layout do Lote ***
+      Campo não criticado pelo sistema. Informar Zeros OU se preferir,
+      informar número da versão do leiaute do Lote que foi utilizado como base
+      para formatação dos campos.
+      Versões disponíveis: 043, 042, 041, 040, 030 e 020.
+      A versão do Lote quando informada deve estar condizente com a versão do
+      Arquivo (posições 164 a 166 do Header de Arquivo).
+      }
+
+    //  VersaoLote := LayoutVersaoLote;
+
+      case VersaoArquivo of
+        030: VersaoLote := 020;
+        040: VersaoLote := 030;
+        080: VersaoLote := 040;
+        082: VersaoLote := 041;
+        083: VersaoLote := 042;
+        084: VersaoLote := 043;
+        087: VersaoLote := 045;
+      else
+        VersaoLote := 000;
+      end;
 
       Result:= Result + #13#10 +
                IntToStrZero(ACBrBanco.Numero, 3)               + // 1 a 3 - Código do banco
@@ -359,7 +397,7 @@ begin
                'R'                                             + // 9 - Tipo de operação: R (Remessa) ou T (Retorno)
                '01'                                            + // 10 a 11 - Tipo de serviço: 01 (Cobrança)
                '00'                                            + // 12 a 13 - Forma de lançamento: preencher com ZEROS no caso de cobrança
-               '020'                                           + // 14 a 16 - Número da versão do layout do lote
+               PadLeft(IntToStr(VersaoLote), 3, '0')           + // 14 a 16 - Número da versão do layout do lote
                ' '                                             + // 17 - Uso exclusivo FEBRABAN/CNAB
                ATipoInscricao                                  + // 18 - Tipo de inscrição do cedente
                PadLeft(OnlyNumber(CNPJCPF), 15, '0')           + // 19 a 32 -Número de inscrição do cedente
@@ -393,6 +431,8 @@ var
    AMensagem                    : String;
    ACodProtesto                 : Char;
    BoletoEmail,GeraSegS         : Boolean;
+   DataProtestoNegativacao      : string;
+   DiasProtestoNegativacao      : string;
 
   function MontarInstrucoes2: string;
   begin
@@ -456,13 +496,39 @@ begin
 
      {SEGMENTO P}
 
-     {Código para Protesto}
-      case TipoDiasProtesto of
-        diCorridos       : ACodProtesto := '1';
-        diUteis          : ACodProtesto := '2';
+     {Código para Protesto / Negativação}
+      case CodigoNegativacao of
+        cnProtestarCorrido :  ACodProtesto := '1';
+        cnProtestarUteis   :  ACodProtesto := '2';
+        cnNegativar        :  ACodProtesto := '8';
       else
-        ACodProtesto := '3';
+        case TipoDiasProtesto of
+          diCorridos       : ACodProtesto := '1';
+          diUteis          : ACodProtesto := '2';
+        else
+          ACodProtesto := '3';
+        end;
       end;
+
+      {Data e Dias de Protesto / Negativação}
+      if (ACodProtesto = '8') then
+      begin
+        DataProtestoNegativacao := DateToStr(DataNegativacao);
+        DiasProtestoNegativacao := IntToStr(DiasDeNegativacao);
+      end
+      else
+	  begin
+  	    if (ACodProtesto <> '3') then
+        begin
+          DataProtestoNegativacao := DateToStr(DataProtesto);
+          DiasProtestoNegativacao := IntToStr(DiasDeProtesto);
+        end
+        else
+        begin
+          DataProtestoNegativacao := '';
+          DiasProtestoNegativacao := '0';
+        end;
+	  end;
 
      {Pegando o Tipo de Ocorrencia}
      case OcorrenciaOriginal.Tipo of
@@ -498,7 +564,7 @@ begin
      else if EspecieDoc = 'NCC' then
        EspecieDoc   := '08'
      else if EspecieDoc = 'NCE' then
-            EspecieDoc   := '09'
+       EspecieDoc   := '09'
      else if EspecieDoc = 'NCI' then
        EspecieDoc   := '10'
      else if EspecieDoc = 'NCR' then
@@ -535,20 +601,50 @@ begin
        ATipoAceite := 'N';
      end;
 
+     BoletoEmail:= ACBrTitulo.CarteiraEnvio = tceBancoEmail;
+     if (BoletoEmail) or (Mensagem.Count > 1) then
+      begin
+       QtdRegTitulo:= 4;
+       GeraSegS    := True;
+      end
+     else
+      begin
+       QtdRegTitulo:= 3;
+       GeraSegS    := False;
+      end;     
+
      {Pegando Tipo de Boleto}
      case ACBrBoleto.Cedente.ResponEmissao of
-       tbCliEmite        : ATipoBoleto := '2' + '2';
-       tbBancoEmite      : ATipoBoleto := '1' + '1';
-       tbBancoReemite    : ATipoBoleto := '4' + '1';
+       tbCliEmite : ATipoBoleto := '2' + '2';
+       tbBancoEmite :
+       begin
+         if BoletoEmail then
+           ATipoBoleto := '1' + '3'
+         else
+           ATipoBoleto := '1' + '1';
+       end;
+       tbBancoReemite :
+       begin
+         if BoletoEmail then
+           ATipoBoleto := '4' + '3'
+         else
+           ATipoBoleto := '4' + '1';
+       end;
        tbBancoNaoReemite : ATipoBoleto := '5' + '2';
+     else
+       ATipoBoleto := '2' + '2';
      end;
-     ACaracTitulo := ' ';
+
+//     ACaracTitulo := ' ';
      case CaracTitulo of
-       tcSimples     : ACaracTitulo  := '1';
-       tcVinculada   : ACaracTitulo  := '2';
-       tcCaucionada  : ACaracTitulo  := '3';
-       tcDescontada  : ACaracTitulo  := '4';
-       tcVendor      : ACaracTitulo  := '5';
+       tcSimples       : ACaracTitulo  := '1';
+       tcVinculada     : ACaracTitulo  := '2';
+       tcCaucionada    : ACaracTitulo  := '3';
+       tcDescontada    : ACaracTitulo  := '4';
+       tcVendor        : ACaracTitulo  := '5';
+       tcDiretaEspecial: ACaracTitulo  := '7';
+     else
+       ACaracTitulo  := '1';
      end;
 
      wCarteira:= StrToIntDef(Carteira,0);
@@ -593,19 +689,6 @@ begin
      if Mensagem.Text <> '' then
        AMensagem   := Mensagem.Strings[0];
 
-
-     BoletoEmail:= ACBrTitulo.CarteiraEnvio = tceBancoEmail;
-     if (BoletoEmail) or (Mensagem.Count > 1) then
-      begin
-       QtdRegTitulo:= 4;
-       GeraSegS    := True;
-      end
-     else
-      begin
-       QtdRegTitulo:= 3;
-       GeraSegS    := False;
-      end;
-
      {SEGMENTO P}
      Result:= IntToStrZero(ACBrBanco.Numero, 3)                                         + // 1 a 3 - Código do banco
               '0001'                                                                    + // 4 a 7 - Lote de serviço
@@ -646,9 +729,14 @@ begin
               IntToStrZero( round(ValorIOF * 100), 15)                                  + // 166 a 180 - Valor do IOF a ser recolhido
               IntToStrZero( round(ValorAbatimento * 100), 15)                           + // 181 a 195 - Valor do abatimento
               PadRight(SeuNumero, 25, ' ')                                              + // 196 a 220 - Identificação do título na empresa
-              IfThen((DataProtesto <> 0) and (DiasDeProtesto > 0), ACodProtesto, '3')   + // 221 - Código de protesto
-              IfThen((DataProtesto <> 0) and (DiasDeProtesto > 0),
-                    PadLeft(IntToStr(DiasDeProtesto), 2, '0'), '00')                    + // 222 a 223 - Prazo para protesto (em dias)
+//              IfThen((DataProtesto <> 0) and (DiasDeProtesto > 0), ACodProtesto, '3')   + // 221 - Código de protesto
+//              IfThen((DataProtesto <> 0) and (DiasDeProtesto > 0),
+//                    PadLeft(IntToStr(DiasDeProtesto), 2, '0'), '00')                    + // 222 a 223 - Prazo para protesto (em dias)
+              IfThen((DataProtestoNegativacao <> '') and
+                      (StrToInt(DiasProtestoNegativacao) > 0), ACodProtesto, '3')       + // 221 - Código de protesto
+              IfThen((DataProtestoNegativacao <> '') and
+                     (StrToInt(DiasProtestoNegativacao) > 0),
+                      PadLeft(DiasProtestoNegativacao, 2, '0'), '00')                   + // 222 a 223 - Prazo para protesto (em dias)
               '0'                                                                       + // 224 - Campo não tratado pelo BB [ Alterado conforme instruções da CSO Brasília ] {27-07-09}
               '000'                                                                     + // 225 a 227 - Campo não tratado pelo BB [ Alterado conforme instruções da CSO Brasília ] {27-07-09}
               '09'                                                                      + // 228 a 229 - Código da moeda: Real
@@ -1267,6 +1355,8 @@ begin
        toRetornoAlterarPrazoLimiteRecebimento      : Result := '39';
        toRetornoChequePendenteCompensacao          : Result := '46';
        toRetornoTipoCobrancaAlterado               : Result := '72';
+       toRetornoInclusaoNegativacao                : Result := '85';
+       toRetornoExclusaoNegativacao                : Result := '86';
        toRetornoDespesasProtesto                   : Result := '96';
        toRetornoDespesasSustacaoProtesto           : Result := '97';
        toRetornoDebitoCustasAntecipadas            : Result := '98';
@@ -1367,6 +1457,8 @@ begin
       44: Result:= '44-Título pago com cheque devolvido';
       46: Result:= '46-Título pago com cheque, aguardando compensação';
       72: Result:= '72-Alteração de tipo de cobrança';
+      85: Result:= '85 – Inclusão de Negativação';
+      86: Result:= '86 – Exclusão de Negativação';
       96: Result:= '96-Despesas de Protesto';
       97: Result:= '97-Despesas de Sustação de Protesto';
       98: Result:= '98-Débito de Custas Antecipadas';
@@ -1427,6 +1519,8 @@ begin
       39: Result := toRetornoAlterarPrazoLimiteRecebimento;
       46: Result := toRetornoChequePendenteCompensacao;
       72: Result := toRetornoTipoCobrancaAlterado;
+      85: Result := toRetornoInclusaoNegativacao;
+      86: Result := toRetornoExclusaoNegativacao;
       96: Result := toRetornoDespesasProtesto;
       97: Result := toRetornoProtestoSustado;
       98: Result := toRetornoDebitoCustasAntecipadas;
@@ -1583,6 +1677,37 @@ begin
         00: Result := '00-Transferência de título de cobrança simples para descontada ou vice-versa';
         52: Result := '52-Reembolso de título vendor ou descontado';
       end;
+    toRetornoConfirmacaoRecebPedidoNegativacao, toRetornoInclusaoNegativacao: //  85 – Inclusão de Negativação (Particularidades BB jan/2019)
+      case CodMotivo of
+        01: Result:='01-Negativação aceita no BB';
+        02: Result:='02-Negativação aceita no agente negativador';
+        03: Result:='03-Inclusão cancelada';
+        04: Result:='04-Negativação recusada - pagador menor de idade';
+        05: Result:='05-Negativação recusada - espécie do boleto não permitida';
+        06: Result:='06-Negativação recusada - beneficiário não é PJ';
+        07: Result:='07-Negativação recusada - moeda do boleto não é Real';
+        08: Result:='08-Negativação recusada - endereço do pagador inválido';
+        09: Result:='09-Negativação recusada pelo agente negativado';
+        10: Result:='10-Negativação recusada - situação do boleto não permite NGTV';
+        11: Result:='11-Negativação recusada - cadastro do benef. desatualizado';
+        12: Result:='12-Negativação recusada - boleto inexistente';
+        13: Result:='13-Negativação recusada - pagador não identificado';
+        14: Result:='14-Recusa de tarifação de negativação';
+        15: Result:='15-Negativação recusada - motivos diversos';
+      end;
+    toRetornoConfirmacaoPedidoExclNegativacao, toRetornoExclusaoNegativacao: //  86 – Exclusão de Negativação (Particularidades BB jan/2019)
+      case CodMotivo of
+        01: Result:='01-Exclusão cancelada';
+        02: Result:='02-Negativação excluída no agente negativador';
+        03: Result:='03-Negativação excluída - devolução pelos correios';
+        04: Result:='04-Negativação excluída - data de ocorrência decursada';
+        05: Result:='05-Negativação excluída - determinação judicial';
+        06: Result:='06-Negativação excluída - contestação do interessado';
+        07: Result:='07-Negativação excluída - carta não retornou do correio';
+        08: Result:='08-Exclusão negativação recusada - registro inexistente';
+        15: Result:='09-Exclusão negativação recusada - motivos diversos';
+      end;
+
     else
       Result := IntToStrZero(CodMotivo, 2) + ' - Outros Motivos';
     end;
@@ -1702,7 +1827,7 @@ begin
         19: Result:='19-Tarifa Sobre Arquivo mensal (Em Ser)';
         20: Result:='20-Tarifa Sobre Emissão de Bloqueto Pré-Emitido pelo Banco';
       end;
-      toRetornoConfirmacaoRecebPedidoNegativacao: //  85 – Inclusão de Negativação (Particularidades BB jan/2019)
+      toRetornoConfirmacaoRecebPedidoNegativacao, toRetornoInclusaoNegativacao: //  85 – Inclusão de Negativação (Particularidades BB jan/2019)
       case CodMotivo of
         01: Result:='01-Negativação aceita no BB';
         02: Result:='02-Negativação aceita no agente negativador';
@@ -1720,7 +1845,7 @@ begin
         14: Result:='14-Recusa de tarifação de negativação';
         15: Result:='15-Negativação recusada - motivos diversos';
       end;
-      toRetornoConfirmacaoPedidoExclNegativacao: //  86 – Exclusão de Negativação (Particularidades BB jan/2019)
+      toRetornoConfirmacaoPedidoExclNegativacao, toRetornoExclusaoNegativacao: //  86 – Exclusão de Negativação (Particularidades BB jan/2019)
       case CodMotivo of
         01: Result:='01-Exclusão cancelada';
         02: Result:='02-Negativação excluída no agente negativador';
@@ -1863,7 +1988,7 @@ begin
          CodigoLiquidacaoDescricao := TipoOcorrenciaToDescricao(OcorrenciaOriginal.Tipo);
        end;
 
-       if(CodOcorrencia >= 2) and (CodOcorrencia <= 10) then
+       if ((CodOcorrencia >= 2) and (CodOcorrencia <= 10)) or ( CodOcorrencia >= 85 )then
        begin
          MotivoLinha:= 81;
          CodMotivo:= StrToInt(copy(Linha,MotivoLinha,2));

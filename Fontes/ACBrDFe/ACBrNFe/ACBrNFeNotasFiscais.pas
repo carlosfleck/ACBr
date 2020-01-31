@@ -53,8 +53,13 @@ interface
 
 uses
   Classes, SysUtils, StrUtils,
-  ACBrNFeConfiguracoes,
-  pcnNFe, pcnNFeR, pcnNFeW, pcnConversao, pcnAuxiliar, pcnLeitor;
+  ACBrNFeConfiguracoes, pcnNFe,
+  {$IfDef DFE_ACBR_LIBXML2}
+    ACBrNFeXmlReader, ACBrNFeXmlWriter,
+  {$Else}
+     pcnNFeR, pcnNFeW,
+  {$EndIf}
+   pcnConversao, pcnAuxiliar, pcnLeitor;
 
 type
 
@@ -63,8 +68,13 @@ type
   NotaFiscal = class(TCollectionItem)
   private
     FNFe: TNFe;
+{$IfDef DFE_ACBR_LIBXML2}
+    FNFeW: TNFeXmlWriter;
+    FNFeR: TNFeXmlReader;
+{$Else}
     FNFeW: TNFeW;
     FNFeR: TNFeR;
+{$EndIf}
 
     FConfiguracoes: TConfiguracoesNFe;
     FXMLAssinado: String;
@@ -197,8 +207,14 @@ constructor NotaFiscal.Create(Collection2: TCollection);
 begin
   inherited Create(Collection2);
   FNFe := TNFe.Create;
-  FNFeW := TNFeW.Create(FNFe);
-  FNFeR := TNFeR.Create(FNFe);
+  {$IfDef DFE_ACBR_LIBXML2}
+    FNFeW := TNFeXmlWriter.Create(FNFe);
+    FNFeR := TNFeXmlReader.Create(FNFe);
+{$Else}
+    FNFeW := TNFeW.Create(FNFe);
+    FNFeR := TNFeR.Create(FNFe);
+{$EndIf}
+
   FConfiguracoes := TACBrNFe(TNotasFiscais(Collection).ACBrNFe).Configuracoes;
 
   with TACBrNFe(TNotasFiscais(Collection).ACBrNFe) do
@@ -1472,11 +1488,16 @@ begin
 end;
 
 function NotaFiscal.LerXML(const AXML: String): Boolean;
+{$IfNDef DFE_ACBR_LIBXML2}
 var
   XMLStr: String;
+{$EndIf}
 begin
   XMLOriginal := AXML;  // SetXMLOriginal() irá verificar se AXML está em UTF8
 
+{$IfDef DFE_ACBR_LIBXML2}
+  FNFeR.Arquivo := XMLOriginal;
+{$Else}
   { Verifica se precisa converter "AXML" de UTF8 para a String nativa da IDE.
     Isso é necessário, para que as propriedades fiquem com a acentuação correta }
   XMLStr := ParseText(AXML, True, XmlEhUTF8(AXML));
@@ -1491,20 +1512,19 @@ begin
   XMLStr := StringReplace(XMLStr, ' xmlns="http://www.portalfiscal.inf.br/nfe"', '', [rfReplaceAll]);
 
   FNFeR.Leitor.Arquivo := XMLStr;
+{$EndIf}
   FNFeR.LerXml;
-
   Result := True;
 end;
 
 function NotaFiscal.LerArqIni(const AIniString: String): Boolean;
 var
-  INIRec : TMemIniFile ;
-//  SL     : TStringList;
-  sSecao : String;
-  OK     : boolean;
-  I, J, K : Integer;
-  {versao,} sFim, sProdID, sDINumber, sADINumber, sQtdVol,
-    sDupNumber, sAdittionalField, sType, sDay, sDeduc, sNVE, sCNPJCPF : String;
+  INIRec: TMemIniFile ;
+  sSecao: String;
+  OK, bVol: boolean;
+  I, J, K: Integer;
+  sFim, sProdID, sDINumber, sADINumber, sDupNumber, sAdittionalField, sType,
+  sDay, sDeduc, sNVE, sCNPJCPF: String;
 begin
   Result := False;
 
@@ -2341,18 +2361,25 @@ begin
       begin
         sSecao := IfThen(INIRec.SectionExists('Volume'+IntToStrZero(I,3)), 'Volume', 'vol');
         sSecao := sSecao+IntToStrZero(I,3) ;
-        sQtdVol  := INIRec.ReadString(sSecao,'Quantidade',INIRec.ReadString(sSecao,'qVol','FIM')) ;
-        if (sQtdVol = 'FIM') or (Length(sQtdVol) <= 0)  then
+
+        bVol := (INIRec.ReadString(sSecao, 'Quantidade', INIRec.ReadString(sSecao, 'qVol', '')) = '') and
+                (INIRec.ReadString(sSecao, 'Especie', INIRec.ReadString( sSecao, 'esp', '')) = '') and
+                (INIRec.ReadString(sSecao, 'Marca', '') = '') and
+                (INIRec.ReadString(sSecao, 'Numeracao', INIRec.ReadString( sSecao, 'nVol', '')) = '') and
+                (INIRec.ReadString(sSecao, 'PesoLiquido', INIRec.ReadString(sSecao, 'pesoL', '')) = '') and
+                (INIRec.ReadString(sSecao, 'PesoBruto', INIRec.ReadString(sSecao, 'pesoB', '')) = '');
+
+        if bVol then
           break ;
 
         with Transp.Vol.New do
         begin
-          qVol  := StrToInt(sQtdVol);
-          esp   := INIRec.ReadString( sSecao,'Especie'  ,INIRec.ReadString( sSecao,'esp'  ,''));
-          marca := INIRec.ReadString( sSecao,'Marca'    ,'');
-          nVol  := INIRec.ReadString( sSecao,'Numeracao',INIRec.ReadString( sSecao,'nVol'  ,''));
-          pesoL := StringToFloatDef( INIRec.ReadString(sSecao,'PesoLiquido',INIRec.ReadString(sSecao,'pesoL','')) ,0) ;
-          pesoB := StringToFloatDef( INIRec.ReadString(sSecao,'PesoBruto'  ,INIRec.ReadString(sSecao,'pesoB','')) ,0) ;
+          qVol  := StrToInt(INIRec.ReadString(sSecao, 'Quantidade', INIRec.ReadString(sSecao, 'qVol', '0')));
+          esp   := INIRec.ReadString(sSecao, 'Especie', INIRec.ReadString(sSecao, 'esp', ''));
+          marca := INIRec.ReadString(sSecao, 'Marca', '');
+          nVol  := INIRec.ReadString(sSecao, 'Numeracao', INIRec.ReadString(sSecao, 'nVol', ''));
+          pesoL := StringToFloatDef(INIRec.ReadString(sSecao, 'PesoLiquido', INIRec.ReadString(sSecao, 'pesoL', '')), 0);
+          pesoB := StringToFloatDef(INIRec.ReadString(sSecao, 'PesoBruto', INIRec.ReadString(sSecao, 'pesoB', '')), 0);
 
           J := 1;
           while true do
@@ -3480,6 +3507,16 @@ begin
   with TACBrNFe(TNotasFiscais(Collection).ACBrNFe) do
   begin
     IdAnterior := NFe.infNFe.ID;
+{$IfDef DFE_ACBR_LIBXML2}
+    FNFeW.Opcoes.FormatoAlerta  := Configuracoes.Geral.FormatoAlerta;
+    FNFeW.Opcoes.RetirarAcentos := Configuracoes.Geral.RetirarAcentos;
+    FNFeW.Opcoes.RetirarEspacos := Configuracoes.Geral.RetirarEspacos;
+    FNFeW.Opcoes.IdentarXML := Configuracoes.Geral.IdentarXML;
+    FNFeW.Opcoes.NormatizarMunicipios  := Configuracoes.Arquivos.NormatizarMunicipios;
+    FNFeW.Opcoes.PathArquivoMunicipios := Configuracoes.Arquivos.PathArquivoMunicipios;
+    FNFeW.Opcoes.CamposFatObrigatorios := Configuracoes.Geral.CamposFatObrigatorios;
+    FNFeW.Opcoes.ForcarGerarTagRejeicao938 := Configuracoes.Geral.ForcarGerarTagRejeicao938;
+{$Else}
     FNFeW.Gerador.Opcoes.FormatoAlerta  := Configuracoes.Geral.FormatoAlerta;
     FNFeW.Gerador.Opcoes.RetirarAcentos := Configuracoes.Geral.RetirarAcentos;
     FNFeW.Gerador.Opcoes.RetirarEspacos := Configuracoes.Geral.RetirarEspacos;
@@ -3488,6 +3525,7 @@ begin
     FNFeW.Opcoes.PathArquivoMunicipios := Configuracoes.Arquivos.PathArquivoMunicipios;
     FNFeW.Opcoes.CamposFatObrigatorios := Configuracoes.Geral.CamposFatObrigatorios;
     FNFeW.Opcoes.ForcarGerarTagRejeicao938 := Configuracoes.Geral.ForcarGerarTagRejeicao938;
+{$EndIf}
 
     pcnAuxiliar.TimeZoneConf.Assign( Configuracoes.WebServices.TimeZoneConf );
 
@@ -3495,20 +3533,31 @@ begin
     FNFeW.CSRT   := Configuracoes.RespTec.CSRT;
   end;
 
+{$IfNDef DFE_ACBR_LIBXML2}
   FNFeW.Opcoes.GerarTXTSimultaneamente := False;
+{$EndIf}
 
   FNFeW.GerarXml;
   //DEBUG
+  //WriteToTXT('c:\temp\Notafiscal.xml', FNFeW.Document.Xml, False, False);
   //WriteToTXT('c:\temp\Notafiscal.xml', FNFeW.Gerador.ArquivoFormatoXML, False, False);
 
+{$IfDef DFE_ACBR_LIBXML2}
+  XMLOriginal := FNFeW.Document.Xml;  // SetXMLOriginal() irá converter para UTF8
+{$Else}
   XMLOriginal := FNFeW.Gerador.ArquivoFormatoXML;  // SetXMLOriginal() irá converter para UTF8
+{$EndIf}
 
   { XML gerado pode ter nova Chave e ID, então devemos calcular novamente o
     nome do arquivo, mantendo o PATH do arquivo carregado }
   if (NaoEstaVazio(FNomeArq) and (IdAnterior <> FNFe.infNFe.ID)) then
     FNomeArq := CalcularNomeArquivoCompleto('', ExtractFilePath(FNomeArq));
 
+{$IfDef DFE_ACBR_LIBXML2}
+  FAlertas := ACBrStr( FNFeW.ListaDeAlertas.Text );
+{$Else}
   FAlertas := ACBrStr( FNFeW.Gerador.ListaDeAlertas.Text );
+{$EndIf}
   Result := FXMLOriginal;
 end;
 
@@ -3516,6 +3565,8 @@ function NotaFiscal.GerarTXT: String;
 var
   IdAnterior : String;
 begin
+  Result := '';
+{$IfNDef DFE_ACBR_LIBXML2}
   with TACBrNFe(TNotasFiscais(Collection).ACBrNFe) do
   begin
     IdAnterior                             := NFe.infNFe.ID;
@@ -3539,6 +3590,7 @@ begin
 
   FAlertas := FNFeW.Gerador.ListaDeAlertas.Text;
   Result   := FNFeW.Gerador.ArquivoFormatoTXT;
+{$EndIf}
 end;
 
 function NotaFiscal.CalcularNomeArquivo: String;
@@ -3567,7 +3619,7 @@ begin
     else
       Data := Now;
 
-    Result := PathWithDelim(Configuracoes.Arquivos.GetPathNFe(Data, FNFe.Emit.CNPJCPF, FNFe.Ide.modelo));
+    Result := PathWithDelim(Configuracoes.Arquivos.GetPathNFe(Data, FNFe.Emit.CNPJCPF, FNFe.Emit.IE, FNFe.Ide.modelo));
   end;
 end;
 
